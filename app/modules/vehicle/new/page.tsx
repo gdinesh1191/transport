@@ -439,10 +439,9 @@ export default function NewVehicle() {
 
   return (
     <Layout pageTitle="Vehicle Registration">
-      <div className="bg-gray-50 flex-1">
+      <div className="flex-1">
         <main id="main-content" className="flex-1 overflow-y-auto">
-          <div className="container px-4 py-6"    style={{ height: 'calc(100vh - 103px)', overflowY: 'auto' }}>
-             
+         <div className="container px-4 py-6 overflow-y-auto h-[calc(100vh-103px)]">
             <form onSubmit={handleSubmit}>
               {/* Basic Vehicle Information */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">

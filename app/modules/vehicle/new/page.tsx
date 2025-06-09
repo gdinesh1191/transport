@@ -124,7 +124,308 @@ export default function NewVehicle() {
             </div>
           </div>
         );
-      
+        case 'vehicle_details':
+          return (
+            <div className="p-2">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <FormField label="Class of Truck" required>
+                    <select
+                      name="truckClass"
+                      className="form-control border border-gray-300 rounded px-3 py-2"
+                      required
+                    >
+                      <option value="">Select Truck Class</option>
+                      <option value="Light">Light</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Heavy">Heavy</option>
+                    </select>
+                  </FormField>
+        
+                  <FormField label="Model Number" required>
+                    <Input
+                      name="modelNumber"
+                      placeholder="Enter Model Number"
+                      data-validate="required"
+                    />
+                  </FormField>
+        
+                  <FormField label="Model Year" required>
+                    <select
+                      name="modelYear"
+                      className="form-control border border-gray-300 rounded px-3 py-2"
+                      required
+                    >
+                      <option value="">Select Year</option>
+                      {Array.from({ length: 30 }, (_, i) => {
+                        const year = new Date().getFullYear() - i;
+                        return (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </FormField>
+        
+                  <FormField label="Chassis Number" required>
+                    <Input
+                      name="chassisNumber"
+                      placeholder="Enter Chassis Number"
+                      data-validate="required"
+                    />
+                  </FormField>
+                </div>
+        
+                <div>
+                  <FormField label="Engine Number" required>
+                    <Input
+                      name="engineNumber"
+                      placeholder="Enter Engine Number"
+                      data-validate="required"
+                    />
+                  </FormField>
+        
+                  <FormField label="Trailer Chassis No." required>
+                    <Input
+                      name="trailerChassisNo"
+                      placeholder="Enter Trailer Chassis Number"
+                      data-validate="required"
+                    />
+                  </FormField>
+        
+                  <FormField label="Vehicle Weight (in Kgs)" required>
+                    <Input
+                      name="vehicleWeight"
+                      type="number"
+                      placeholder="Enter Weight"
+                      data-validate="required"
+                    />
+                  </FormField>
+        
+                  <FormField label="Unladen Weight (in Kgs)" required>
+                    <Input
+                      name="unladenWeight"
+                      type="number"
+                      placeholder="Enter Unladen Weight"
+                      data-validate="required"
+                    />
+                  </FormField>
+                </div>
+              </div>
+            </div>
+          );
+          case 'vehicle_expiry_details':
+            return (
+              <div className="p-2">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>
+                    <FormField label="F.C. Expiry Date" required>
+                      <Input
+                        name="fcExpiryDate"
+                        type="date"
+                        data-validate="required"
+                      />
+                    </FormField>
+          
+                    <FormField label="Insurance Company" required>
+                      <select
+                        name="insuranceCompany"
+                        className="form-control border border-gray-300 rounded px-3 py-2"
+                        required
+                      >
+                        <option value="">Select Insurance Company</option>
+                        <option value="icici">ICICI Lombard</option>
+                        <option value="hdfc">HDFC Ergo</option>
+                        <option value="newindia">New India Assurance</option>
+                        <option value="others">Others</option>
+                      </select>
+                    </FormField>
+          
+                    <FormField label="Insurance Expiry" required>
+                      <Input
+                        name="insuranceExpiry"
+                        type="date"
+                        data-validate="required"
+                      />
+                    </FormField>
+          
+                    <FormField label="Permit Expiry Date" required>
+                      <Input
+                        name="permitExpiryDate"
+                        type="date"
+                        data-validate="required"
+                      />
+                    </FormField>
+                  </div>
+          
+                  <div>
+                    <FormField label="N.P. Expiry Date" required>
+                      <Input
+                        name="npExpiryDate"
+                        type="date"
+                        data-validate="required"
+                      />
+                    </FormField>
+          
+                    <FormField label="Quarterly Tax Expiry" required>
+                      <Input
+                        name="quarterlyTaxExpiry"
+                        type="date"
+                        data-validate="required"
+                      />
+                    </FormField>
+          
+                    <FormField label="Loan Status" required>
+                      <RadioGroup
+                        name="loanStatus"
+                        options={[
+                          { value: 'Closed', label: 'Closed' },
+                          { value: 'Open', label: 'Open' }
+                        ]}
+                        required
+                      />
+                    </FormField>
+                  </div>
+                </div>
+              </div>
+            );
+            case 'load_availed_details':
+              return (
+                <div className="p-2">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <FormField label="Loan Provider" required>
+                        <select
+                          name="loanProvider"
+                          className="form-control border border-gray-300 rounded px-3 py-2"
+                          required
+                        >
+                          <option value="">Select Loan Provider</option>
+                          <option value="bankA">Bank A</option>
+                          <option value="bankB">Bank B</option>
+                          <option value="financeCompany">Finance Company</option>
+                          <option value="others">Others</option>
+                        </select>
+                      </FormField>
+            
+                      <FormField label="Loan Start Date" required>
+                        <Input
+                          name="loanStartDate"
+                          type="date"
+                          data-validate="required"
+                        />
+                      </FormField>
+                    </div>
+            
+                    <div>
+                      <FormField label="Loan Amount" required>
+                        <Input
+                          name="loanAmount"
+                          type="number"
+                          placeholder="Enter Loan Amount"
+                          data-validate="required"
+                          min="0"
+                          step="0.01"
+                        />
+                      </FormField>
+            
+                      <FormField label="Loan Tenure" required>
+                        <Input
+                          name="loanTenure"
+                          type="number"
+                          placeholder="Enter Loan Tenure (months/years)"
+                          data-validate="required"
+                          min="0"
+                        />
+                      </FormField>
+            
+                      <FormField label="Loan Interest" required>
+                        <Input
+                          name="loanInterest"
+                          type="number"
+                          placeholder="Enter Loan Interest (%)"
+                          data-validate="required"
+                          min="0"
+                          step="0.01"
+                        />
+                      </FormField>
+                    </div>
+                  </div>
+                </div>
+              );
+              case 'vehicle_purchase_details':
+                return (
+                  <div className="p-2">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div>
+                        <FormField label="Truck Invoice No." required>
+                          <Input
+                            name="truckInvoiceNo"
+                            placeholder="Enter Truck Invoice Number"
+                            data-validate="required"
+                          />
+                        </FormField>
+              
+                        <FormField label="Truck Invoice Date" required>
+                          <Input
+                            name="truckInvoiceDate"
+                            type="date"
+                            data-validate="required"
+                          />
+                        </FormField>
+              
+                        <FormField label="Endorsement Status" required>
+                          <RadioGroup
+                            name="endorsementStatus"
+                            options={[
+                              { value: 'Endorsed', label: 'Endorsed' },
+                              { value: 'Not Endorsed', label: 'Not Endorsed' }
+                            ]}
+                            required
+                          />
+                        </FormField>
+              
+                        <FormField label="Endorsed With">
+                          <Input
+                            name="endorsedWith"
+                            placeholder="Enter Truck Endorsed With"
+                          />
+                        </FormField>
+                      </div>
+              
+                      <div>
+                        <FormField label="Truck Status" required>
+                          <RadioGroup
+                            name="truckStatus"
+                            options={[
+                              { value: 'Running', label: 'Running' },
+                              { value: 'Sold', label: 'Sold' }
+                            ]}
+                            required
+                          />
+                        </FormField>
+              
+                        <FormField label="Duty Driver Name" required>
+                          <Input
+                            name="dutyDriverName"
+                            placeholder="Enter Duty Driver Name"
+                            data-validate="required"
+                          />
+                        </FormField>
+              
+                        <FormField label="Dealer Name" required>
+                          <Input
+                            name="dealerName"
+                            placeholder="Enter Dealer Name"
+                            data-validate="required"
+                          />
+                        </FormField>
+                      </div>
+                    </div>
+                  </div>
+                );
+              
       default:
         return (
           <div className="p-2">

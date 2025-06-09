@@ -11,7 +11,7 @@ const FormField = ({label, required = false, children, className = "",}: {
   className?: string;
 }) => (
   <div className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}>
-    <label className="form-label w-1/2">{label}{required && <span className="form-required text-red-500">*</span>}</label>
+    <label className="form-label w-50">{label}{required && <span className="form-required text-red-500">*</span>}</label>
     <div className="flex flex-col w-3/4 flex-grow">{children}</div>
   </div>
 );
@@ -48,9 +48,9 @@ export default function NewExpese() {
 
   return (
     <Layout pageTitle="Expense New">
-      <div className="bg-gray-50 flex-1">
+      <div className="flex-1">
         <main id="main-content" className="flex-1 overflow-y-auto">
-          <div className="container px-4 py-6" style={{height: "calc(100vh - 103px)", overflowY: "auto"}}>
+          <div className="px-4 py-6 h-[calc(100vh-103px)] overflow-y-auto" >
             <form onSubmit={handleSubmit}>
               {/* Basic Vehicle Information */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">

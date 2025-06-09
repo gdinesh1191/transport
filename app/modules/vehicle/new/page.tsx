@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import Layout from '../../../components/Layout';
-
-// Form field components for reusability
+ 
 const FormField = ({ label, required = false, children, className = "" }: {
   label: string;
   required?: boolean;
@@ -139,11 +138,10 @@ export default function NewVehicle() {
 
   return (
     <Layout pageTitle="Vehicle Registration">
-      <div className="min-h-screen bg-gray-50">
+      <div className="bg-gray-50 flex-1">
         <main id="main-content" className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-4 py-6">
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">Vehicle Registration</h1>
-            
+          <div className="container px-4 py-6"    style={{ height: 'calc(100vh - 103px)', overflowY: 'auto' }}>
+             
             <form onSubmit={handleSubmit}>
               {/* Basic Vehicle Information */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
@@ -192,7 +190,7 @@ export default function NewVehicle() {
                 </div>
               </div>
 
-              {/* Tab Navigation */}
+              {}
               <div className="mx-2 mt-5">
                 <ul className="flex whitespace-nowrap w-full border-b border-gray-300 mr-3">
                   {tabs.map((tab) => (
@@ -209,7 +207,7 @@ export default function NewVehicle() {
                 </ul>
               </div>
 
-              {/* Tab Content */}
+              {}
               <div className="mt-3">
                 {renderTabContent()}
               </div>
@@ -218,17 +216,10 @@ export default function NewVehicle() {
         </main>
 
         <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            className="bg-[#009333] text-white border border-[#009333] px-2 py-1 text-sm rounded hover:bg-[#007a2a]"
-          >
+          <button  type="submit"   onClick={handleSubmit}   className="bg-[#009333] text-white border border-[#009333] px-2 py-1 text-sm rounded hover:bg-[#007a2a]" >
             Save
           </button>
-          <button
-            type="button"
-            className="bg-[#6c757d] text-white border border-[#6c757d] px-2 py-1 text-sm rounded hover:bg-[#545b62]"
-          >
+          <button  type="button" className="bg-[#6c757d] text-white border border-[#6c757d] px-2 py-1 text-sm rounded hover:bg-[#545b62]" >
             Cancel
           </button>
         </footer>

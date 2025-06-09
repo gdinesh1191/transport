@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+
+
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -62,3 +65,18 @@ body {
 .border-l-5 {
   border-left-width: 5px;
 }
+
+
+input::placeholder,
+textarea::placeholder {
+  @apply text-[14px] text-[#585858];
+}
+
+
+
+@layer components {
+  .form-control {
+    @apply block w-full px-[0.75rem] py-[0.375rem] text-[#212529] bg-white border border-[#cbcbcb] rounded-md leading-[1.5] focus:outline-none focus:border-[#009333];
+  }
+}
+

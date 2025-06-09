@@ -11,7 +11,7 @@ const FormField = ({label, required = false, children, className = "",}: {
   className?: string;
 }) => (
   <div className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}>
-    <label className="form-label w-50">{label}{required && <span className="form-required text-red-500">*</span>}</label>
+    <label className="form-label w-1/2">{label}{required && <span className="form-required text-red-500">*</span>}</label>
     <div className="flex flex-col w-3/4 flex-grow">{children}</div>
   </div>
 );
@@ -22,7 +22,7 @@ const Input = ({name,placeholder,type = "text",className = "",...props}: {name: 
 
 const RadioGroup = ({name, options, required = false,}: {name: string; options: { value: string; label: string }[]; required?: boolean;}) => (
   <div className="space-x-4">{options.map((option, index) => (
-      <label key={option.value} className="form-label w-50">
+      <label key={option.value} className="form-label">
         <input type="radio" name={name} value={option.value} className="form-radio" {...(required && index === 0 ? { "data-validate": "required" } : {})}/>
         <span className="ml-2">{option.label}</span>
       </label>
@@ -56,11 +56,11 @@ export default function NewExpese() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
                 <div className="space-y-4">
                   <FormField label="Date" required >
-                    <Input name="date"  placeholder="Choose your date" data-validate="required" className="w-64" />
+                    <Input name="date" type="date" placeholder="Choose your date" data-validate="required"  />
                   </FormField>
 
                   <FormField label="Category" required>
-                    <select name="category" className="form-control w-64" data-validate="required">
+                    <select name="category" className="form-control px-3 py-2" data-validate="required">
                       <option value="">Select Category</option>
                       <option value="fuelCharges">Fuel Charges</option>
                       <option value="tollCharges">Toll Charges</option>
@@ -69,12 +69,12 @@ export default function NewExpese() {
                     </select>
                   </FormField>
 
-                  <FormField label="Description" >
-                    <textarea name="description" id="description"  placeholder="Enter description"  data-validate="required" className="form-control w-64 capitalize h-[80px]"></textarea>
+                  <FormField label="Description" className="md:items-start" >
+                    <textarea name="description" id="description"  placeholder="Enter description"  data-validate="required" className="form-control  capitalize h-[80px]"></textarea>
                   </FormField>
 
                   <FormField label="Amount" required >
-                    <Input name="amount" placeholder="Enter amount" className="form-control  w-64 numbers-decimal" data-validate="required" />
+                    <Input name="amount" placeholder="Enter amount" className="form-control   numbers-decimal" data-validate="required" />
                   </FormField>
 
                   <FormField label="Payment Method" required>

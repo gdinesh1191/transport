@@ -28,7 +28,7 @@ const Input = ({ name, placeholder, type = "text", className = "", ...props }: {
     type={type}
     name={name}
     placeholder={placeholder}
-    className={`form-control border border-gray-300 rounded px-3 py-2 ${className}`}
+    className={`form-control`}
     {...props}
   />
 );

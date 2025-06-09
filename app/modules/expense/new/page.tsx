@@ -101,8 +101,8 @@ export default function NewExpese() {
         </main>
 
         <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-          <button type="submit" onClick={handleSubmit} className="bg-[#009333] text-white border border-[#009333] px-[0.5rem] py-[0.25rem] text-[0.875rem] font-normal rounded-[0.25rem]" >Save</button>
-          <button type="button" className="bg-[#6c757d] text-white border border-[#6c757d] px-[0.5rem] py-[0.25rem] text-[0.875rem] font-normal rounded-[0.25rem]">Cancel</button>
+          <button type="submit" onClick={handleSubmit} className="btn-sm btn-primary" >Save</button>
+          <button type="button" className="btn-sm btn-secondary">Cancel</button>
         </footer>
       </div>
     </Layout>

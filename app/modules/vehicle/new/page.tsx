@@ -517,10 +517,10 @@ export default function NewVehicle() {
         </main>
 
         <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-          <button  type="submit"   onClick={handleSubmit}   className="bg-[#009333] text-white border border-[#009333] px-2 py-1 text-sm rounded hover:bg-[#007a2a]" >
+          <button  type="submit"   onClick={handleSubmit}   className="btn-sm btn-primary" >
             Save
           </button>
-          <button  type="button" className="bg-[#6c757d] text-white border border-[#6c757d] px-2 py-1 text-sm rounded hover:bg-[#545b62]" >
+          <button  type="button" className="btn-sm btn-secondary" >
             Cancel
           </button>
         </footer>

@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import Layout from '../../../components/Layout';
-
-// Form field components for reusability
+ 
 const FormField = ({ label, required = false, children, className = "" }: {
   label: string;
   required?: boolean;
@@ -125,7 +124,308 @@ export default function NewVehicle() {
             </div>
           </div>
         );
-      
+        case 'vehicle_details':
+          return (
+            <div className="p-2">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <FormField label="Class of Truck" required>
+                    <select
+                      name="truckClass"
+                      className="form-control border border-gray-300 rounded px-3 py-2"
+                      required
+                    >
+                      <option value="">Select Truck Class</option>
+                      <option value="Light">Light</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Heavy">Heavy</option>
+                    </select>
+                  </FormField>
+        
+                  <FormField label="Model Number" required>
+                    <Input
+                      name="modelNumber"
+                      placeholder="Enter Model Number"
+                      data-validate="required"
+                    />
+                  </FormField>
+        
+                  <FormField label="Model Year" required>
+                    <select
+                      name="modelYear"
+                      className="form-control border border-gray-300 rounded px-3 py-2"
+                      required
+                    >
+                      <option value="">Select Year</option>
+                      {Array.from({ length: 30 }, (_, i) => {
+                        const year = new Date().getFullYear() - i;
+                        return (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </FormField>
+        
+                  <FormField label="Chassis Number" required>
+                    <Input
+                      name="chassisNumber"
+                      placeholder="Enter Chassis Number"
+                      data-validate="required"
+                    />
+                  </FormField>
+                </div>
+        
+                <div>
+                  <FormField label="Engine Number" required>
+                    <Input
+                      name="engineNumber"
+                      placeholder="Enter Engine Number"
+                      data-validate="required"
+                    />
+                  </FormField>
+        
+                  <FormField label="Trailer Chassis No." required>
+                    <Input
+                      name="trailerChassisNo"
+                      placeholder="Enter Trailer Chassis Number"
+                      data-validate="required"
+                    />
+                  </FormField>
+        
+                  <FormField label="Vehicle Weight (in Kgs)" required>
+                    <Input
+                      name="vehicleWeight"
+                      type="number"
+                      placeholder="Enter Weight"
+                      data-validate="required"
+                    />
+                  </FormField>
+        
+                  <FormField label="Unladen Weight (in Kgs)" required>
+                    <Input
+                      name="unladenWeight"
+                      type="number"
+                      placeholder="Enter Unladen Weight"
+                      data-validate="required"
+                    />
+                  </FormField>
+                </div>
+              </div>
+            </div>
+          );
+          case 'vehicle_expiry_details':
+            return (
+              <div className="p-2">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>
+                    <FormField label="F.C. Expiry Date" required>
+                      <Input
+                        name="fcExpiryDate"
+                        type="date"
+                        data-validate="required"
+                      />
+                    </FormField>
+          
+                    <FormField label="Insurance Company" required>
+                      <select
+                        name="insuranceCompany"
+                        className="form-control border border-gray-300 rounded px-3 py-2"
+                        required
+                      >
+                        <option value="">Select Insurance Company</option>
+                        <option value="icici">ICICI Lombard</option>
+                        <option value="hdfc">HDFC Ergo</option>
+                        <option value="newindia">New India Assurance</option>
+                        <option value="others">Others</option>
+                      </select>
+                    </FormField>
+          
+                    <FormField label="Insurance Expiry" required>
+                      <Input
+                        name="insuranceExpiry"
+                        type="date"
+                        data-validate="required"
+                      />
+                    </FormField>
+          
+                    <FormField label="Permit Expiry Date" required>
+                      <Input
+                        name="permitExpiryDate"
+                        type="date"
+                        data-validate="required"
+                      />
+                    </FormField>
+                  </div>
+          
+                  <div>
+                    <FormField label="N.P. Expiry Date" required>
+                      <Input
+                        name="npExpiryDate"
+                        type="date"
+                        data-validate="required"
+                      />
+                    </FormField>
+          
+                    <FormField label="Quarterly Tax Expiry" required>
+                      <Input
+                        name="quarterlyTaxExpiry"
+                        type="date"
+                        data-validate="required"
+                      />
+                    </FormField>
+          
+                    <FormField label="Loan Status" required>
+                      <RadioGroup
+                        name="loanStatus"
+                        options={[
+                          { value: 'Closed', label: 'Closed' },
+                          { value: 'Open', label: 'Open' }
+                        ]}
+                        required
+                      />
+                    </FormField>
+                  </div>
+                </div>
+              </div>
+            );
+            case 'load_availed_details':
+              return (
+                <div className="p-2">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <FormField label="Loan Provider" required>
+                        <select
+                          name="loanProvider"
+                          className="form-control border border-gray-300 rounded px-3 py-2"
+                          required
+                        >
+                          <option value="">Select Loan Provider</option>
+                          <option value="bankA">Bank A</option>
+                          <option value="bankB">Bank B</option>
+                          <option value="financeCompany">Finance Company</option>
+                          <option value="others">Others</option>
+                        </select>
+                      </FormField>
+            
+                      <FormField label="Loan Start Date" required>
+                        <Input
+                          name="loanStartDate"
+                          type="date"
+                          data-validate="required"
+                        />
+                      </FormField>
+                    </div>
+            
+                    <div>
+                      <FormField label="Loan Amount" required>
+                        <Input
+                          name="loanAmount"
+                          type="number"
+                          placeholder="Enter Loan Amount"
+                          data-validate="required"
+                          min="0"
+                          step="0.01"
+                        />
+                      </FormField>
+            
+                      <FormField label="Loan Tenure" required>
+                        <Input
+                          name="loanTenure"
+                          type="number"
+                          placeholder="Enter Loan Tenure (months/years)"
+                          data-validate="required"
+                          min="0"
+                        />
+                      </FormField>
+            
+                      <FormField label="Loan Interest" required>
+                        <Input
+                          name="loanInterest"
+                          type="number"
+                          placeholder="Enter Loan Interest (%)"
+                          data-validate="required"
+                          min="0"
+                          step="0.01"
+                        />
+                      </FormField>
+                    </div>
+                  </div>
+                </div>
+              );
+              case 'vehicle_purchase_details':
+                return (
+                  <div className="p-2">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div>
+                        <FormField label="Truck Invoice No." required>
+                          <Input
+                            name="truckInvoiceNo"
+                            placeholder="Enter Truck Invoice Number"
+                            data-validate="required"
+                          />
+                        </FormField>
+              
+                        <FormField label="Truck Invoice Date" required>
+                          <Input
+                            name="truckInvoiceDate"
+                            type="date"
+                            data-validate="required"
+                          />
+                        </FormField>
+              
+                        <FormField label="Endorsement Status" required>
+                          <RadioGroup
+                            name="endorsementStatus"
+                            options={[
+                              { value: 'Endorsed', label: 'Endorsed' },
+                              { value: 'Not Endorsed', label: 'Not Endorsed' }
+                            ]}
+                            required
+                          />
+                        </FormField>
+              
+                        <FormField label="Endorsed With">
+                          <Input
+                            name="endorsedWith"
+                            placeholder="Enter Truck Endorsed With"
+                          />
+                        </FormField>
+                      </div>
+              
+                      <div>
+                        <FormField label="Truck Status" required>
+                          <RadioGroup
+                            name="truckStatus"
+                            options={[
+                              { value: 'Running', label: 'Running' },
+                              { value: 'Sold', label: 'Sold' }
+                            ]}
+                            required
+                          />
+                        </FormField>
+              
+                        <FormField label="Duty Driver Name" required>
+                          <Input
+                            name="dutyDriverName"
+                            placeholder="Enter Duty Driver Name"
+                            data-validate="required"
+                          />
+                        </FormField>
+              
+                        <FormField label="Dealer Name" required>
+                          <Input
+                            name="dealerName"
+                            placeholder="Enter Dealer Name"
+                            data-validate="required"
+                          />
+                        </FormField>
+                      </div>
+                    </div>
+                  </div>
+                );
+              
       default:
         return (
           <div className="p-2">
@@ -139,11 +439,10 @@ export default function NewVehicle() {
 
   return (
     <Layout pageTitle="Vehicle Registration">
-      <div className="min-h-screen bg-gray-50">
+      <div className="bg-gray-50 flex-1">
         <main id="main-content" className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-4 py-6">
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">Vehicle Registration</h1>
-            
+          <div className="container px-4 py-6"    style={{ height: 'calc(100vh - 103px)', overflowY: 'auto' }}>
+             
             <form onSubmit={handleSubmit}>
               {/* Basic Vehicle Information */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
@@ -192,7 +491,7 @@ export default function NewVehicle() {
                 </div>
               </div>
 
-              {/* Tab Navigation */}
+              {}
               <div className="mx-2 mt-5">
                 <ul className="flex whitespace-nowrap w-full border-b border-gray-300 mr-3">
                   {tabs.map((tab) => (
@@ -209,7 +508,7 @@ export default function NewVehicle() {
                 </ul>
               </div>
 
-              {/* Tab Content */}
+              {}
               <div className="mt-3">
                 {renderTabContent()}
               </div>
@@ -218,17 +517,10 @@ export default function NewVehicle() {
         </main>
 
         <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            className="bg-[#009333] text-white border border-[#009333] px-2 py-1 text-sm rounded hover:bg-[#007a2a]"
-          >
+          <button  type="submit"   onClick={handleSubmit}   className="bg-[#009333] text-white border border-[#009333] px-2 py-1 text-sm rounded hover:bg-[#007a2a]" >
             Save
           </button>
-          <button
-            type="button"
-            className="bg-[#6c757d] text-white border border-[#6c757d] px-2 py-1 text-sm rounded hover:bg-[#545b62]"
-          >
+          <button  type="button" className="bg-[#6c757d] text-white border border-[#6c757d] px-2 py-1 text-sm rounded hover:bg-[#545b62]" >
             Cancel
           </button>
         </footer>

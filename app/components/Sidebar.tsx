@@ -1,7 +1,7 @@
 'use client'
-
+ 
 import { useState, useEffect } from 'react'
-
+import { useRouter } from 'next/navigation';  
 export default function Sidebar() {
   const [isMobile, setIsMobile] = useState(false)
   const [masterMenuOpen, setMasterMenuOpen] = useState(false)
@@ -29,6 +29,8 @@ export default function Sidebar() {
 
   // Desktop Sidebar (wider)
   if (!isMobile) {
+    const router = useRouter();
+
     return (
       <div className="w-[200px] bg-[#212934] shadow-md relative h-full">
         <div className="px-0 pt-2 pb-0 flex justify-center">
@@ -56,14 +58,19 @@ export default function Sidebar() {
 
             {masterMenuOpen && (
               <ul className="text-[#b0b3b7]">
-                <li className="py-2 pr-4 pl-12 hover:bg-[#191f26] border-l-5 border-l-transparent hover:border-l-5 hover:border-l-[#1aed59] flex items-center justify-between cursor-pointer text-[#b0b3b7]">
-                  <span onClick={() => window.location.href = '/modules/vehicle/list'}>Vehicle</span>
-                  <i onClick={() => window.location.href = '/modules/vehicle/new'} className="ri-add-fill text-lg"></i>
-                </li>
-                <li className="py-2 pr-4 pl-12 hover:bg-[#191f26] border-l-5 border-l-transparent hover:border-l-5 hover:border-l-[#1aed59] flex items-center justify-between cursor-pointer text-[#b0b3b7]">
-                  <span onClick={() => window.location.href = '/modules/employee/list'}>Employee</span>
-                  <i onClick={() => window.location.href = '/modules/employee/new'} className="ri-add-fill text-lg"></i>
-                </li>
+                 <li
+        className="py-2 pr-4 pl-12 hover:bg-[#191f26] border-l-5 border-l-transparent hover:border-l-[#1aed59] flex items-center justify-between cursor-pointer text-[#b0b3b7]"
+      >
+        <span onClick={() => router.push('/modules/vehicle/list')}>Vehicle</span>
+        <i onClick={() => router.push('/modules/vehicle/new')} className="ri-add-fill text-lg"></i>
+      </li>
+
+      <li
+        className="py-2 pr-4 pl-12 hover:bg-[#191f26] border-l-5 border-l-transparent hover:border-l-[#1aed59] flex items-center justify-between cursor-pointer text-[#b0b3b7]"
+      >
+        <span onClick={() => router.push('/modules/employee/list')}>Employee</span>
+        <i onClick={() => router.push('/modules/employee/new')} className="ri-add-fill text-lg"></i>
+      </li>
               </ul>
             )}
 

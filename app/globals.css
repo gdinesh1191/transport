@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
+.active-menu {
+  background-color: #191f26;
+  border-left-color: #1aed59;
+}
+
+.font-helvetica {
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+.submenu::before {
+  content: "";
+  position: absolute;
+  top: 0.6rem;
+  left: -16px;
+  border-width: 8px;
+  border-style: solid;
+  border-color: transparent rgb(18, 52, 77) transparent transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #6d6d6d;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+}
+
+/* Fix for border-l-5 since it might not be available in default Tailwind */
+.border-l-5 {
+  border-left-width: 5px;
+}

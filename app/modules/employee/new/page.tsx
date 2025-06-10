@@ -79,14 +79,15 @@ const RadioGroup = ({
 
 
 
-export default function Newemployee() {
+export default function NewEmployee() {
   const [activeTab, setActiveTab] = useState("Bank_details");
   const [showModal, setShowModal] = useState(true);
   const [employeeType, setEmployeeType] = useState("");
 
   const tabs = [
     { id: "Bank_details", label: "Bank Details" },
-    { id: "proof_details", label: "Proof Details" },
+    { id: "Proof_details", label: "Proof Details" },
+     { id: "Driver_details", label: "Driver Details" },
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -210,51 +211,14 @@ export default function Newemployee() {
             <div></div>
           </div>
         );
+
+        
     }
   };
 
 
 
-   if (showModal) {
-    return (
-    <div className="fixed inset-0 flex items-start justify-center bg-[rgba(0,0,0,0.5)] z-50">
-
-        <div className="bg-white p-4 rounded-lg shadow-lg w-full max-w-[500px] mx-4 mt-10">
-          <div className="text-center p-4">
-            <div className="flex justify-center items-center mb-5 gap-2">
-              <i className="ri-user-line text-green-600 text-3xl"></i>
-              <h2 className="text-[#000000] text-2xl">Select Employee Type</h2>
-            </div>
-            <p className="text-md text-gray-600 mb-7">
-              Choose the employee type that best describes your business
-            </p>
-            <div className="flex gap-4 justify-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmployeeType("staff");
-                  setShowModal(false);
-                }}
-                className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white text-gray-800 px-4 py-2 rounded-md w-full"
-              >
-                Staff
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmployeeType("driver");
-                  setShowModal(false);
-                }}
-                className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white text-gray-800 px-4 py-2 rounded-md w-full"
-              >
-                Driver
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+ 
 
 
 
@@ -461,6 +425,43 @@ export default function Newemployee() {
           </button>
         </footer>
       </div>
+
+      {showModal && (<div className="fixed inset-0 flex items-start justify-center bg-[rgba(0,0,0,0.5)] z-50">
+
+        <div className="bg-white p-4 rounded-lg shadow-lg w-full max-w-[500px] mx-4 mt-10">
+          <div className="text-center p-4">
+            <div className="flex justify-center items-center mb-5 gap-2">
+              <i className="ri-user-line text-green-600 text-3xl"></i>
+              <h2 className="text-[#000000] text-2xl">Select Employee Type</h2>
+            </div>
+            <p className="text-md text-gray-600 mb-7">
+              Choose the employee type that best describes your business
+            </p>
+            <div className="flex gap-4 justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmployeeType("staff");
+                  setShowModal(false);
+                }}
+                className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white text-gray-800 px-4 py-2 rounded-md w-full"
+              >
+                Staff
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmployeeType("driver");
+                  setShowModal(false);
+                }}
+                className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white text-gray-800 px-4 py-2 rounded-md w-full"
+              >
+                Driver
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>)}
     </Layout>
   );
 }

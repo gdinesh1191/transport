@@ -550,7 +550,7 @@ export default function NewVehicle() {
           </div>
         );
     }
-  };
+  }; 
 
   return (
     <Layout pageTitle="Vehicle Registration">

@@ -305,7 +305,7 @@ export default function NewEmployee() {
                           <option value="Mrs.">Mrs.</option>
                           <option value="Ms.">Ms.</option>
                         </select>
-                        <Input name="employeeName" placeholder="Enter Name" className="form-control lg:w-300 capitalize alphabet-only " data-validate="required" />
+                        <Input name="employeeName" placeholder="Enter Name" className="form-control lg: w-300 capitalize alphabet-only " data-validate="required" />
                       </div>
                     </div>
                   </FormField>
@@ -399,10 +399,10 @@ export default function NewEmployee() {
         </main>
 
         <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-          <button type="submit" onClick={handleSubmit as any} className="bg-[#009333] text-white border border-[#009333] px-[0.5rem] py-[0.25rem] text-[0.875rem] font-normal rounded-[0.25rem]">
+          <button type="submit" onClick={handleSubmit as any} className="btn-sm btn-primary">
             Save
           </button>
-          <button type="button" className="bg-[#6c757d] text-white border border-[#6c757d] px-[0.5rem] py-[0.25rem] text-[0.875rem] font-normal rounded-[0.25rem]">
+          <button type="button" className="btn-sm btn-secondary" >
             Cancel
           </button>
         </footer>
@@ -432,7 +432,6 @@ export default function NewEmployee() {
                   type="button"
                   onClick={() => {
                     setEmployeeType("Driver");
-                    setActiveTab("Driver_details");
                     setShowModal(false);
                   }}
                   className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white text-gray-800 px-4 py-2 rounded-md w-full"

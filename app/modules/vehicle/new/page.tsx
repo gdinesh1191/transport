@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Layout from '../../../components/Layout';
- 
+
 const FormField = ({ label, required = false, children, className = "" }: {
   label: string; required?: boolean; children: React.ReactNode; className?: string;
 }) => (
@@ -15,7 +15,7 @@ const FormField = ({ label, required = false, children, className = "" }: {
 );
 
 const Input = ({ name, placeholder, type = "text", className = "", ...props }: {
-  name: string; placeholder?: string; type?: string; className?: string; [key: string]: any;
+  name: string; placeholder?: string; type?: string; className?: string;[key: string]: any;
 }) => (
   <input type={type} name={name} placeholder={placeholder} className={`form-control`} {...props} />
 );
@@ -229,7 +229,7 @@ export default function NewVehicle() {
             </div>
           </div>
         );
-              
+
       default:
         return (
           <div className="p-2">
@@ -244,55 +244,56 @@ export default function NewVehicle() {
   return (
     <Layout pageTitle="Vehicle Registration">
       <div className="flex-1">
-      <div className="flex-1">
-        <main id="main-content" className="flex-1 overflow-y-auto">
-         <div className="container px-4 py-6 overflow-y-auto h-[calc(100vh-103px)]">
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
-                <div className="space-y-4">
-                  <FormField label="Truck Registration Number" required className="md:items-start">
-                    <Input name="truck-registration" placeholder="Enter registration number" className="capitalize uppercase alphanumeric placeholder:capitalize" data-validate="required" />
-                  </FormField>
-                  <FormField label="Truck Type" required className="md:items-start">
-                    <select name="truck-type" className="form-control border border-gray-300 rounded px-3 py-2" data-validate="required">
-                      <option value="">Select truck type</option>
-                      <option value="pickup">Pickup</option>
-                      <option value="lorry">Lorry</option>
-                      <option value="trailer">Trailer</option>
-                      <option value="mini-truck">Mini Truck</option>
-                      <option value="heavy-truck">Heavy Truck</option>
-                    </select>
-                  </FormField>
-                  <FormField label="Makers Name" required className="md:items-start">
-                    <Input name="maker-name" placeholder="Enter makers name" className="capitalize alphanumeric" data-validate="required" />
-                  </FormField>
-                  <FormField label="Nature of Goods Weight" required className="md:items-start">
-                    <Input name="goods-weight" placeholder="Enter weight" className="capitalize alphanumeric" data-validate="required" />
-                  </FormField>
+        <div className="flex-1">
+          <main id="main-content" className="flex-1 overflow-y-auto">
+            <div className="px-4 py-6 overflow-y-auto h-[calc(100vh-103px)]">
+              <form onSubmit={handleSubmit}>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
+                  <div className="space-y-4">
+                    <FormField label="Truck Registration Number" required className="md:items-start">
+                      <Input name="truck-registration" placeholder="Enter registration number" className="capitalize uppercase alphanumeric placeholder:capitalize" data-validate="required" />
+                    </FormField>
+                    <FormField label="Truck Type" required className="md:items-start">
+                      <select name="truck-type" className="form-control border border-gray-300 rounded px-3 py-2" data-validate="required">
+                        <option value="">Select truck type</option>
+                        <option value="pickup">Pickup</option>
+                        <option value="lorry">Lorry</option>
+                        <option value="trailer">Trailer</option>
+                        <option value="mini-truck">Mini Truck</option>
+                        <option value="heavy-truck">Heavy Truck</option>
+                      </select>
+                    </FormField>
+                    <FormField label="Makers Name" required className="md:items-start">
+                      <Input name="maker-name" placeholder="Enter makers name" className="capitalize alphanumeric" data-validate="required" />
+                    </FormField>
+                    <FormField label="Nature of Goods Weight" required className="md:items-start">
+                      <Input name="goods-weight" placeholder="Enter weight" className="capitalize alphanumeric" data-validate="required" />
+                    </FormField>
+                  </div>
                 </div>
-              </div>
 
-              <div className="mx-2 mt-5">
-                <ul className="flex whitespace-nowrap w-full border-b border-gray-300 mr-3">
-                  {tabs.map((tab) => (
-                    <li key={tab.id} className={`mr-6 pb-2 cursor-pointer hover:text-[#009333] ${activeTab === tab.id ? 'text-[#009333] border-b-2 border-[#009333]' : ''}`} onClick={() => setActiveTab(tab.id)}>
-                      {tab.label}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                <div className="mx-2 mt-5">
+                  <ul className="flex whitespace-nowrap w-full border-b border-gray-300 mr-3">
+                    {tabs.map((tab) => (
+                      <li key={tab.id} className={`mr-6 pb-2 cursor-pointer hover:text-[#009333] ${activeTab === tab.id ? 'text-[#009333] border-b-2 border-[#009333]' : ''}`} onClick={() => setActiveTab(tab.id)}>
+                        {tab.label}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
-              <div className="mt-3">
-                {renderTabContent()}
-              </div>
-            </form>
-          </div>
-        </main>
+                <div className="mt-3">
+                  {renderTabContent()}
+                </div>
+              </form>
+            </div>
+          </main>
 
-        <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-          <button type="submit" onClick={handleSubmit} className="btn-sm btn-primary">Save</button>
-          <button type="button" className="btn-secondary">Cancel</button>
-        </footer>
+          <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
+            <button type="submit" onClick={handleSubmit} className="btn-sm btn-primary">Save</button>
+            <button type="button" className="btn-secondary">Cancel</button>
+          </footer>
+        </div>
       </div>
     </Layout>
   );

@@ -16,7 +16,7 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
       <div className="flex-1 flex flex-col">
         <Header pageTitle={pageTitle} />
         
-        <main className="overflow-auto custom-scrollbar bg-white   style={{ height: 'calc(100vh - 100px)'  }}">
+        <main className="overflow-auto custom-scrollbar bg-white ">
           {children}
         </main>
       </div>

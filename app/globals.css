@@ -98,5 +98,36 @@ input[type="checkbox"] {
   .btn-secondary {
     @apply bg-[#6c757d] text-white border border-[#6c757d] hover:bg-[#5a6268] cursor-pointer transition;
   }
-}
 
+    .dropdown-hover {
+    @apply px-1 py-[0.075rem] rounded hover:bg-[#dce0e5];
+  }
+
+   .sticky-table-header {
+    @apply text-[12px] text-[#475867] text-left bg-white sticky top-0 z-10 shadow-[0_1px_0_0_#ebeff3];
+  }
+
+   .sticky-table-header {
+    @apply text-[12px] text-[#475867] text-left bg-white sticky top-0 z-10 shadow-[0_1px_0_0_#ebeff3];
+  }
+
+  .th-cell {
+    @apply border-r border-[#ebeff3] p-[0.3rem];
+  }
+
+    .last-th-cell {
+    @apply p-[0.3rem];
+  }
+
+  .td-cell {
+    @apply border-r border-b border-[#ebeff3] p-[0.3rem];
+  }
+
+    .last-td-cell {
+    @apply border-b border-[#ebeff3] p-[0.3rem];
+  }
+
+  .counter-badge {
+    @apply inline-block min-w-[20px] h-[20px] px-[6px] text-xs leading-[20px] rounded-full text-center bg-[#009333] text-white;
+  }
+}

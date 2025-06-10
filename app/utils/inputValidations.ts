@@ -18,8 +18,7 @@ const useInputValidation = () => {
       }
 
       if (target.classList.contains('number_with_decimal')) {
-        // Allow numbers with up to two decimal places
-        value = value.replace(/[^0-9.]/g, '');
+         value = value.replace(/[^0-9.]/g, '');
         const match = value.match(/^(\d+(\.\d{0,2})?)?/);
         value = match ? match[0] : '';
       }
@@ -41,11 +40,11 @@ const useInputValidation = () => {
       }
 
       if (target.classList.contains('whole_number')) {
-        // Whole numbers only, no decimal
+        
         value = value.replace(/[^\d]/g, '');
       }
 
-      // Assign sanitized value back to the input
+      
       target.value = value;
     };
 

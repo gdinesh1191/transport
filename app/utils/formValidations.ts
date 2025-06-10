@@ -9,20 +9,18 @@ export interface ValidationConfig {
 }
 
 /**
- * Validates a single form field based on its validation rules.
- * @param element The HTML input, select, or textarea element to validate.
- * @param rules An array of validation rules (e.g., ["required", "minlength:5"]).
- * @returns True if the element is valid, false otherwise.
+ * Validates a single form field based on the provided rules.
+ * @param element The HTML element to validate.
+ * @param rules The validation rules to apply.
+ * @returns True if the field is valid, false otherwise.
  */
 function validateField(element: HTMLElement, rules: ValidationRule[]): boolean {
   let isValid = true;
   let errorMessage = "";
 
   rules.forEach(rule => {
-    if (!isValid) return; // If already invalid, no need to check further rules
-
-    // Type assertion to more specific HTML element types for 'value' and 'type' property access
-    const inputElement = element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+    if (!isValid) return;  
+     const inputElement = element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
     if (rule === "required") {
       if ('value' in inputElement && inputElement.value.trim() === "") {
@@ -33,7 +31,7 @@ function validateField(element: HTMLElement, rules: ValidationRule[]): boolean {
         const form = element.closest('form');
         if (form && !form.querySelector(`input[name="${radioGroupName}"]:checked`)) {
           isValid = false;
-          // For radio buttons, try to find the label associated with the group or use the name
+           
           errorMessage = `${(element.closest('.form-label') || element.parentElement?.querySelector('.form-label'))?.textContent?.replace('*', '').trim() || radioGroupName || 'Field'} is required.`;
         }
       }
@@ -57,9 +55,9 @@ function validateField(element: HTMLElement, rules: ValidationRule[]): boolean {
 }
 
 /**
- * Displays or clears an error message below the given element.
- * @param element The form element.
- * @param message The error message to display. If empty, the error message is cleared.
+ * Displays an error message for a given form field.
+ * @param element The HTML element that failed validation.
+ * @param message The error message to display.
  */
 function displayErrorMessage(element: HTMLElement, message: string) {
   // Find the parent div of the input (FormField's flex-grow div)

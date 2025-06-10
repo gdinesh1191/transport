@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Layout from "../../../components/Layout";
+import 'vanillajs-datepicker/css/datepicker.css';
 
 // Form field components for reusability
 const FormField = ({label, required = false, children, className = "",}: {
@@ -61,10 +62,13 @@ const Typeahead = ({
   const [hoveredItem, setHoveredItem] = useState<any>(null);
   const [hoveredPosition, setHoveredPosition] = useState({ x: 0, y: 0 });
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [keyboardSelectedIndex, setKeyboardSelectedIndex] = useState(-1);
+  const [navigationMode, setNavigationMode] = useState<'mouse' | 'keyboard'>('mouse');
   
   const dropdownRef = useRef<any>(null);
   const inputRef = useRef<any>(null);
   const hoverTimeoutRef = useRef<any>(null);
+  const itemRefs = useRef<any[]>([]);
 
   // Filter data based on search criteria
   const filterData = (term: any) => {
@@ -91,6 +95,25 @@ const Typeahead = ({
     return selectedItem && searchTerm === selectedItem[displayField];
   };
 
+  // Get currently highlighted item (either by mouse or keyboard)
+  const getCurrentHighlightedItem = () => {
+    if (navigationMode === 'keyboard' && keyboardSelectedIndex >= 0) {
+      return filteredData[keyboardSelectedIndex];
+    }
+    return hoveredItem;
+  };
+
+  // Update description card position (fixed position like original)
+  const updateDescriptionPosition = () => {
+    if (!dropdownRef.current) return;
+    
+    const dropdownRect = dropdownRef.current.getBoundingClientRect();
+    setHoveredPosition({
+      x: dropdownRect.right + 10,
+      y: dropdownRect.top + 40
+    });
+  };
+
   // Handle input change
   const handleInputChange = (e: any) => {
     const value = e.target.value;
@@ -103,7 +126,67 @@ const Typeahead = ({
     
     const filtered = filterData(value);
     setFilteredData(filtered);
-    setIsDropdownOpen(value.length >= minSearchLength && filtered.length > 0);
+    const shouldOpen = value.length >= minSearchLength && filtered.length > 0;
+    setIsDropdownOpen(shouldOpen);
+    
+    // Reset keyboard navigation and hover states when input changes
+    setKeyboardSelectedIndex(-1);
+    setNavigationMode('mouse');
+    
+    // Hide description card immediately if dropdown should close
+    if (!shouldOpen) {
+      setHoveredItem(null);
+    }
+  };
+
+  // Handle keyboard navigation
+  const handleKeyDown = (e: any) => {
+    if (!isDropdownOpen || filteredData.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setNavigationMode('keyboard');
+        const nextIndex = keyboardSelectedIndex < filteredData.length - 1 ? keyboardSelectedIndex + 1 : 0;
+        setKeyboardSelectedIndex(nextIndex);
+        setHoveredItem(filteredData[nextIndex]);
+        updateDescriptionPosition();
+        
+        // Scroll into view
+        if (itemRefs.current[nextIndex]) {
+          itemRefs.current[nextIndex].scrollIntoView({ block: 'nearest' });
+        }
+        break;
+        
+      case 'ArrowUp':
+        e.preventDefault();
+        setNavigationMode('keyboard');
+        const prevIndex = keyboardSelectedIndex > 0 ? keyboardSelectedIndex - 1 : filteredData.length - 1;
+        setKeyboardSelectedIndex(prevIndex);
+        setHoveredItem(filteredData[prevIndex]);
+        updateDescriptionPosition();
+        
+        // Scroll into view
+        if (itemRefs.current[prevIndex]) {
+          itemRefs.current[prevIndex].scrollIntoView({ block: 'nearest' });
+        }
+        break;
+        
+      case 'Enter':
+        e.preventDefault();
+        const itemToSelect = getCurrentHighlightedItem();
+        if (itemToSelect) {
+          handleItemSelect(itemToSelect);
+        }
+        break;
+        
+      case 'Escape':
+        setIsDropdownOpen(false);
+        setHoveredItem(null);
+        setKeyboardSelectedIndex(-1);
+        inputRef.current?.blur();
+        break;
+    }
   };
 
   // Handle item selection
@@ -112,6 +195,8 @@ const Typeahead = ({
     setSearchTerm(item[displayField]);
     setIsDropdownOpen(false);
     setHoveredItem(null);
+    setKeyboardSelectedIndex(-1);
+    setNavigationMode('mouse');
     onSelect?.(item);
   };
 
@@ -121,27 +206,30 @@ const Typeahead = ({
     setSelectedItem(null);
     setIsDropdownOpen(false);
     setHoveredItem(null);
+    setKeyboardSelectedIndex(-1);
+    setNavigationMode('mouse');
     inputRef.current?.focus();
   };
 
   // Handle mouse enter on item
-  const handleMouseEnter = (item: any, event: any) => {
+  const handleMouseEnter = (item: any, index: number, event: any) => {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
     
-    const dropdownRect = dropdownRef.current.getBoundingClientRect();
-    setHoveredPosition({
-      x: dropdownRect.right + 10,
-      y: dropdownRect.top + 40
-    });
+    // Switch to mouse navigation mode
+    setNavigationMode('mouse');
+    setKeyboardSelectedIndex(index);
+    updateDescriptionPosition();
     setHoveredItem(item);
   };
 
   // Handle mouse leave from item
   const handleMouseLeave = () => {
     hoverTimeoutRef.current = setTimeout(() => {
-      setHoveredItem(null);
+      if (navigationMode === 'mouse') {
+        setHoveredItem(null);
+      }
     }, 100);
   };
 
@@ -153,7 +241,9 @@ const Typeahead = ({
   };
 
   const handleDescriptionMouseLeave = () => {
-    setHoveredItem(null);
+    if (navigationMode === 'mouse') {
+      setHoveredItem(null);
+    }
   };
 
   // Handle click outside to close dropdown
@@ -162,6 +252,8 @@ const Typeahead = ({
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
         setHoveredItem(null);
+        setKeyboardSelectedIndex(-1);
+        setNavigationMode('mouse');
         
         // Clear input if it doesn't match a selected item or if no valid selection
         if (!isCurrentInputValid() && searchTerm.trim() !== "") {
@@ -175,6 +267,20 @@ const Typeahead = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [searchTerm, selectedItem]);
 
+  // Reset item refs when filtered data changes
+  useEffect(() => {
+    itemRefs.current = itemRefs.current.slice(0, filteredData.length);
+  }, [filteredData]);
+
+  // Close description card when dropdown closes
+  useEffect(() => {
+    if (!isDropdownOpen) {
+      setHoveredItem(null);
+      setKeyboardSelectedIndex(-1);
+      setNavigationMode('mouse');
+    }
+  }, [isDropdownOpen]);
+
   return (
     <div className="relative w-full" ref={dropdownRef}>
       {/* Input with Typeahead */}
@@ -185,6 +291,7 @@ const Typeahead = ({
           name={name}
           value={searchTerm}
           onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className={`form-control w-full pr-8 ${className}`}
           {...(required ? { "data-validate": "required" } : {})}
@@ -208,12 +315,18 @@ const Typeahead = ({
           {/* Scrollable Suggestions Area */}
           <div className="flex-1 overflow-y-auto py-1">
             {filteredData.length > 0 ? (
-              filteredData.map((item: any) => (
+              filteredData.map((item: any, index: number) => (
                 <div
                   key={item.id}
-                  className="px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700"
+                  ref={el => { itemRefs.current[index] = el; }}
+                  className={`px-3 py-2 cursor-pointer text-sm text-gray-700 ${
+                    (navigationMode === 'keyboard' && keyboardSelectedIndex === index) ||
+                    (navigationMode === 'mouse' && hoveredItem?.id === item.id)
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'hover:bg-gray-50'
+                  }`}
                   onClick={() => handleItemSelect(item)}
-                  onMouseEnter={(e) => handleMouseEnter(item, e)}
+                  onMouseEnter={(e) => handleMouseEnter(item, index, e)}
                   onMouseLeave={handleMouseLeave}
                 >
                   {item[displayField]}
@@ -239,7 +352,7 @@ const Typeahead = ({
       )}
 
       {/* Description Card */}
-      {hoveredItem && hoveredItem.description && (
+      {hoveredItem && hoveredItem.description && isDropdownOpen && (
         <div
           className="fixed bg-white border border-gray-200 rounded-sm shadow-lg p-3 z-[60] max-w-xs"
           style={{
@@ -264,7 +377,47 @@ const Typeahead = ({
   );
 };
 
-export default function NewExpese() {
+const DatepickerField = ({
+  name,
+  placeholder = 'Select date',
+  required = false,
+  className = '',
+}: {
+  name: string;
+  placeholder?: string;
+  required?: boolean;
+  className?: string;
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!inputRef.current) return;
+
+    // ⛔ do NOT import at top-level
+    import('vanillajs-datepicker').then(({ Datepicker }) => {
+      const dp = new Datepicker(inputRef.current!, {
+        autohide: true,
+        format: 'dd/mm/yyyy',
+      });
+
+      return () => dp.destroy();
+    });
+  }, []);
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      name={name}
+      placeholder={placeholder}
+      className={`form-control w-full ${className}`}
+      {...(required ? { 'data-validate': 'required' } : {})}
+    />
+  );
+};
+
+
+const NewExpese=()=> {
     const [fileName, setFileName] = useState('No file chosen');
 
     // Sample name data - replace with your actual data
@@ -313,7 +466,7 @@ export default function NewExpese() {
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
                                 <div className="space-y-4">
                                     <FormField label="Date" required >
-                                        <Input name="date" type="date" placeholder="Choose your date" data-validate="required"  />
+                                        <DatepickerField name="date" required />
                                     </FormField>
 
                                     <FormField label="Category" required>
@@ -379,3 +532,4 @@ export default function NewExpese() {
         </Layout>
     );
 }
+export default NewExpese;

@@ -177,12 +177,7 @@ export default function NewEmployee() {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    alert("Form valid, proceed to save!");
-    // You would gather all your form state here (bankForm, proofDetailsForm, driverDetailsForm, etc.)
-    // and send it to your API or handle it as needed.
-    console.log("Bank Details:", bankForm);
-    console.log("Proof Details:", proofDetailsForm);
-    console.log("Driver Details:", driverDetailsForm);
+  
   };
 
   const renderTabContent = () => {
@@ -211,7 +206,7 @@ export default function NewEmployee() {
                 {bankError && (<div className="text-red-500 text-sm mt-2 text-end">{bankError}</div>)}
 
                 <FormField label="">
-                  <input type="button" value="Add Bank" onClick={handleAddBank} className="btn-sm btn-primary" />
+                  <input type="button" value="Add Bank" onClick={handleAddBank} className="mt-2 w-full px-4 py-2 rounded bg-[#009333] text-white text-sm font-medium hover:bg-[#007a2a]" />
                 </FormField>
               </div>
             </div>
@@ -284,7 +279,7 @@ export default function NewEmployee() {
                 </FormField>
 
                 <FormField label="PAN Number" required>
-                  <Input name="panNumber" value={proofDetailsForm.panNumber} onChange={handleProofChange} placeholder="Enter PAN Number" className="form-control w-full uppercase alphanumeric" maxLength={10} data-validate="required" />
+                  <Input name="panNumber" value={proofDetailsForm.panNumber} onChange={handleProofChange} placeholder="Enter PAN Number" className="form-control w-full  alphanumeric" maxLength={10} data-validate="required" />
                 </FormField>
               </div>
             </div>
@@ -305,12 +300,12 @@ export default function NewEmployee() {
                   <FormField label="Name" required>
                     <div>
                       <div className="flex gap-2">
-                        <select name="salutation" className="form-control">
+                        <select name="salutation" className="form-control w-30">
                           <option value="Mr.">Mr.</option>
                           <option value="Mrs.">Mrs.</option>
                           <option value="Ms.">Ms.</option>
                         </select>
-                        <Input name="employeeName" placeholder="Enter Name" className="form-control w-300 capitalize alphabet-only " data-validate="required" />
+                        <Input name="employeeName" placeholder="Enter Name" className="form-control lg:w-300 capitalize alphabet-only " data-validate="required" />
                       </div>
                     </div>
                   </FormField>

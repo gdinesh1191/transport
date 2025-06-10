@@ -34,7 +34,7 @@ export default function Sidebar() {
     return (
       <div className="w-[200px] bg-[#212934] shadow-md relative h-full">
         <div className="px-0 pt-2 pb-0 flex justify-center">
-          <img src="/images/logo.png" alt="InfoGreen Logo" className="h-10" />
+          <img src="/data/images/logo.png" alt="InfoGreen Logo" className="h-10" />
         </div>
 
         <nav className="py-0">

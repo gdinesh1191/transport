@@ -247,6 +247,7 @@ export default function NewVehicle() {
         <main id="main-content" className="flex-1 overflow-y-auto">
           <div className="px-4 py-6" style={{ height: 'calc(100vh - 103px)', overflowY: 'auto' }}>
             <form onSubmit={handleSubmit}>
+ 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
                 <div className="space-y-4">
                   <FormField label="Truck Registration Number" required className="md:items-start">

@@ -22,7 +22,7 @@ const Input = ({name,placeholder,type = "text",className = "",...props}: {name: 
 
 const RadioGroup = ({name, options, required = false,}: {name: string; options: { value: string; label: string }[]; required?: boolean;}) => (
   <div className="space-x-4">{options.map((option, index) => (
-      <label key={option.value} className="form-label w-50">
+      <label key={option.value} className="form-label">
         <input type="radio" name={name} value={option.value} className="form-radio" {...(required && index === 0 ? { "data-validate": "required" } : {})}/>
         <span className="ml-2">{option.label}</span>
       </label>
@@ -48,19 +48,19 @@ export default function NewExpese() {
 
   return (
     <Layout pageTitle="Expense New">
-      <div className="bg-gray-50 flex-1">
+      <div className="flex-1">
         <main id="main-content" className="flex-1 overflow-y-auto">
-          <div className="container px-4 py-6" style={{height: "calc(100vh - 103px)", overflowY: "auto"}}>
+          <div className="px-4 py-6 h-[calc(100vh-103px)] overflow-y-auto" >
             <form onSubmit={handleSubmit}>
               {/* Basic Vehicle Information */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
                 <div className="space-y-4">
                   <FormField label="Date" required >
-                    <Input name="date"  placeholder="Choose your date" data-validate="required" className="w-64" />
+                    <Input name="date" type="date" placeholder="Choose your date" data-validate="required"  />
                   </FormField>
 
                   <FormField label="Category" required>
-                    <select name="category" className="form-control w-64" data-validate="required">
+                    <select name="category" className="form-control px-3 py-2" data-validate="required">
                       <option value="">Select Category</option>
                       <option value="fuelCharges">Fuel Charges</option>
                       <option value="tollCharges">Toll Charges</option>
@@ -69,12 +69,12 @@ export default function NewExpese() {
                     </select>
                   </FormField>
 
-                  <FormField label="Description" >
-                    <textarea name="description" id="description"  placeholder="Enter description"  data-validate="required" className="form-control w-64 capitalize h-[80px]"></textarea>
+                  <FormField label="Description" className="md:items-start" >
+                    <textarea name="description" id="description"  placeholder="Enter description"  data-validate="required" className="form-control  capitalize h-[80px]"></textarea>
                   </FormField>
 
                   <FormField label="Amount" required >
-                    <Input name="amount" placeholder="Enter amount" className="form-control  w-64 numbers-decimal" data-validate="required" />
+                    <Input name="amount" placeholder="Enter amount" className="form-control   numbers-decimal" data-validate="required" />
                   </FormField>
 
                   <FormField label="Payment Method" required>
@@ -101,8 +101,8 @@ export default function NewExpese() {
         </main>
 
         <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-          <button type="submit" onClick={handleSubmit} className="bg-[#009333] text-white border border-[#009333] px-[0.5rem] py-[0.25rem] text-[0.875rem] font-normal rounded-[0.25rem]" >Save</button>
-          <button type="button" className="bg-[#6c757d] text-white border border-[#6c757d] px-[0.5rem] py-[0.25rem] text-[0.875rem] font-normal rounded-[0.25rem]">Cancel</button>
+          <button type="submit" onClick={handleSubmit} className="btn-sm btn-primary" >Save</button>
+          <button type="button" className="btn-sm btn-secondary">Cancel</button>
         </footer>
       </div>
     </Layout>

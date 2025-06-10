@@ -8,6 +8,7 @@ type TabKey = "all" | "active" | "in-active";
 
 const VehicleList = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("all");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const tabs: TabKey[] = ["all", "active", "in-active"];
 
@@ -155,10 +156,59 @@ const VehicleList = () => {
 
             <div className="flex items-center relative space-x-2">
               <input className="form-control !h-[31px]" type="text" placeholder="Enter Vehicle Number" />
-              <button className="btn-sm !border-transparent !text-[#384551] hover:bg-[#dce0e5] hover:border-[#ebeff3] text-sm">
-                <i className="ri-sort-desc" id="openSidebar"></i>
+              <button className="btn-sm !border-transparent !text-[#384551] hover:bg-[#dce0e5] hover:border-[#ebeff3] text-sm" onClick={() => setIsSidebarOpen(true)}>
+                <i className="ri-sort-desc" ></i>
               </button>
             </div>
+          </div>
+
+          {/* Offcanvas Sidebar */}
+          <div className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            {/* Backdrop */}
+            <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)]" onClick={() => setIsSidebarOpen(false)}></div>
+
+            {/* Sidebar Content */}
+            <div className={`relative w-80 mt-[5.4rem] mb-[0.15rem] rounded-tl-[0.375rem] rounded-bl-[0.375rem] bg-white shadow-[0_4px_16px_#27313a66] transform transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
+
+              {/* Header */}
+              <div className="py-[0.5rem] px-[0.75rem] border-b border-[#dee2e6] flex justify-between items-center">
+                <h5 className="text-sm text-[#12344d]">Add Filters</h5>
+                <button onClick={() => setIsSidebarOpen(false)} className="text-[#12344d] cursor-pointer">
+                  <i className="ri-close-line"></i>
+                </button>
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="p-4 overflow-y-auto flex-1">
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-[#000000] mb-1.5">Vehicle Number</label>
+                  <input type="text" placeholder="Enter vehicle number" className="form-control" />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-[#000000] mb-1.5">Owner Name</label>
+                  <input type="text" placeholder="Enter owner name" className="form-control" />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-[#000000] mb-1.5">Chassis Number</label>
+                  <input type="text" placeholder="Enter chassis number" className="form-control" />
+                </div>
+
+               
+                {/* Add more filters as needed */}
+              </div>
+
+
+              <div className="p-2 border-t border-[#dee2e6] flex justify-end gap-2">
+                <button className="btn-sm btn-light" onClick={() => { setIsSidebarOpen(false); }}>
+                  Reset All
+                </button>
+                <button className="btn-sm btn-primary" onClick={() => { setIsSidebarOpen(false); }}>
+                  Apply
+                </button>
+              </div>
+            </div>
+
           </div>
 
           {/* Table */}

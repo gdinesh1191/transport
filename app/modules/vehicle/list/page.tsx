@@ -7,7 +7,7 @@ const VehicleList = () => {
   return (
     <Layout pageTitle="Vehicle List">
       <div className="bg-gray-50 flex-1">
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto"  style={{ height: "calc(100vh - 103px)", overflowY: "auto" }}>
           
        
             <div className="flex justify-between items-center bg-white px-1.5 mt-[5px]">
@@ -226,6 +226,18 @@ const VehicleList = () => {
             </div>
           
         </main>
+         <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
+          <button
+            type="submit"
+           
+            className="btn-sm btn-primary"
+          >
+            Save
+          </button>
+          <button type="button" className="btn-secondary">
+            Cancel
+          </button>
+        </footer>
       </div>
     </Layout>
   );

@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Layout from "../../../components/Layout";
 import useInputValidation from "@/app/utils/inputValidations";
+
+import ToastContainer , { showToast } from "@/app/utils/toaster";
 interface Option {
   value: string;
   label: string;
@@ -180,7 +182,16 @@ const RadioGroup = ({
 export default function NewVehicle() {
   const [activeTab, setActiveTab] = useState("owner_information");
   useInputValidation();
+  const handleSuccessToast = () => {
+    showToast.success('Vehicle saved successfully!');
+  };
 
+ 
+
+  const handleErrorToast = () => {
+    showToast.error('Failed to save vehicle information.');
+  };
+ 
   const tabs = [
     { id: "owner_information", label: "Owner Information" },
     { id: "vehicle_details", label: "Vehicle Details" },
@@ -637,17 +648,21 @@ export default function NewVehicle() {
         </main>
 
         <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-          <button
-            type="submit"
-            onClick={handleSubmit}
+         <button
+            
+              onClick={handleSuccessToast}
             className="btn-sm btn-primary"
           >
             Save
           </button>
-          <button type="button" className="btn-secondary">
+          <button className="btn-secondary" onClick={handleErrorToast}>
             Cancel
-          </button>
+          </button> 
+
+ 
+        
         </footer>
+        <ToastContainer />
       </div>
     </Layout>
   );

@@ -61,7 +61,7 @@ body {
   background-color: #f1f1f1;
 }
 
-/* Fix for border-l-5 since it might not be available in default Tailwind */
+ 
 .border-l-5 {
   border-left-width: 5px;
 }

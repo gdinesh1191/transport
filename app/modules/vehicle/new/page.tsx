@@ -25,7 +25,7 @@ const SearchableSelect = ({
   required = false,
   searchable = false,
   placeholder = 'Select an option',
-  className = '',
+  className = 'text-[13px] ',
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -87,8 +87,8 @@ const SearchableSelect = ({
       <ul>
         {filteredOptions.map((option) => (
           <li
-            key={option.value}
-            className="px-2 py-1 hover:bg-gray-100 cursor-pointer"
+            key={option.value} 
+            className="px-2 py-1 hover:bg-gray-100 cursor-pointer text-[14px]"
             onClick={() => handleSelect(option)}
           >
             {option.label}
@@ -111,6 +111,7 @@ const SearchableSelect = ({
     </div>
   );
 };
+
 const FormField = ({
   label,
   required = false,
@@ -268,16 +269,17 @@ export default function NewVehicle() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <FormField label="Class of Truck" required>
-                  <select
-                    name="truckClass"
-                    className="form-control border border-gray-300 rounded px-3 py-2"
-                    required
-                  >
-                    <option value="">Select Truck Class</option>
-                    <option value="Light">Light</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Heavy">Heavy</option>
-                  </select>
+                <SearchableSelect
+    name="truckClass"
+    placeholder="Select Truck Class"
+    searchable={true}
+    required={true}
+    options={[
+      { value: 'Light', label: 'Light' },
+      { value: 'Medium', label: 'Medium' },
+      { value: 'Heavy', label: 'Heavy' }
+    ]}
+  />
                 </FormField>
                 <FormField label="Model Number" required>
                   <Input
@@ -323,7 +325,7 @@ export default function NewVehicle() {
                 <FormField label="Vehicle Weight (in Kgs)" required>
                   <Input
                     name="vehicleWeight" className="number_with_decimal"
-                    type="number"
+                    type="text"
                     placeholder="Enter Weight"
                     data-validate="required"
                   />
@@ -331,7 +333,7 @@ export default function NewVehicle() {
                 <FormField label="Unladen Weight (in Kgs)" required>
                   <Input
                     name="unladenWeight" className="number_with_decimal"
-                    type="number"
+                    type="text"
                     placeholder="Enter Unladen Weight"
                     data-validate="required"
                   />
@@ -354,17 +356,18 @@ export default function NewVehicle() {
                   />
                 </FormField>
                 <FormField label="Insurance Company" required>
-                  <select
-                    name="insuranceCompany"
-                    className="form-control border border-gray-300 rounded px-3 py-2"
-                    required
-                  >
-                    <option value="">Select Insurance Company</option>
-                    <option value="icici">ICICI Lombard</option>
-                    <option value="hdfc">HDFC Ergo</option>
-                    <option value="newindia">New India Assurance</option>
-                    <option value="others">Others</option>
-                  </select>
+                <SearchableSelect
+    name="insuranceCompany"
+    placeholder="Select Insurance Company"
+    searchable={true}
+    required={true}
+    options={[
+      { value: 'icici', label: 'ICICI Lombard' },
+      { value: 'hdfc', label: 'HDFC Ergo' },
+      { value: 'newindia', label: 'New India Assurance' },
+      { value: 'others', label: 'Others' }
+    ]}
+  />
                 </FormField>
                 <FormField label="Insurance Expiry" required>
                   <Input
@@ -416,19 +419,20 @@ export default function NewVehicle() {
           <div className="p-2">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
-                <FormField label="Loan Provider" required>
-                  <select
-                    name="loanProvider"
-                    className="form-control border border-gray-300 rounded px-3 py-2"
-                    required
-                  >
-                    <option value="">Select Loan Provider</option>
-                    <option value="bankA">Bank A</option>
-                    <option value="bankB">Bank B</option>
-                    <option value="financeCompany">Finance Company</option>
-                    <option value="others">Others</option>
-                  </select>
-                </FormField>
+              <FormField label="Loan Provider" required>
+  <SearchableSelect
+    name="loanProvider"
+    placeholder="Select Loan Provider"
+    searchable={true}
+    options={[
+      { value: 'bankA', label: 'Bank A' },
+      { value: 'bankB', label: 'Bank B' },
+      { value: 'financeCompany', label: 'Finance Company' },
+      { value: 'others', label: 'Others' },
+    ]}
+  />
+</FormField>
+
                 <FormField label="Loan Start Date" required>
                   <Input
                     name="loanStartDate"
@@ -441,7 +445,7 @@ export default function NewVehicle() {
                 <FormField label="Loan Amount" required>
                   <Input
                     name="loanAmount"
-                    type="number" className="number_with_decimal"
+                    type="text" className="number_with_decimal"
                     placeholder="Enter Loan Amount"
                     data-validate="required"
                     min="0"
@@ -451,7 +455,7 @@ export default function NewVehicle() {
                 <FormField label="Loan Tenure" required>
                   <Input
                     name="loanTenure"
-                    type="number" className="whole_number"
+                    type="text" className="whole_number"
                     placeholder="Enter Loan Tenure (months/years)"
                     data-validate="required"
                     min="0"
@@ -460,7 +464,7 @@ export default function NewVehicle() {
                 <FormField label="Loan Interest" required>
                   <Input
                     name="loanInterest" className="number_with_decimal"
-                    type="number"
+                    type="text"
                     placeholder="Enter Loan Interest (%)"
                     data-validate="required"
                     min="0"
@@ -655,7 +659,7 @@ export default function NewVehicle() {
           >
             Save
           </button>
-          <button className="btn-secondary" onClick={handleErrorToast}>
+          <button className="btn-secondary btn-sm" onClick={handleErrorToast}>
             Cancel
           </button> 
 

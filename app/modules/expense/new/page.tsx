@@ -1,11 +1,14 @@
- "use client";
+"use client";
 
 import { useRef, useState, useEffect } from "react";
 import Layout from "../../../components/Layout";
 import { validateForm } from "@/app/utils/formValidations"; // Import the utility
-
-import 'vanillajs-datepicker/css/datepicker.css';
-
+ 
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { TextField } from '@mui/material';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import dayjs, { Dayjs } from 'dayjs';
 const FormField = ({
   label,
   required = false,
@@ -67,7 +70,7 @@ const RadioGroup = ({
           name={name}
           value={option.value}
           className="form-radio"
-          // Add data-validate to one of the radio inputs in the group if required
+           
           {...(required ? { "data-validate": "required" } : {})}
         />
         <span className="ml-2">{option.label}</span>
@@ -422,30 +425,7 @@ const Typeahead = ({
   );
 };
 
-const DatepickerField = ({
-  name,
-  placeholder = 'Select date',
-  required = false,
-  className = '',
-}: {
-  name: string;
-  placeholder?: string;
-  required?: boolean;
-  className?: string;
-}) => {
-  const inputRef = useRef<HTMLInputElement>(null);
  
-  return (
-    <input
-      ref={inputRef}
-      type="text"
-      name={name}
-      placeholder={placeholder}
-      className={`form-control w-full ${className}`}
-      {...(required ? { 'data-validate': 'required' } : {})}
-    />
-  );
-};
 
 const NewExpense = () => {
   const [fileName, setFileName] = useState('No file chosen');
@@ -492,20 +472,19 @@ const NewExpense = () => {
     console.log("Add new name clicked");
     // Handle add new logic here
   };
-
+  const [value, setValue] = useState<Dayjs | null>(dayjs());
+  const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   return (
     <Layout pageTitle="Expense New">
-      <div className="flex-1">
+      <div className="flex-1"> 
         <main id="main-content" className="flex-1 overflow-y-auto">
           <div className="px-4 py-6 h-[calc(100vh-103px)] overflow-y-auto">
             <form ref={formRef} onSubmit={handleSubmit} autoComplete="off">
               {/* Basic Vehicle Information */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
                 <div className="space-y-4">
-                  <FormField label="Date" required>
-                    <DatepickerField name="date" required />
-                  </FormField>
-
+                   
                   <FormField label="Category" required>
                     <select name="category" className="form-control px-3 py-2" data-validate="required">
                       <option value="">Select Category</option>
@@ -515,7 +494,39 @@ const NewExpense = () => {
                       <option value="service">Vehicle Service on Trip</option>
                     </select>
                   </FormField>
+                  <FormField label="Date" className="md:items-start">
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <DatePicker
+        format="DD/MM/YYYY"
+        open={open}
+        onOpen={() => setOpen(true)}
+        onClose={() => setOpen(false)}
+        value={value}
+        onChange={(newValue: Dayjs | null) => {
+          setValue(newValue);
+          setOpen(false); // auto-close after selection
+        }}
+        slotProps={{
+          textField: {
+            inputRef: inputRef,
+            placeholder: 'DD/MM/YYYY',
+            readOnly:true,
+            className: 'form-control py-[6px] px-3 text-[13px] h-9 focus:outline-none focus:ring-1 focus:ring-[#009333] focus:border-[#009333]'
+,
+            onClick: () => setOpen(true),  
+            InputProps: {
+              readOnly: true,  
+              sx: {
+                height: '36px',
+                fontSize: '13px',
+              },
+            },
+          },
+        }}
+      />
+    </LocalizationProvider>
 
+                  </FormField>
                   <FormField label="Description" className="md:items-start">
                     <textarea 
                       name="description" 

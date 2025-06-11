@@ -45,19 +45,26 @@ body {
   border-color: transparent rgb(18, 52, 77) transparent transparent;
 }
  
-/* ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
 
-::-webkit-scrollbar-thumb {
-  background-color: #6d6d6d;
-  border-radius: 10px;
+::-webkit-scrollbar {
+  width: 11px;            
+  height: 11px;        
 }
 
 ::-webkit-scrollbar-track {
-  background-color: #f1f1f1;
-} */
+  background: #fff;   
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #8b8b8b; 
+  border-radius: 10px;
+  border: 2px solid #f1f1f1; 
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
 
  
 .border-l-5 {

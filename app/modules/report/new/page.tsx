@@ -1,4 +1,4 @@
-
+ 
 'use client';
 
 import { useState } from 'react';
@@ -7,8 +7,10 @@ import Layout from '../../../components/Layout';
 const ReportsPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeReport, setActiveReport] = useState<string | null>(null);
+ 
     // New state to manage the active category title
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
+ 
     const vehicles = [
         { id: 1, number: "TN29N1212", owner: "Arumugam", chassis: "AD33323C3212", fcExpiry: "12/02/2023", status: "Active", nextDue: "22/08/2025", year: 2017 },
         { id: 2, number: "TN45Z2321", owner: "Kumar", chassis: "ZX92133QWER", fcExpiry: "01/05/2024", status: "In-Active", nextDue: "15/09/2025", year: 2015 },
@@ -51,7 +53,7 @@ const ReportsPage = () => {
         { id: 39, number: "TN45M7677", owner: "Vimal", chassis: "MLKJNH5432", fcExpiry: "20/10/2023", status: "Active", nextDue: "18/01/2027", year: 2014 },
         { id: 40, number: "TN46N7879", owner: "Natarajan", chassis: "POIUYT8765", fcExpiry: "06/11/2024", status: "Active", nextDue: "08/03/2027", year: 2018 },
     ];
-
+ 
     const filteredVehicles = vehicles;
     const reportCategories = [
         {
@@ -120,25 +122,9 @@ const ReportsPage = () => {
             item.name.toLowerCase().includes(searchTerm.toLowerCase())
         )
     })).filter(category => category.items.length > 0);
+ 
 
-    return (
-        <Layout pageTitle="Reports">
-            <div className="flex">
-                <aside className="w-[240px] h-[100vh] bg-[#f8f9fa] border-[#ebeff3] px-3 flex flex-col space-y-4">
-
-                    <div className="relative">
-                        <div className="flex items-center  overflow-hidden ">
-                            <i className="ri-search-line absolute left-2 text-sm"></i>
-                            <input
-                                type="text"
-                                placeholder="Search here..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="form-control  pl-7"
-                            />
-                        </div>
-                    </div>
-
+ 
 
                     <div className="flex flex-col gap-4 text-sm bg-[#f8f9fa] overflow-y-auto pr-2 max-h-[calc(100vh-110px)]">
                         {filteredCategories.map((category, categoryIndex) => (
@@ -233,8 +219,7 @@ const ReportsPage = () => {
                                 </button>
                             </div>
                         </div>
-
-
+ 
                         <div className="bg-[#ebeff3]">
                             <div className="mx-2  h-[calc(100vh-129px)] overflow-hidden rounded-lg bg-white">
                                 <div className="h-full overflow-y-auto">
@@ -336,4 +321,4 @@ const ReportsPage = () => {
     );
 }
 
-export default ReportsPage; 
+export default ReportsPage;

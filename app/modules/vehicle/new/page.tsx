@@ -1,32 +1,183 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Layout from '../../../components/Layout';
+ 
+import { useEffect, useRef, useState } from "react";
+import Layout from "../../../components/Layout";
+import useInputValidation from "@/app/utils/inputValidations";
 
-const FormField = ({ label, required = false, children, className = "" }: {
-  label: string; required?: boolean; children: React.ReactNode; className?: string;
+import ToastContainer , { showToast } from "@/app/utils/toaster";
+interface Option {
+  value: string;
+  label: string;
+}
+
+interface Props {
+  name: string;
+  options: Option[];
+  required?: boolean;
+  searchable?: boolean;
+  placeholder?: string;
+  className?: string;
+}
+
+const SearchableSelect = ({
+  name,
+  options,
+  required = false,
+  searchable = false,
+  placeholder = 'Select an option',
+  className = 'text-[13px] ',
+}: Props) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selected, setSelected] = useState<Option | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const filteredOptions = searchable
+    ? options.filter((option) =>
+        option.label.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : options;
+
+  const handleSelect = (option: Option) => {
+    setSelected(option);
+    setIsOpen(false);
+  };
+
+  const handleClickOutside = (e: MouseEvent) => {
+    if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+      setIsOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={wrapperRef} className={`relative ${className}`}>
+      <input
+        type="hidden"
+        name={name}
+        value={selected?.value || ''}
+        required={required}
+      />
+      <div
+        className="form-control border border-gray-300 rounded px-3 py-2 bg-white cursor-pointer"
+        onClick={() => setIsOpen((prev) => !prev)}
+      >
+        {selected?.label || placeholder}
+      </div>
+
+      {isOpen && (
+  <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow flex flex-col">
+    {searchable && (
+      <div className="m-2"><input
+        type="text"
+        placeholder="Search..."
+        className="form-control w-9.5/10"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        autoFocus
+      />
+      </div>
+    )}
+
+    <div className="overflow-y-auto max-h-48 m-1">
+      <ul>
+        {filteredOptions.map((option) => (
+          <li
+            key={option.value} 
+            className="px-2 py-1 hover:bg-gray-100 cursor-pointer text-[14px]"
+            onClick={() => handleSelect(option)}
+          >
+            {option.label}
+          </li>
+        ))}
+        {filteredOptions.length === 0 && (
+          <li className="p-2 text-gray-400">No results</li>
+        )}
+      </ul>
+    </div>
+
+    {/* Footer */}
+    <div className="flex justify-between items-center p-2 border-t border-gray-200 bg-gray-50">
+      <span className="text-sm  cursor-pointer text-[#009333]"><i className="ri-add-circle-fill " ></i>  Add New</span>
+      <i className="ri-refresh-line text-xl text-blue-700 cursor-pointer hover:text-gray-700"></i>
+    </div>
+  </div>
+)}
+
+    </div>
+  );
+};
+
+const FormField = ({
+  label,
+  required = false,
+  children,
+  className = "",
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+  className?: string;
+ 
 }) => (
-  <div className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}>
+  <div
+    className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}
+  >
     <label className="form-label w-50">
-      {label}{required && <span className="form-required text-red-500">*</span>}
+      {label}
+      {required && <span className="form-required text-red-500">*</span>}
     </label>
     <div className="flex flex-col w-3/4">{children}</div>
   </div>
 );
 
-const Input = ({ name, placeholder, type = "text", className = "", ...props }: {
-  name: string; placeholder?: string; type?: string; className?: string;[key: string]: any;
+ 
+const Input = ({
+  name,
+  placeholder,
+  type = "text",
+  className = "",
+  ...props
+}: {
+  name: string;
+  placeholder?: string;
+  type?: string;
+  className?: string;
+  [key: string]: any;
+ 
 }) => (
-  <input type={type} name={name} placeholder={placeholder} className={`form-control`} {...props} />
+  <input
+    type={type}
+    name={name}
+    placeholder={placeholder}
+    className={`form-control ${className}`}
+    {...props}
+  />
 );
-
-const RadioGroup = ({ name, options, required = false }: {
-  name: string; options: { value: string; label: string }[]; required?: boolean;
+const RadioGroup = ({
+  name,
+  options,
+  required = false,
+}: {
+  name: string;
+  options: { value: string; label: string }[];
+  required?: boolean;
 }) => (
   <div className="space-x-4">
     {options.map((option, index) => (
       <label key={option.value} className="form-label">
-        <input type="radio" name={name} value={option.value} className="form-radio" {...(required && index === 0 ? { 'data-validate': 'required' } : {})} />
+        <input
+          type="radio"
+          name={name}
+          value={option.value}
+          className="form-radio"
+          {...(required && index === 0 ? { "data-validate": "required" } : {})}
+        />
         <span className="ml-2">{option.label}</span>
       </label>
     ))}
@@ -34,14 +185,24 @@ const RadioGroup = ({ name, options, required = false }: {
 );
 
 export default function NewVehicle() {
-  const [activeTab, setActiveTab] = useState('owner_information');
+  const [activeTab, setActiveTab] = useState("owner_information");
+  useInputValidation();
+  const handleSuccessToast = () => {
+    showToast.success('Vehicle saved successfully!');
+  };
 
+ 
+
+  const handleErrorToast = () => {
+    showToast.error('Failed to save vehicle information.');
+  };
+ 
   const tabs = [
-    { id: 'owner_information', label: 'Owner Information' },
-    { id: 'vehicle_details', label: 'Vehicle Details' },
-    { id: 'vehicle_expiry_details', label: 'Vehicle Expiry Details' },
-    { id: 'load_availed_details', label: 'Loan Availed Details' },
-    { id: 'vehicle_purchase_details', label: 'Vehicle Purchase Details' }
+    { id: "owner_information", label: "Owner Information" },
+    { id: "vehicle_details", label: "Vehicle Details" },
+    { id: "vehicle_expiry_details", label: "Vehicle Expiry Details" },
+    { id: "load_availed_details", label: "Loan Availed Details" },
+    { id: "vehicle_purchase_details", label: "Vehicle Purchase Details" },
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -51,179 +212,334 @@ export default function NewVehicle() {
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'owner_information':
+      case "owner_information":
         return (
           <div className="p-2">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <FormField label="Owner" required>
-                  <RadioGroup name="ownerType" options={[{ value: 'New', label: 'New' }, { value: 'Existing', label: 'Existing' }]} required />
+                  <RadioGroup
+                    name="ownerType"
+                    options={[
+                      { value: "New", label: "New" },
+                      { value: "Existing", label: "Existing" },
+                    ]}
+                    required
+                  />
                 </FormField>
                 <FormField label="Address" required>
-                  <Input name="ownerAddress" placeholder="Enter Address" className="capitalize" data-validate="required" />
+                  <Input
+                    name="ownerAddress"
+                    placeholder="Enter Address"
+                    className="capitalize"
+                    data-validate="required"
+                  />
                 </FormField>
                 <FormField label="Registration Date" required>
-                  <Input name="registrationDate" type="date" data-validate="required" />
+                  <Input
+                    name="registrationDate"
+                    type="date"
+                    data-validate="required"
+                  />
                 </FormField>
               </div>
               <div>
                 <FormField label="Owners Name" required>
-                  <Input name="ownerName" placeholder="Enter Owners Name" className="capitalize alphabet-only" data-validate="required" />
+                  <Input
+                    name="ownerName"
+                    placeholder="Enter Owners Name"
+                    className="capitalize alphabet-only"
+                    data-validate="required"
+                  />
                 </FormField>
                 <FormField label="Ownership Type" required>
-                  <RadioGroup name="ownershipType" options={[{ value: 'Owned', label: 'Owned' }, { value: 'Leased', label: 'Leased' }]} required />
+                  <RadioGroup
+                    name="ownershipType"
+                    options={[
+                      { value: "Owned", label: "Owned" },
+                      { value: "Leased", label: "Leased" },
+                    ]}
+                    required
+                  />
                 </FormField>
               </div>
             </div>
           </div>
         );
 
-      case 'vehicle_details':
+      case "vehicle_details":
         return (
           <div className="p-2">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <FormField label="Class of Truck" required>
-                  <select name="truckClass" className="form-control border border-gray-300 rounded px-3 py-2" required>
-                    <option value="">Select Truck Class</option>
-                    <option value="Light">Light</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Heavy">Heavy</option>
-                  </select>
+                <SearchableSelect
+    name="truckClass"
+    placeholder="Select Truck Class"
+    searchable={true}
+    required={true}
+    options={[
+      { value: 'Light', label: 'Light' },
+      { value: 'Medium', label: 'Medium' },
+      { value: 'Heavy', label: 'Heavy' }
+    ]}
+  />
                 </FormField>
                 <FormField label="Model Number" required>
-                  <Input name="modelNumber" placeholder="Enter Model Number" data-validate="required" />
+                  <Input
+                    name="modelNumber" className="alphanumeric all_uppercase"
+                    placeholder="Enter Model Number"
+                    data-validate="required"
+                  />
                 </FormField>
                 <FormField label="Model Year" required>
-                  <select name="modelYear" className="form-control border border-gray-300 rounded px-3 py-2" required>
+                  <select
+                    name="modelYear"
+                    className="form-control border border-gray-300 rounded px-3 py-2"
+                    required
+                  >
                     <option value="">Select Year</option>
                     {Array.from({ length: 30 }, (_, i) => {
                       const year = new Date().getFullYear() - i;
-                      return <option key={year} value={year}>{year}</option>;
+                      return (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      );
                     })}
                   </select>
                 </FormField>
                 <FormField label="Chassis Number" required>
-                  <Input name="chassisNumber" placeholder="Enter Chassis Number" data-validate="required" />
+                  <Input
+                    name="chassisNumber" className="alphanumeric all_uppercase"
+                    placeholder="Enter Chassis Number"
+                    data-validate="required"
+                  />
                 </FormField>
               </div>
               <div>
                 <FormField label="Engine Number" required>
-                  <Input name="engineNumber" placeholder="Enter Engine Number" data-validate="required" />
+                  <Input
+                    name="engineNumber" className="alphanumeric all_uppercase"
+                    placeholder="Enter Engine Number"
+                    data-validate="required"
+                  />
                 </FormField>
-                <FormField label="Trailer Chassis No." required>
-                  <Input name="trailerChassisNo" placeholder="Enter Trailer Chassis Number" data-validate="required" />
-                </FormField>
+                
                 <FormField label="Vehicle Weight (in Kgs)" required>
-                  <Input name="vehicleWeight" type="number" placeholder="Enter Weight" data-validate="required" />
+                  <Input
+                    name="vehicleWeight" className="number_with_decimal"
+                    type="text"
+                    placeholder="Enter Weight"
+                    data-validate="required"
+                  />
                 </FormField>
                 <FormField label="Unladen Weight (in Kgs)" required>
-                  <Input name="unladenWeight" type="number" placeholder="Enter Unladen Weight" data-validate="required" />
+                  <Input
+                    name="unladenWeight" className="number_with_decimal"
+                    type="text"
+                    placeholder="Enter Unladen Weight"
+                    data-validate="required"
+                  />
                 </FormField>
               </div>
             </div>
           </div>
         );
 
-      case 'vehicle_expiry_details':
+      case "vehicle_expiry_details":
         return (
           <div className="p-2">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <FormField label="F.C. Expiry Date" required>
-                  <Input name="fcExpiryDate" type="date" data-validate="required" />
+                  <Input
+                    name="fcExpiryDate"
+                    type="date"
+                    data-validate="required"
+                  />
                 </FormField>
                 <FormField label="Insurance Company" required>
-                  <select name="insuranceCompany" className="form-control border border-gray-300 rounded px-3 py-2" required>
-                    <option value="">Select Insurance Company</option>
-                    <option value="icici">ICICI Lombard</option>
-                    <option value="hdfc">HDFC Ergo</option>
-                    <option value="newindia">New India Assurance</option>
-                    <option value="others">Others</option>
-                  </select>
+                <SearchableSelect
+    name="insuranceCompany"
+    placeholder="Select Insurance Company"
+    searchable={true}
+    required={true}
+    options={[
+      { value: 'icici', label: 'ICICI Lombard' },
+      { value: 'hdfc', label: 'HDFC Ergo' },
+      { value: 'newindia', label: 'New India Assurance' },
+      { value: 'others', label: 'Others' }
+    ]}
+  />
                 </FormField>
                 <FormField label="Insurance Expiry" required>
-                  <Input name="insuranceExpiry" type="date" data-validate="required" />
+                  <Input
+                    name="insuranceExpiry"
+                    type="date"
+                    data-validate="required"
+                  />
                 </FormField>
                 <FormField label="Permit Expiry Date" required>
-                  <Input name="permitExpiryDate" type="date" data-validate="required" />
+                  <Input
+                    name="permitExpiryDate"
+                    type="date"
+                    data-validate="required"
+                  />
                 </FormField>
               </div>
               <div>
                 <FormField label="N.P. Expiry Date" required>
-                  <Input name="npExpiryDate" type="date" data-validate="required" />
+                  <Input
+                    name="npExpiryDate"
+                    type="date"
+                    data-validate="required"
+                  />
                 </FormField>
                 <FormField label="Quarterly Tax Expiry" required>
-                  <Input name="quarterlyTaxExpiry" type="date" data-validate="required" />
+                  <Input
+                    name="quarterlyTaxExpiry"
+                    type="date"
+                    data-validate="required"
+                  />
                 </FormField>
                 <FormField label="Loan Status" required>
-                  <RadioGroup name="loanStatus" options={[{ value: 'Closed', label: 'Closed' }, { value: 'Open', label: 'Open' }]} required />
+                  <RadioGroup
+                    name="loanStatus"
+                    options={[
+                      { value: "Closed", label: "Closed" },
+                      { value: "Open", label: "Open" },
+                    ]}
+                    required
+                  />
                 </FormField>
               </div>
             </div>
           </div>
         );
 
-      case 'load_availed_details':
+      case "load_availed_details":
         return (
           <div className="p-2">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
-                <FormField label="Loan Provider" required>
-                  <select name="loanProvider" className="form-control border border-gray-300 rounded px-3 py-2" required>
-                    <option value="">Select Loan Provider</option>
-                    <option value="bankA">Bank A</option>
-                    <option value="bankB">Bank B</option>
-                    <option value="financeCompany">Finance Company</option>
-                    <option value="others">Others</option>
-                  </select>
-                </FormField>
+              <FormField label="Loan Provider" required>
+  <SearchableSelect
+    name="loanProvider"
+    placeholder="Select Loan Provider"
+    searchable={true}
+    options={[
+      { value: 'bankA', label: 'Bank A' },
+      { value: 'bankB', label: 'Bank B' },
+      { value: 'financeCompany', label: 'Finance Company' },
+      { value: 'others', label: 'Others' },
+    ]}
+  />
+</FormField>
+
                 <FormField label="Loan Start Date" required>
-                  <Input name="loanStartDate" type="date" data-validate="required" />
+                  <Input
+                    name="loanStartDate"
+                    type="date"
+                    data-validate="required"
+                  />
                 </FormField>
               </div>
               <div>
                 <FormField label="Loan Amount" required>
-                  <Input name="loanAmount" type="number" placeholder="Enter Loan Amount" data-validate="required" min="0" step="0.01" />
+                  <Input
+                    name="loanAmount"
+                    type="text" className="number_with_decimal"
+                    placeholder="Enter Loan Amount"
+                    data-validate="required"
+                    min="0"
+                    step="0.01"
+                  />
                 </FormField>
                 <FormField label="Loan Tenure" required>
-                  <Input name="loanTenure" type="number" placeholder="Enter Loan Tenure (months/years)" data-validate="required" min="0" />
+                  <Input
+                    name="loanTenure"
+                    type="text" className="whole_number"
+                    placeholder="Enter Loan Tenure (months/years)"
+                    data-validate="required"
+                    min="0"
+                  />
                 </FormField>
                 <FormField label="Loan Interest" required>
-                  <Input name="loanInterest" type="number" placeholder="Enter Loan Interest (%)" data-validate="required" min="0" step="0.01" />
+                  <Input
+                    name="loanInterest" className="number_with_decimal"
+                    type="text"
+                    placeholder="Enter Loan Interest (%)"
+                    data-validate="required"
+                    min="0"
+                    step="0.01"
+                  />
                 </FormField>
               </div>
             </div>
           </div>
         );
 
-      case 'vehicle_purchase_details':
+      case "vehicle_purchase_details":
         return (
           <div className="p-2">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <FormField label="Truck Invoice No." required>
-                  <Input name="truckInvoiceNo" placeholder="Enter Truck Invoice Number" data-validate="required" />
+                  <Input
+                    name="truckInvoiceNo" className="alphanumeric all_uppercase"
+                    placeholder="Enter Truck Invoice Number"
+                    data-validate="required"
+                  />
                 </FormField>
                 <FormField label="Truck Invoice Date" required>
-                  <Input name="truckInvoiceDate" type="date" data-validate="required" />
+                  <Input
+                    name="truckInvoiceDate"
+                    type="date"
+                    data-validate="required"
+                  />
                 </FormField>
                 <FormField label="Endorsement Status" required>
-                  <RadioGroup name="endorsementStatus" options={[{ value: 'Endorsed', label: 'Endorsed' }, { value: 'Not Endorsed', label: 'Not Endorsed' }]} required />
+                  <RadioGroup
+                    name="endorsementStatus"
+                    options={[
+                      { value: "Endorsed", label: "Endorsed" },
+                      { value: "Not Endorsed", label: "Not Endorsed" },
+                    ]}
+                    required
+                  />
                 </FormField>
                 <FormField label="Endorsed With">
-                  <Input name="endorsedWith" placeholder="Enter Truck Endorsed With" />
+                  <Input
+                    name="endorsedWith" className="alphanumeric capitalize"
+                    placeholder="Enter Truck Endorsed With"
+                  />
                 </FormField>
               </div>
               <div>
                 <FormField label="Truck Status" required>
-                  <RadioGroup name="truckStatus" options={[{ value: 'Running', label: 'Running' }, { value: 'Sold', label: 'Sold' }]} required />
+                  <RadioGroup
+                    name="truckStatus"
+                    options={[
+                      { value: "Running", label: "Running" },
+                      { value: "Sold", label: "Sold" },
+                    ]}
+                    required
+                  />
                 </FormField>
                 <FormField label="Duty Driver Name" required>
-                  <Input name="dutyDriverName" placeholder="Enter Duty Driver Name" data-validate="required" />
+                  <Input
+                    name="dutyDriverName" className="alphabet_only capitalize"
+                    placeholder="Enter Duty Driver Name"
+                    data-validate="required"
+                  />
                 </FormField>
                 <FormField label="Dealer Name" required>
-                  <Input name="dealerName" placeholder="Enter Dealer Name" data-validate="required" />
+                  <Input
+                    name="dealerName" className="alphabet_only capitalize"
+                    placeholder="Enter Dealer Name"
+                    data-validate="required"
+                  />
                 </FormField>
               </div>
             </div>
@@ -234,68 +550,130 @@ export default function NewVehicle() {
         return (
           <div className="p-2">
             <div className="text-center py-8">
-              <p className="text-gray-500">{tabs.find(tab => tab.id === activeTab)?.label} content will be added here</p>
+              <p className="text-gray-500">
+                {tabs.find((tab) => tab.id === activeTab)?.label} content will
+                be added here
+              </p>
             </div>
           </div>
         );
     }
-  };
+  }; 
 
   return (
     <Layout pageTitle="Vehicle Registration">
       <div className="flex-1">
  
-        <div className="flex-1">
-          <main id="main-content" className="flex-1 overflow-y-auto">
-            <div className="px-4 py-6 overflow-y-auto h-[calc(100vh-103px)]">
-              <form onSubmit={handleSubmit}>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
-                  <div className="space-y-4">
-                    <FormField label="Truck Registration Number" required className="md:items-start">
-                      <Input name="truck-registration" placeholder="Enter registration number" className="capitalize uppercase alphanumeric placeholder:capitalize" data-validate="required" />
-                    </FormField>
-                    <FormField label="Truck Type" required className="md:items-start">
-                      <select name="truck-type" className="form-control border border-gray-300 rounded px-3 py-2" data-validate="required">
-                        <option value="">Select truck type</option>
-                        <option value="pickup">Pickup</option>
-                        <option value="lorry">Lorry</option>
-                        <option value="trailer">Trailer</option>
-                        <option value="mini-truck">Mini Truck</option>
-                        <option value="heavy-truck">Heavy Truck</option>
-                      </select>
-                    </FormField>
-                    <FormField label="Makers Name" required className="md:items-start">
-                      <Input name="maker-name" placeholder="Enter makers name" className="capitalize alphanumeric" data-validate="required" />
-                    </FormField>
-                    <FormField label="Nature of Goods Weight" required className="md:items-start">
-                      <Input name="goods-weight" placeholder="Enter weight" className="capitalize alphanumeric" data-validate="required" />
-                    </FormField>
-                  </div>
+        <main id="main-content" className="flex-1 overflow-y-auto">
+          <div
+            className="px-4 py-6"
+            style={{ height: "calc(100vh - 103px)", overflowY: "auto" }}
+          >
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
+                <div className="space-y-4">
+                  <FormField
+                    label="Truck Registration Number"
+                    required
+                    className="md:items-start"
+                  >
+                    <Input
+                      name="truck-registration"
+                      placeholder="Enter registration number"
+                      className="alphanumeric no_space all_uppercase"
+                      data-validate="required"
+                    />{" "}
+                  </FormField>
+                  <FormField label="Truck Type" required>
+  <SearchableSelect
+    name="truckType"
+    placeholder="Select truck type"
+    searchable={true} 
+    options={[
+      { value: 'pickup', label: 'Pickup' },
+      { value: 'lorry', label: 'Lorry' },
+      { value: 'trailer', label: 'Trailer' },
+      { value: 'mini-truck', label: 'Mini Truck' },
+      { value: 'heavy-truck', label: 'Heavy Truck' },
+      { value: 'tipper', label: 'Tipper' },
+      { value: 'container', label: 'Container Truck' },
+      { value: 'van', label: 'Van' },
+      { value: 'transit-mixer', label: 'Transit Mixer' },
+      { value: 'tanker', label: 'Tanker' },
+      { value: 'lcv', label: 'Light Commercial Vehicle' },
+      { value: 'mcv', label: 'Medium Commercial Vehicle' },
+      { value: 'scv', label: 'Small Commercial Vehicle' }
+    ]}
+  />
+</FormField>
+                  <FormField
+                    label="Makers Name"
+                    required
+                    className="md:items-start"
+                  >
+                    <Input
+                      name="maker-name"
+                      placeholder="Enter makers name"
+                      className="capitalize alphanumeric"
+                      data-validate="required"
+                    />
+                  </FormField>
+                  <FormField
+                    label="Nature of Goods Weight"
+                    required
+                    className="md:items-start"
+                  >
+                    <Input
+                      name="goods-weight"
+                      placeholder="Enter weight"
+                      className="only_number"
+                      data-validate="required"
+                    />
+                  </FormField>
  
                 </div>
 
-                <div className="mx-2 mt-5">
-                  <ul className="flex whitespace-nowrap w-full border-b border-gray-300 mr-3">
-                    {tabs.map((tab) => (
-                      <li key={tab.id} className={`mr-6 pb-2 cursor-pointer hover:text-[#009333] ${activeTab === tab.id ? 'text-[#009333] border-b-2 border-[#009333]' : ''}`} onClick={() => setActiveTab(tab.id)}>
-                        {tab.label}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+ 
+              <div className="mx-2 mt-5">
+                <ul className="flex whitespace-nowrap w-full border-b border-gray-300 mr-3">
+                  {tabs.map((tab) => (
+                    <li
+                      key={tab.id}
+                      className={`mr-6 pb-2 cursor-pointer hover:text-[#009333] ${
+                        activeTab === tab.id
+                          ? "text-[#009333] border-b-2 border-[#009333]"
+                          : ""
+                      }`}
+                      onClick={() => setActiveTab(tab.id)}
+                    >
+                      {tab.label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-                <div className="mt-3">
-                  {renderTabContent()}
-                </div>
-              </form>
-            </div>
-          </main>
+              <div className="mt-3">{renderTabContent()}</div>
+            </form>
+          </div>
+        </main>
 
-          <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-            <button type="submit" onClick={handleSubmit} className="btn-sm btn-primary">Save</button>
-            <button type="button" className="btn-secondary">Cancel</button>
-          </footer>
-        </div>
+        <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
+         <button
+            
+              onClick={handleSuccessToast}
+            className="btn-sm btn-primary"
+          >
+            Save
+          </button>
+          <button className="btn-secondary btn-sm" onClick={handleErrorToast}>
+            Cancel
+          </button> 
+
+ 
+        
+        </footer>
+        <ToastContainer />
+ 
       </div>
     </Layout>
   );

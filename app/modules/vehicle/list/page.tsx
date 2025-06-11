@@ -65,6 +65,7 @@ const VehicleList = () => {
 
   return (
     <Layout pageTitle="Vehicle List">
+ 
       <main className="flex-1">
         <div className="overflow-y-auto h-[calc(100vh-103px)]">
           {/* Tabs */}
@@ -83,6 +84,7 @@ const VehicleList = () => {
                       )}
                     </span>
                   </button>
+ 
                 </li>
               ))}
             </ul>
@@ -295,6 +297,7 @@ const VehicleList = () => {
                 </table>
               </div>
             </div>
+ 
           </div>
         </div>
       </main>
@@ -304,6 +307,7 @@ const VehicleList = () => {
           Showing <span className="text-red-600">20</span> of <span className="text-blue-600">400</span>
         </span>
       </footer>
+ 
     </Layout>
   );
 };

@@ -10,14 +10,16 @@ interface LayoutProps {
 
 export default function Layout({ children, pageTitle }: LayoutProps) {
   return (
-    <div className="flex h-screen overflow-hidden custom-scrollbar">
+    <div className="flex h-screen overflow-hidden ">
       <Sidebar />
       
       <div className="flex-1 flex flex-col">
         <Header pageTitle={pageTitle} />
         
  
+ 
         <main className="overflow-auto custom-scrollbar bg-white ">
+ 
  
           {children}
         </main>

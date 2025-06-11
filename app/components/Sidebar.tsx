@@ -1,5 +1,5 @@
 'use client'
- 
+import Image from 'next/image';
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation';  
 
@@ -56,7 +56,13 @@ export default function Sidebar() {
     return (
       <div className="w-[200px] bg-[#212934] shadow-md relative h-full">
         <div className="px-0 pt-2 pb-0 flex justify-center">
-          <img src="/data/images/logo.png" alt="InfoGreen Logo" className="h-10" />
+        <Image
+        src="/images/logo.png" // Path relative to the public directory
+        alt="InfoGreen Logo"
+        width={100} // Specify the intrinsic width of the image in pixels
+        height={40} // Specify the intrinsic height of the image in pixels
+      />
+
         </div>
 
         <nav className="py-0">

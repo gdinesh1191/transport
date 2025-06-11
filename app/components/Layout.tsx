@@ -12,6 +12,7 @@ interface LayoutProps {
 
 export default function Layout({ children, pageTitle }: LayoutProps) {
   return (
+ 
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <div className="flex h-screen overflow-hidden">
         <Sidebar />
@@ -19,10 +20,11 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
         <div className="flex-1 flex flex-col">
           <Header pageTitle={pageTitle} />
 
-          <main className="overflow-auto custom-scrollbar bg-white">
+          <main className= " custom-scrollbar bg-white">
             {children}
           </main>
         </div>
+ 
       </div>
     </LocalizationProvider>
   );

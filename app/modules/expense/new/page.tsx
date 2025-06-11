@@ -1,12 +1,10 @@
-"use client";
+ "use client";
 
- 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Layout from "../../../components/Layout";
 import { validateForm } from "@/app/utils/formValidations"; // Import the utility
- 
+
 import 'vanillajs-datepicker/css/datepicker.css';
- 
 
 const FormField = ({
   label,
@@ -105,57 +103,33 @@ const Typeahead = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [filteredData, setFilteredData] = useState<any>([]);
+  const [filteredData, setFilteredData] = useState<any[]>([]);
   const [hoveredItem, setHoveredItem] = useState<any>(null);
   const [hoveredPosition, setHoveredPosition] = useState({ x: 0, y: 0 });
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [keyboardSelectedIndex, setKeyboardSelectedIndex] = useState(-1);
   const [navigationMode, setNavigationMode] = useState<'mouse' | 'keyboard'>('mouse');
   
-  const dropdownRef = useRef<any>(null);
-  const inputRef = useRef<any>(null);
-  const hoverTimeoutRef = useRef<any>(null);
-  const itemRefs = useRef<any[]>([]);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
- 
-export default function NewExpese() {
-  const [fileName, setFileName] = useState("No file chosen");
-  const formRef = useRef<HTMLFormElement>(null);  
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formRef.current) {
-      if (validateForm(formRef.current)) {
-         const formData = new FormData(formRef.current);
-         console.log("Form submitted successfully", Object.fromEntries(formData.entries()));
-        setFileName("No file chosen"); 
-      } else {
-       
-      }
-    }
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFileName(e.target.files[0].name);
-    } else {
-      setFileName("No file chosen");
- 
   // Filter data based on search criteria
-  const filterData = (term: any) => {
+  const filterData = (term: string) => {
     if (!term.trim()) return [];
     
-    const searchTerms = term.toLowerCase().split(' ').filter((t: any) => t.length > 0);
+    const searchTerms = term.toLowerCase().split(' ').filter((t: string) => t.length > 0);
     
     return data.filter(item => {
       return searchFields.some(field => {
         const fieldValue = item[field]?.toLowerCase() || '';
         
-        return searchTerms.every((searchTerm: any) => {
+        return searchTerms.every((searchTerm: string) => {
           if (searchTerm.length < minSearchLength) return false;
           
           const words = fieldValue.split(' ');
-          return words.some((word:any) => word.startsWith(searchTerm));
+          return words.some((word: string) => word.startsWith(searchTerm));
         });
       });
     });
@@ -170,7 +144,6 @@ export default function NewExpese() {
   const getCurrentHighlightedItem = () => {
     if (navigationMode === 'keyboard' && keyboardSelectedIndex >= 0) {
       return filteredData[keyboardSelectedIndex];
- 
     }
     return hoveredItem;
   };
@@ -187,7 +160,7 @@ export default function NewExpese() {
   };
 
   // Handle input change
-  const handleInputChange = (e: any) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
     
@@ -212,7 +185,7 @@ export default function NewExpese() {
   };
 
   // Handle keyboard navigation
-  const handleKeyDown = (e: any) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!isDropdownOpen || filteredData.length === 0) return;
 
     switch (e.key) {
@@ -226,7 +199,7 @@ export default function NewExpese() {
         
         // Scroll into view
         if (itemRefs.current[nextIndex]) {
-          itemRefs.current[nextIndex].scrollIntoView({ block: 'nearest' });
+          itemRefs.current[nextIndex]?.scrollIntoView({ block: 'nearest' });
         }
         break;
         
@@ -240,7 +213,7 @@ export default function NewExpese() {
         
         // Scroll into view
         if (itemRefs.current[prevIndex]) {
-          itemRefs.current[prevIndex].scrollIntoView({ block: 'nearest' });
+          itemRefs.current[prevIndex]?.scrollIntoView({ block: 'nearest' });
         }
         break;
         
@@ -284,7 +257,7 @@ export default function NewExpese() {
   };
 
   // Handle mouse enter on item
-  const handleMouseEnter = (item: any, index: number, event: any) => {
+  const handleMouseEnter = (item: any, index: number, event: React.MouseEvent) => {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
@@ -320,8 +293,8 @@ export default function NewExpese() {
 
   // Handle click outside to close dropdown
   useEffect(() => {
-    const handleClickOutside = (event: any) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
         setHoveredItem(null);
         setKeyboardSelectedIndex(-1);
@@ -337,7 +310,7 @@ export default function NewExpese() {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [searchTerm, selectedItem]);
+  }, [searchTerm, selectedItem, isCurrentInputValid, navigationMode]);
 
   // Reset item refs when filtered data changes
   useEffect(() => {
@@ -354,98 +327,6 @@ export default function NewExpese() {
   }, [isDropdownOpen]);
 
   return (
- 
-    <Layout pageTitle="Expense New">
-      <div className="flex-1">
-        <main id="main-content" className="flex-1 overflow-y-auto">
-          <div className="px-4 py-6 h-[calc(100vh-103px)] overflow-y-auto">
-            <form ref={formRef} onSubmit={handleSubmit}>
-              {/* Basic Vehicle Information */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
-                <div className="space-y-4">
-                  <FormField label="Date" required>
-                    <Input
-                      name="date"
-                      type="date"
-                      placeholder="Choose your date"
-                      data-validate="required"
-                    />
-                  </FormField>
-
-                  <FormField label="Category" required>
-                    <select
-                      name="category"
-                      className="form-control px-3 py-2"
-                      data-validate="required"
-                    >
-                      <option value="">Select Category</option>
-                      <option value="fuelCharges">Fuel Charges</option>
-                      <option value="tollCharges">Toll Charges</option>
-                      <option value="driverAllowance">Driver Allowance</option>
-                      <option value="service">Vehicle Service on Trip</option>
-                    </select>
-                  </FormField>
-
-                  <FormField label="Description" className="md:items-start">
-                    <textarea
-                      name="description"
-                      id="description"
-                      placeholder="Enter description"
-                      data-validate="required,minlength:10,maxlength:200" // Added min/max length
-                      className="form-control capitalize h-[80px]"
-                    ></textarea>
-                  </FormField>
-
-                  <FormField label="Amount" required>
-                    <Input
-                      name="amount"
-                      placeholder="Enter amount"
-                      className="form-control numbers-decimal"
-                      data-validate="required"
-                      type="text" // Changed to type number for amount
-                      step="0.01" // Allow decimal values
-                    />
-                  </FormField>
-
-                  <FormField label="Payment Method" required>
-                    <RadioGroup
-                      name="paymentMethod"
-                      options={[
-                        { value: "Cash", label: "Cash" },
-                        { value: "UPI", label: "UPI" },
-                        { value: "Net Banking", label: "Net Banking" },
-                      ]}
-                      required
-                    />
-                  </FormField>
-
-                  <FormField label="Attachments" required>
-                    <div className="w-full flex-grow flex flex-col">
-                      <div className="flex items-center justify-start gap-3">
-                        <div className="border border-gray-200 rounded-sm px-3 py-1 cursor-pointer">
-                          <label
-                            htmlFor="attachmentInput"
-                            className="flex items-center gap-1 text-[#009333] text-sm cursor-pointer"
-                          >
-                            <i className="ri-upload-2-line text-md"></i>Upload
-                            File
-                          </label>
-                        </div>
-                        <span id="fileName" className="text-gray-600 text-sm truncate">
-                          {fileName}
-                        </span>
-                      </div>
-                      <input
-                        type="file"
-                        id="attachmentInput"
-                        name="attachment"
-                        className="hidden"
-                        data-validate="required"
-                        onChange={handleFileUpload}
-                      />
-                    </div>
-                  </FormField>
- 
     <div className="relative w-full" ref={dropdownRef}>
       {/* Input with Typeahead */}
       <div className="relative">
@@ -494,7 +375,6 @@ export default function NewExpese() {
                   onMouseLeave={handleMouseLeave}
                 >
                   {item[displayField]}
- 
                 </div>
               ))
             ) : (
@@ -516,18 +396,6 @@ export default function NewExpese() {
         </div>
       )}
 
- 
-        <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-          <button type="submit" onClick={handleSubmit} className="btn-sm btn-primary">
-            Save
-          </button>
-          <button type="button" className="btn-sm btn-secondary">
-            Cancel
-          </button>
-        </footer>
-      </div>
-    </Layout>
- 
       {/* Description Card */}
       {hoveredItem && hoveredItem.description && isDropdownOpen && (
         <div
@@ -551,7 +419,6 @@ export default function NewExpese() {
         </div>
       )}
     </div>
- 
   );
 };
 
@@ -567,21 +434,7 @@ const DatepickerField = ({
   className?: string;
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!inputRef.current) return;
-
-    // ⛔ do NOT import at top-level
-    import('vanillajs-datepicker').then(({ Datepicker }) => {
-      const dp = new Datepicker(inputRef.current!, {
-        autohide: true,
-        format: 'dd/mm/yyyy',
-      });
-
-      return () => dp.destroy();
-    });
-  }, []);
-
+ 
   return (
     <input
       ref={inputRef}
@@ -594,120 +447,154 @@ const DatepickerField = ({
   );
 };
 
+const NewExpense = () => {
+  const [fileName, setFileName] = useState('No file chosen');
+  const formRef = useRef<HTMLFormElement>(null);
 
-const NewExpese=()=> {
-    const [fileName, setFileName] = useState('No file chosen');
+  // Sample name data - replace with your actual data
+  const nameData = [
+    { id: 1, name: "Aaaaaaaaaaaaaaaa", description: "This is a detailed description for Aaaaaaaaaaaaaaaa item with more information about its features and usage." },
+    { id: 2, name: "Ad Agency Solutions", description: "Professional advertising and marketing solutions for businesses of all sizes." },
+    { id: 3, name: "Anil Alta Technologies", description: "Advanced technology solutions and IT services provider." },
+    { id: 4, name: "Anil Maggie Foods", description: "Quality food products and catering services for various occasions." },
+    { id: 5, name: "Anil Kumar Enterprises", description: "Multi-business enterprise offering various commercial services." },
+    { id: 6, name: "Arun Suppliers", description: "Reliable supplier of industrial and commercial goods and materials." },
+    { id: 7, name: "Asdfasf Industries", description: "Manufacturing and industrial solutions provider with quality products." },
+    { id: 8, name: "Alpha Beta Corp", description: "Corporate solutions and business consulting services." },
+    { id: 9, name: "Amazing Products Ltd", description: "Innovative product development and distribution company." },
+    { id: 10, name: "Advance Systems", description: "Advanced system integration and technical support services." }
+  ];
 
-    // Sample name data - replace with your actual data
-    const nameData = [
-      { id: 1, name: "Aaaaaaaaaaaaaaaa", description: "This is a detailed description for Aaaaaaaaaaaaaaaa item with more information about its features and usage." },
-      { id: 2, name: "Ad Agency Solutions", description: "Professional advertising and marketing solutions for businesses of all sizes." },
-      { id: 3, name: "Anil Alta Technologies", description: "Advanced technology solutions and IT services provider." },
-      { id: 4, name: "Anil Maggie Foods", description: "Quality food products and catering services for various occasions." },
-      { id: 5, name: "Anil Kumar Enterprises", description: "Multi-business enterprise offering various commercial services." },
-      { id: 6, name: "Arun Suppliers", description: "Reliable supplier of industrial and commercial goods and materials." },
-      { id: 7, name: "Asdfasf Industries", description: "Manufacturing and industrial solutions provider with quality products." },
-      { id: 8, name: "Alpha Beta Corp", description: "Corporate solutions and business consulting services." },
-      { id: 9, name: "Amazing Products Ltd", description: "Innovative product development and distribution company." },
-      { id: 10, name: "Advance Systems", description: "Advanced system integration and technical support services." }
-    ];
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formRef.current) {
+      if (validateForm(formRef.current)) {
+        const formData = new FormData(formRef.current);
+        console.log("Form submitted successfully", Object.fromEntries(formData.entries()));
+        setFileName("No file chosen"); 
+      }
+    }
+  };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        alert("Form valid, proceed to save!");
-    };
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setFileName(e.target.files[0].name);
+    } else {
+      setFileName('No file chosen');
+    }
+  };
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files.length > 0) {
-            setFileName(e.target.files[0].name);
-        } else {
-            setFileName('No file chosen');
-        }
-    };
+  const handleNameSelect = (item: any) => {
+    console.log("Selected name:", item);
+  };
 
-    const handleNameSelect = (item: any) => {
-        console.log("Selected name:", item);
-    };
+  const handleAddNewName = () => {
+    console.log("Add new name clicked");
+    // Handle add new logic here
+  };
 
-    const handleAddNewName = () => {
-        console.log("Add new name clicked");
-        // Handle add new logic here
-    };
+  return (
+    <Layout pageTitle="Expense New">
+      <div className="flex-1">
+        <main id="main-content" className="flex-1 overflow-y-auto">
+          <div className="px-4 py-6 h-[calc(100vh-103px)] overflow-y-auto">
+            <form ref={formRef} onSubmit={handleSubmit} autoComplete="off">
+              {/* Basic Vehicle Information */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
+                <div className="space-y-4">
+                  <FormField label="Date" required>
+                    <DatepickerField name="date" required />
+                  </FormField>
 
-    return (
-        <Layout pageTitle="Expense New">
-            <div className="flex-1">
-                <main id="main-content" className="flex-1 overflow-y-auto">
-                    <div className="px-4 py-6 h-[calc(100vh-103px)] overflow-y-auto" >
-                        <form onSubmit={handleSubmit} autoComplete="off" >
-                            {/* Basic Vehicle Information */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
-                                <div className="space-y-4">
-                                    <FormField label="Date" required >
-                                        <DatepickerField name="date" required />
-                                    </FormField>
+                  <FormField label="Category" required>
+                    <select name="category" className="form-control px-3 py-2" data-validate="required">
+                      <option value="">Select Category</option>
+                      <option value="fuelCharges">Fuel Charges</option>
+                      <option value="tollCharges">Toll Charges</option>
+                      <option value="driverAllowance">Driver Allowance</option>
+                      <option value="service">Vehicle Service on Trip</option>
+                    </select>
+                  </FormField>
 
-                                    <FormField label="Category" required>
-                                        <select name="category" className="form-control px-3 py-2" data-validate="required">
-                                            <option value="">Select Category</option>
-                                            <option value="fuelCharges">Fuel Charges</option>
-                                            <option value="tollCharges">Toll Charges</option>
-                                            <option value="driverAllowance">Driver Allowance</option>
-                                            <option value="service">Vehicle Service on Trip</option>
-                                        </select>
-                                    </FormField>
+                  <FormField label="Description" className="md:items-start">
+                    <textarea 
+                      name="description" 
+                      id="description" 
+                      placeholder="Enter description" 
+                      data-validate="required" 
+                      className="form-control capitalize h-[80px]"
+                    ></textarea>
+                  </FormField>
 
-                                    <FormField label="Description" className="md:items-start" >
-                                        <textarea name="description" id="description"  placeholder="Enter description"  data-validate="required" className="form-control  capitalize h-[80px]"></textarea>
-                                    </FormField>
+                  <FormField label="Amount" required>
+                    <Input 
+                      name="amount" 
+                      placeholder="Enter amount" 
+                      className="form-control numbers-decimal" 
+                      data-validate="required" 
+                    />
+                  </FormField>
 
-                                    <FormField label="Amount" required >
-                                        <Input name="amount" placeholder="Enter amount" className="form-control   numbers-decimal" data-validate="required" />
-                                    </FormField>
+                  <FormField label="Name" required>
+                    <Typeahead
+                      name="name"
+                      placeholder="Enter name"
+                      data={nameData}
+                      required={true}
+                      onSelect={handleNameSelect}
+                      onAddNew={handleAddNewName}
+                      searchFields={['name']}
+                      displayField="name"
+                      minSearchLength={1}
+                    />
+                  </FormField>
 
-                                    <FormField label="Name" required >
-                                        <Typeahead
-                                            name="name"
-                                            placeholder="Enter name"
-                                            data={nameData}
-                                            required={true}
-                                            onSelect={handleNameSelect}
-                                            onAddNew={handleAddNewName}
-                                            searchFields={['name']}
-                                            displayField="name"
-                                            minSearchLength={1}
-                                        />
-                                    </FormField>
+                  <FormField label="Payment Method" required>
+                    <RadioGroup 
+                      name="paymentMethod" 
+                      options={[
+                        { value: "Cash", label: "Cash" }, 
+                        { value: "UPI", label: "UPI" }, 
+                        { value: "Net Banking", label: "Net Banking" }
+                      ]} 
+                      required 
+                    />
+                  </FormField>
 
-                                    <FormField label="Payment Method" required>
-                                        <RadioGroup  name="paymentMethod" options={[{ value: "Cash", label: "Cash" }, { value: "UPI", label: "UPI" }, { value: "Net Banking", label: "Net Banking" },]} required />
-                                    </FormField>
-
-                                    <FormField label="Attachments" required>
-                                        <div className="w-full flex-grow flex flex-col">
-                                            <div className="flex items-center justify-start gap-3">
-                                                <div className="border border-gray-200 rounded-sm px-3 py-1 cursor-pointer">
-                                                    <label htmlFor="attachmentInput" className="flex items-center  gap-1 text-[#009333] text-sm cursor-pointer">
-                                                        <i className="ri-upload-2-line text-md"></i>Upload File
-                                                    </label>
-                                                </div>
-                                                <span id="fileName" className="text-gray-600 text-sm truncate">{fileName}</span>
-                                            </div>
-                                            <input type="file" id="attachmentInput" name="attachment" className="hidden" data-validate="required" onChange={handleFileUpload} required/>
-                                        </div>
-                                    </FormField>
-                                </div>
-                            </div>
-                        </form>
+                  <FormField label="Attachments" required>
+                    <div className="w-full flex-grow flex flex-col">
+                      <div className="flex items-center justify-start gap-3">
+                        <div className="border border-gray-200 rounded-sm px-3 py-1 cursor-pointer">
+                          <label htmlFor="attachmentInput" className="flex items-center gap-1 text-[#009333] text-sm cursor-pointer">
+                            <i className="ri-upload-2-line text-md"></i>Upload File
+                          </label>
+                        </div>
+                        <span id="fileName" className="text-gray-600 text-sm truncate">{fileName}</span>
+                      </div>
+                      <input 
+                        type="file" 
+                        id="attachmentInput" 
+                        name="attachment" 
+                        className="hidden" 
+                        data-validate="required" 
+                        onChange={handleFileUpload} 
+                        required
+                      />
                     </div>
-                </main>
+                  </FormField>
+                </div>
+              </div>
+            </form>
+          </div>
+        </main>
 
-                <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-                    <button type="submit" onClick={handleSubmit} className="btn-sm btn-primary" >Save</button>
-                    <button type="button" className="btn-sm btn-secondary">Cancel</button>
-                </footer>
-            </div>
-        </Layout>
-    );
-}
-export default NewExpese;
+        <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
+          <button type="submit" onClick={handleSubmit} className="btn-sm btn-primary">Save</button>
+          <button type="button" className="btn-sm btn-secondary">Cancel</button>
+        </footer>
+      </div>
+    </Layout>
+  );
+};
+
+export default NewExpense;

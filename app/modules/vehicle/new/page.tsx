@@ -1,11 +1,10 @@
 "use client";
 
- 
 import { useEffect, useRef, useState } from "react";
 import Layout from "../../../components/Layout";
 import useInputValidation from "@/app/utils/inputValidations";
+import ToastContainer, { showToast } from "@/app/utils/toaster";
 
-import ToastContainer , { showToast } from "@/app/utils/toaster";
 interface Option {
   value: string;
   label: string;
@@ -71,44 +70,46 @@ const SearchableSelect = ({
       </div>
 
       {isOpen && (
-  <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow flex flex-col">
-    {searchable && (
-      <div className="m-2"><input
-        type="text"
-        placeholder="Search..."
-        className="form-control w-9.5/10"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        autoFocus
-      />
-      </div>
-    )}
+        <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow flex flex-col">
+          {searchable && (
+            <div className="m-2">
+              <input
+                type="text"
+                placeholder="Search..."
+                className="form-control w-9.5/10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                autoFocus
+              />
+            </div>
+          )}
 
-    <div className="overflow-y-auto max-h-48 m-1">
-      <ul>
-        {filteredOptions.map((option) => (
-          <li
-            key={option.value} 
-            className="px-2 py-1 hover:bg-gray-100 cursor-pointer text-[14px]"
-            onClick={() => handleSelect(option)}
-          >
-            {option.label}
-          </li>
-        ))}
-        {filteredOptions.length === 0 && (
-          <li className="p-2 text-gray-400">No results</li>
-        )}
-      </ul>
-    </div>
+          <div className="overflow-y-auto max-h-48 m-1">
+            <ul>
+              {filteredOptions.map((option) => (
+                <li
+                  key={option.value} 
+                  className="px-2 py-1 hover:bg-gray-100 cursor-pointer text-[14px]"
+                  onClick={() => handleSelect(option)}
+                >
+                  {option.label}
+                </li>
+              ))}
+              {filteredOptions.length === 0 && (
+                <li className="p-2 text-gray-400">No results</li>
+              )}
+            </ul>
+          </div>
 
-    {/* Footer */}
-    <div className="flex justify-between items-center p-2 border-t border-gray-200 bg-gray-50">
-      <span className="text-sm  cursor-pointer text-[#009333]"><i className="ri-add-circle-fill " ></i>  Add New</span>
-      <i className="ri-refresh-line text-xl text-blue-700 cursor-pointer hover:text-gray-700"></i>
-    </div>
-  </div>
-)}
-
+          {/* Footer */}
+          <div className="flex justify-between items-center p-2 border-t border-gray-200 bg-gray-50">
+            <span className="text-sm cursor-pointer text-[#009333]">
+              <i className="ri-add-circle-fill"></i> Add New
+            </span>
+            <i className="ri-refresh-line text-xl text-blue-700 cursor-pointer hover:text-gray-700"></i>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -123,7 +124,6 @@ const FormField = ({
   required?: boolean;
   children: React.ReactNode;
   className?: string;
- 
 }) => (
   <div
     className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}
@@ -136,7 +136,6 @@ const FormField = ({
   </div>
 );
 
- 
 const Input = ({
   name,
   placeholder,
@@ -149,7 +148,6 @@ const Input = ({
   type?: string;
   className?: string;
   [key: string]: any;
- 
 }) => (
   <input
     type={type}
@@ -159,6 +157,7 @@ const Input = ({
     {...props}
   />
 );
+
 const RadioGroup = ({
   name,
   options,
@@ -187,11 +186,10 @@ const RadioGroup = ({
 export default function NewVehicle() {
   const [activeTab, setActiveTab] = useState("owner_information");
   useInputValidation();
+  
   const handleSuccessToast = () => {
     showToast.success('Vehicle saved successfully!');
   };
-
- 
 
   const handleErrorToast = () => {
     showToast.error('Failed to save vehicle information.');
@@ -273,21 +271,22 @@ export default function NewVehicle() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <FormField label="Class of Truck" required>
-                <SearchableSelect
-    name="truckClass"
-    placeholder="Select Truck Class"
-    searchable={true}
-    required={true}
-    options={[
-      { value: 'Light', label: 'Light' },
-      { value: 'Medium', label: 'Medium' },
-      { value: 'Heavy', label: 'Heavy' }
-    ]}
-  />
+                  <SearchableSelect
+                    name="truckClass"
+                    placeholder="Select Truck Class"
+                    searchable={true}
+                    required={true}
+                    options={[
+                      { value: 'Light', label: 'Light' },
+                      { value: 'Medium', label: 'Medium' },
+                      { value: 'Heavy', label: 'Heavy' }
+                    ]}
+                  />
                 </FormField>
                 <FormField label="Model Number" required>
                   <Input
-                    name="modelNumber" className="alphanumeric all_uppercase"
+                    name="modelNumber" 
+                    className="alphanumeric all_uppercase"
                     placeholder="Enter Model Number"
                     data-validate="required"
                   />
@@ -311,7 +310,8 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Chassis Number" required>
                   <Input
-                    name="chassisNumber" className="alphanumeric all_uppercase"
+                    name="chassisNumber" 
+                    className="alphanumeric all_uppercase"
                     placeholder="Enter Chassis Number"
                     data-validate="required"
                   />
@@ -320,7 +320,8 @@ export default function NewVehicle() {
               <div>
                 <FormField label="Engine Number" required>
                   <Input
-                    name="engineNumber" className="alphanumeric all_uppercase"
+                    name="engineNumber" 
+                    className="alphanumeric all_uppercase"
                     placeholder="Enter Engine Number"
                     data-validate="required"
                   />
@@ -328,7 +329,8 @@ export default function NewVehicle() {
                 
                 <FormField label="Vehicle Weight (in Kgs)" required>
                   <Input
-                    name="vehicleWeight" className="number_with_decimal"
+                    name="vehicleWeight" 
+                    className="number_with_decimal"
                     type="text"
                     placeholder="Enter Weight"
                     data-validate="required"
@@ -336,7 +338,8 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Unladen Weight (in Kgs)" required>
                   <Input
-                    name="unladenWeight" className="number_with_decimal"
+                    name="unladenWeight" 
+                    className="number_with_decimal"
                     type="text"
                     placeholder="Enter Unladen Weight"
                     data-validate="required"
@@ -360,18 +363,18 @@ export default function NewVehicle() {
                   />
                 </FormField>
                 <FormField label="Insurance Company" required>
-                <SearchableSelect
-    name="insuranceCompany"
-    placeholder="Select Insurance Company"
-    searchable={true}
-    required={true}
-    options={[
-      { value: 'icici', label: 'ICICI Lombard' },
-      { value: 'hdfc', label: 'HDFC Ergo' },
-      { value: 'newindia', label: 'New India Assurance' },
-      { value: 'others', label: 'Others' }
-    ]}
-  />
+                  <SearchableSelect
+                    name="insuranceCompany"
+                    placeholder="Select Insurance Company"
+                    searchable={true}
+                    required={true}
+                    options={[
+                      { value: 'icici', label: 'ICICI Lombard' },
+                      { value: 'hdfc', label: 'HDFC Ergo' },
+                      { value: 'newindia', label: 'New India Assurance' },
+                      { value: 'others', label: 'Others' }
+                    ]}
+                  />
                 </FormField>
                 <FormField label="Insurance Expiry" required>
                   <Input
@@ -423,19 +426,19 @@ export default function NewVehicle() {
           <div className="p-2">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
-              <FormField label="Loan Provider" required>
-  <SearchableSelect
-    name="loanProvider"
-    placeholder="Select Loan Provider"
-    searchable={true}
-    options={[
-      { value: 'bankA', label: 'Bank A' },
-      { value: 'bankB', label: 'Bank B' },
-      { value: 'financeCompany', label: 'Finance Company' },
-      { value: 'others', label: 'Others' },
-    ]}
-  />
-</FormField>
+                <FormField label="Loan Provider" required>
+                  <SearchableSelect
+                    name="loanProvider"
+                    placeholder="Select Loan Provider"
+                    searchable={true}
+                    options={[
+                      { value: 'bankA', label: 'Bank A' },
+                      { value: 'bankB', label: 'Bank B' },
+                      { value: 'financeCompany', label: 'Finance Company' },
+                      { value: 'others', label: 'Others' },
+                    ]}
+                  />
+                </FormField>
 
                 <FormField label="Loan Start Date" required>
                   <Input
@@ -449,7 +452,8 @@ export default function NewVehicle() {
                 <FormField label="Loan Amount" required>
                   <Input
                     name="loanAmount"
-                    type="text" className="number_with_decimal"
+                    type="text" 
+                    className="number_with_decimal"
                     placeholder="Enter Loan Amount"
                     data-validate="required"
                     min="0"
@@ -459,7 +463,8 @@ export default function NewVehicle() {
                 <FormField label="Loan Tenure" required>
                   <Input
                     name="loanTenure"
-                    type="text" className="whole_number"
+                    type="text" 
+                    className="whole_number"
                     placeholder="Enter Loan Tenure (months/years)"
                     data-validate="required"
                     min="0"
@@ -467,7 +472,8 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Loan Interest" required>
                   <Input
-                    name="loanInterest" className="number_with_decimal"
+                    name="loanInterest" 
+                    className="number_with_decimal"
                     type="text"
                     placeholder="Enter Loan Interest (%)"
                     data-validate="required"
@@ -487,7 +493,8 @@ export default function NewVehicle() {
               <div>
                 <FormField label="Truck Invoice No." required>
                   <Input
-                    name="truckInvoiceNo" className="alphanumeric all_uppercase"
+                    name="truckInvoiceNo" 
+                    className="alphanumeric all_uppercase"
                     placeholder="Enter Truck Invoice Number"
                     data-validate="required"
                   />
@@ -511,7 +518,8 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Endorsed With">
                   <Input
-                    name="endorsedWith" className="alphanumeric capitalize"
+                    name="endorsedWith" 
+                    className="alphanumeric capitalize"
                     placeholder="Enter Truck Endorsed With"
                   />
                 </FormField>
@@ -529,14 +537,16 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Duty Driver Name" required>
                   <Input
-                    name="dutyDriverName" className="alphabet_only capitalize"
+                    name="dutyDriverName" 
+                    className="alphabet_only capitalize"
                     placeholder="Enter Duty Driver Name"
                     data-validate="required"
                   />
                 </FormField>
                 <FormField label="Dealer Name" required>
                   <Input
-                    name="dealerName" className="alphabet_only capitalize"
+                    name="dealerName" 
+                    className="alphabet_only capitalize"
                     placeholder="Enter Dealer Name"
                     data-validate="required"
                   />
@@ -563,7 +573,6 @@ export default function NewVehicle() {
   return (
     <Layout pageTitle="Vehicle Registration">
       <div className="flex-1">
- 
         <main id="main-content" className="flex-1 overflow-y-auto">
           <div
             className="px-4 py-6"
@@ -582,30 +591,30 @@ export default function NewVehicle() {
                       placeholder="Enter registration number"
                       className="alphanumeric no_space all_uppercase"
                       data-validate="required"
-                    />{" "}
+                    />
                   </FormField>
                   <FormField label="Truck Type" required>
-  <SearchableSelect
-    name="truckType"
-    placeholder="Select truck type"
-    searchable={true} 
-    options={[
-      { value: 'pickup', label: 'Pickup' },
-      { value: 'lorry', label: 'Lorry' },
-      { value: 'trailer', label: 'Trailer' },
-      { value: 'mini-truck', label: 'Mini Truck' },
-      { value: 'heavy-truck', label: 'Heavy Truck' },
-      { value: 'tipper', label: 'Tipper' },
-      { value: 'container', label: 'Container Truck' },
-      { value: 'van', label: 'Van' },
-      { value: 'transit-mixer', label: 'Transit Mixer' },
-      { value: 'tanker', label: 'Tanker' },
-      { value: 'lcv', label: 'Light Commercial Vehicle' },
-      { value: 'mcv', label: 'Medium Commercial Vehicle' },
-      { value: 'scv', label: 'Small Commercial Vehicle' }
-    ]}
-  />
-</FormField>
+                    <SearchableSelect
+                      name="truckType"
+                      placeholder="Select truck type"
+                      searchable={true} 
+                      options={[
+                        { value: 'pickup', label: 'Pickup' },
+                        { value: 'lorry', label: 'Lorry' },
+                        { value: 'trailer', label: 'Trailer' },
+                        { value: 'mini-truck', label: 'Mini Truck' },
+                        { value: 'heavy-truck', label: 'Heavy Truck' },
+                        { value: 'tipper', label: 'Tipper' },
+                        { value: 'container', label: 'Container Truck' },
+                        { value: 'van', label: 'Van' },
+                        { value: 'transit-mixer', label: 'Transit Mixer' },
+                        { value: 'tanker', label: 'Tanker' },
+                        { value: 'lcv', label: 'Light Commercial Vehicle' },
+                        { value: 'mcv', label: 'Medium Commercial Vehicle' },
+                        { value: 'scv', label: 'Small Commercial Vehicle' }
+                      ]}
+                    />
+                  </FormField>
                   <FormField
                     label="Makers Name"
                     required
@@ -630,10 +639,9 @@ export default function NewVehicle() {
                       data-validate="required"
                     />
                   </FormField>
- 
                 </div>
+              </div>
 
- 
               <div className="mx-2 mt-5">
                 <ul className="flex whitespace-nowrap w-full border-b border-gray-300 mr-3">
                   {tabs.map((tab) => (
@@ -658,9 +666,8 @@ export default function NewVehicle() {
         </main>
 
         <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-         <button
-            
-              onClick={handleSuccessToast}
+          <button
+            onClick={handleSuccessToast}
             className="btn-sm btn-primary"
           >
             Save
@@ -668,12 +675,8 @@ export default function NewVehicle() {
           <button className="btn-secondary btn-sm" onClick={handleErrorToast}>
             Cancel
           </button> 
-
- 
-        
         </footer>
         <ToastContainer />
- 
       </div>
     </Layout>
   );

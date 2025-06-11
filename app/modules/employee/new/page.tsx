@@ -54,26 +54,14 @@ const FormField: React.FC<FormFieldProps> = ({ label, required = false, children
 );
 
 const Input: React.FC<InputProps> = ({ name, placeholder, type = "text", className = "", ...props }) => (
-  <input
-    type={type}
-    name={name}
-    placeholder={placeholder}
-    className={`form-control ${className}`}
-    {...props}
-  />
+  <input type={type} name={name} placeholder={placeholder} className={`form-control ${className}`} {...props} />
 );
 
 const RadioGroup: React.FC<RadioGroupProps> = ({ name, options, required = false }) => (
   <div className="space-x-4">
     {options.map((option, index) => (
       <label key={option.value} className="form-label">
-        <input
-          type="radio"
-          name={name}
-          value={option.value}
-          className="form-radio"
-          {...(required && index === 0 ? { "data-validate": "required" } : {})}
-        />
+        <input type="radio" name={name} value={option.value} className="form-radio" {...(required && index === 0 ? { "data-validate": "required" } : {})} />
         <span className="ml-2">{option.label}</span>
       </label>
     ))}
@@ -86,23 +74,15 @@ export default function NewEmployee() {
   const [employeeType, setEmployeeType] = useState<string>("");
 
   const [bankForm, setBankForm] = useState<Omit<BankDetails, "id">>({
-    bankName: "",
-    accountNumber: "",
-    accountName: "",
-    ifscCode: "",
-    branchName: "",
+    bankName: "", accountNumber: "", accountName: "", ifscCode: "", branchName: "",
   });
 
   const [proofDetailsForm, setProofDetailsForm] = useState({
-    aadhaarNumber: "",
-    panNumber: "",
+    aadhaarNumber: "", panNumber: "",
   });
 
   const [driverDetailsForm, setDriverDetailsForm] = useState({
-    licenseNumber: "",
-    licenseExpiry: "",
-    truckNumber: "",
-    licenseIssuedBy: "",
+    licenseNumber: "", licenseExpiry: "", truckNumber: "", licenseIssuedBy: "",
   });
 
   const handleProofChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -133,12 +113,7 @@ export default function NewEmployee() {
 
     if (bankName && accountNumber && accountName && ifscCode && branchName) {
       const newBank: BankDetails = {
-        id: bankIdCounter,
-        bankName,
-        accountNumber,
-        accountName,
-        ifscCode,
-        branchName,
+        id: bankIdCounter, bankName, accountNumber, accountName, ifscCode, branchName,
       };
 
       setBankList((prev) => [...prev, newBank]);
@@ -177,7 +152,7 @@ export default function NewEmployee() {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-  
+    // Submission logic here
   };
 
   const renderTabContent = () => {
@@ -187,27 +162,13 @@ export default function NewEmployee() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
             <div className="lg:border-r lg:border-gray-300 lg:pr-4">
               <div>
-                <FormField label="Account Name" required>
-                  <Input type="text" name="accountName" value={bankForm.accountName} onChange={handleBankChange} placeholder="Enter Account Name" className="capitalize " data-validate="required" />
-                </FormField>
-                <FormField label="Account Number" required>
-                  <Input name="accountNumber" type="text" value={bankForm.accountNumber} onChange={handleBankChange} className="only_number" placeholder="Enter Account Number" data-validate="required" />
-                </FormField>
-                <FormField label="IFSC Code" required>
-                  <Input name="ifscCode" type="text" value={bankForm.ifscCode} onChange={handleBankChange} placeholder="Enter IFSC Code" data-validate="required" className="alphanumeric" />
-                </FormField>
-
-                <FormField label="Bank Name" required>
-                  <Input name="bankName" type="text" value={bankForm.bankName} onChange={handleBankChange} placeholder="Enter Bank Name" className="capitalize" data-validate="required" />
-                </FormField>
-                <FormField label="Branch Name" required>
-                  <Input name="branchName" type="text" value={bankForm.branchName} onChange={handleBankChange} placeholder="Enter Branch Name" className="capitalize" data-validate="required" />
-                </FormField>
+                <FormField label="Account Name" required><Input type="text" name="accountName" value={bankForm.accountName} onChange={handleBankChange} placeholder="Enter Account Name" className="capitalize " data-validate="required" /></FormField>
+                <FormField label="Account Number" required><Input name="accountNumber" type="text" value={bankForm.accountNumber} onChange={handleBankChange} className="only_number" placeholder="Enter Account Number" data-validate="required" /></FormField>
+                <FormField label="IFSC Code" required><Input name="ifscCode" type="text" value={bankForm.ifscCode} onChange={handleBankChange} placeholder="Enter IFSC Code" data-validate="required" className="alphanumeric" /></FormField>
+                <FormField label="Bank Name" required><Input name="bankName" type="text" value={bankForm.bankName} onChange={handleBankChange} placeholder="Enter Bank Name" className="capitalize" data-validate="required" /></FormField>
+                <FormField label="Branch Name" required><Input name="branchName" type="text" value={bankForm.branchName} onChange={handleBankChange} placeholder="Enter Branch Name" className="capitalize" data-validate="required" /></FormField>
                 {bankError && (<div className="text-red-500 text-sm mt-2 text-end">{bankError}</div>)}
-
-                <FormField label="">
-                  <input type="button" value="Add Bank" onClick={handleAddBank} className="mt-2 w-full px-4 py-2 rounded bg-[#009333] text-white text-sm font-medium hover:bg-[#007a2a]" />
-                </FormField>
+                <FormField label=""><input type="button" value="Add Bank" onClick={handleAddBank} className="mt-2 w-full px-4 py-2 rounded bg-[#009333] text-white text-sm font-medium hover:bg-[#007a2a]" /></FormField>
               </div>
             </div>
 
@@ -250,20 +211,10 @@ export default function NewEmployee() {
         return (
           <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
             <div>
-              <FormField label="License Number" required>
-                <Input name="licenseNumber" className="form-control" value={driverDetailsForm.licenseNumber} onChange={handleDriverChange} placeholder="Enter License Number" data-validate="required" />
-              </FormField>
-
-              <FormField label="License Expiry Date" required>
-                <Input type="date"className="form-control" name="licenseExpiry"  value={driverDetailsForm.licenseExpiry} onChange={handleDriverChange} data-validate="required" />
-              </FormField>
-
-              <FormField label="Truck Number" required>
-                <Input name="truckNumber"className="form-control" value={driverDetailsForm.truckNumber} onChange={handleDriverChange} placeholder="Enter Truck Number" />
-              </FormField>
-              <FormField label="License Issued By" required>
-                <Input name="licenseIssuedBy" value={driverDetailsForm.licenseIssuedBy} onChange={handleDriverChange} placeholder="Enter License Issued By" />
-              </FormField>
+              <FormField label="License Number" required><Input name="licenseNumber" className="form-control" value={driverDetailsForm.licenseNumber} onChange={handleDriverChange} placeholder="Enter License Number" data-validate="required" /></FormField>
+              <FormField label="License Expiry Date" required><Input type="date" className="form-control" name="licenseExpiry" value={driverDetailsForm.licenseExpiry} onChange={handleDriverChange} data-validate="required" /></FormField>
+              <FormField label="Truck Number" required><Input name="truckNumber" className="form-control" value={driverDetailsForm.truckNumber} onChange={handleDriverChange} placeholder="Enter Truck Number" /></FormField>
+              <FormField label="License Issued By" required><Input name="licenseIssuedBy" value={driverDetailsForm.licenseIssuedBy} onChange={handleDriverChange} placeholder="Enter License Issued By" /></FormField>
             </div>
             <div></div>
           </div>
@@ -274,13 +225,8 @@ export default function NewEmployee() {
           <div>
             <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
               <div className="space-y-4">
-                <FormField label="Aadhaar Number" required>
-                  <Input name="aadhaarNumber" value={proofDetailsForm.aadhaarNumber} onChange={handleProofChange} placeholder="Enter Aadhaar Number" className="form-control w-full numeric-only" maxLength={12} data-validate="required" />
-                </FormField>
-
-                <FormField label="PAN Number" required>
-                  <Input name="panNumber" value={proofDetailsForm.panNumber} onChange={handleProofChange} placeholder="Enter PAN Number" className="form-control w-full  alphanumeric" maxLength={10} data-validate="required" />
-                </FormField>
+                <FormField label="Aadhaar Number" required><Input name="aadhaarNumber" value={proofDetailsForm.aadhaarNumber} onChange={handleProofChange} placeholder="Enter Aadhaar Number" className="form-control w-full numeric-only" maxLength={12} data-validate="required" /></FormField>
+                <FormField label="PAN Number" required><Input name="panNumber" value={proofDetailsForm.panNumber} onChange={handleProofChange} placeholder="Enter PAN Number" className="form-control w-full alphanumeric" maxLength={10} data-validate="required" /></FormField>
               </div>
             </div>
             <div></div>
@@ -314,10 +260,7 @@ export default function NewEmployee() {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
                 <div className="space-y-4 lg:border-r lg:border-gray-300 lg:pr-4">
-                  <FormField label="DOB" required>
-                    <Input name="dob" type="date" className="form-control w-full" data-validate="required" />
-                  </FormField>
-
+                  <FormField label="DOB" required><Input name="dob" type="date" className="form-control w-full" data-validate="required" /></FormField>
                   <FormField label="Gender" required>
                     <select name="gender" className="form-control " data-validate="required">
                       <option value="">Select Gender</option>
@@ -326,41 +269,17 @@ export default function NewEmployee() {
                       <option value="other">Other</option>
                     </select>
                   </FormField>
-
-                  <FormField label="Blood Group" required>
-                    <Input name="bloodGroup" placeholder="Enter Blood Group" className="form-control w-full" data-validate="required" />
-                  </FormField>
-
-                  <FormField label="Phone Number" required>
-                    <Input name="phone" placeholder="Enter Phone Number" className="form-control w-full numeric-only" data-validate="required" />
-                  </FormField>
-
-                  <FormField label="Whatsapp Number" required>
-                    <Input name="whatsapp" placeholder="Enter Phone Number" className="form-control w-full numeric-only" data-validate="required" />
-                  </FormField>
-
-                  <FormField label="Family Number">
-                    <Input name="familyNumber" placeholder="Enter Phone Number" className="form-control w-full numeric-only" />
-                  </FormField>
+                  <FormField label="Blood Group" required><Input name="bloodGroup" placeholder="Enter Blood Group" className="form-control w-full" data-validate="required" /></FormField>
+                  <FormField label="Phone Number" required><Input name="phone" placeholder="Enter Phone Number" className="form-control w-full numeric-only" data-validate="required" /></FormField>
+                  <FormField label="Whatsapp Number" required><Input name="whatsapp" placeholder="Enter Phone Number" className="form-control w-full numeric-only" data-validate="required" /></FormField>
+                  <FormField label="Family Number"><Input name="familyNumber" placeholder="Enter Phone Number" className="form-control w-full numeric-only" /></FormField>
                 </div>
 
                 <div className="space-y-4">
-                  <FormField label="Address Line 1">
-                    <Input name="addressLine1" placeholder="Enter Address Line 1" className="form-control w-full capitalize" />
-                  </FormField>
-
-                  <FormField label="">
-                    <Input name="addressLine2" placeholder="Enter Address Line 2" className="form-control w-full capitalize" />
-                  </FormField>
-
-                  <FormField label="Picture Path">
-                    <Input type="file" name="picture" className="w-full" />
-                  </FormField>
-
-                  <FormField label="Remarks">
-                    <Input name="remarks" placeholder="Enter Remarks" className="form-control w-full capitalize" />
-                  </FormField>
-
+                  <FormField label="Address Line 1"><Input name="addressLine1" placeholder="Enter Address Line 1" className="form-control w-full capitalize" /></FormField>
+                  <FormField label=""><Input name="addressLine2" placeholder="Enter Address Line 2" className="form-control w-full capitalize" /></FormField>
+                  <FormField label="Picture Path"><Input type="file" name="picture" className="w-full" /></FormField>
+                  <FormField label="Remarks"><Input name="remarks" placeholder="Enter Remarks" className="form-control w-full capitalize" /></FormField>
                   <div>
                     <FormField label="State" required>
                       <select name="state" className="form-control w-full" data-validate="required">
@@ -369,10 +288,7 @@ export default function NewEmployee() {
                         <option value="Karnataka">Karnataka</option>
                       </select>
                     </FormField>
-
-                    <FormField label="Pincode">
-                      <Input name="pincode" placeholder="Enter Pincode" className="w-full numeric-only" />
-                    </FormField>
+                    <FormField label="Pincode"><Input name="pincode" placeholder="Enter Pincode" className="w-full numeric-only" /></FormField>
                   </div>
                 </div>
               </div>
@@ -381,13 +297,7 @@ export default function NewEmployee() {
               <div className="mx-2 mt-5">
                 <ul className="flex whitespace-nowrap w-full border-b border-gray-300 mr-3">
                   {tabs.map((tab) => (
-                    <li
-                      key={tab.id}
-                      className={`mr-6 pb-2 cursor-pointer hover:text-[#009333] ${activeTab === tab.id ? "text-[#009333] border-b-2 border-[#009333]" : ""}`}
-                      onClick={() => setActiveTab(tab.id)}
-                    >
-                      {tab.label}
-                    </li>
+                    <li key={tab.id} className={`mr-6 pb-2 cursor-pointer hover:text-[#009333] ${activeTab === tab.id ? "text-[#009333] border-b-2 border-[#009333]" : ""}`} onClick={() => setActiveTab(tab.id)}>{tab.label}</li>
                   ))}
                 </ul>
               </div>
@@ -399,12 +309,8 @@ export default function NewEmployee() {
         </main>
 
         <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-          <button type="submit" onClick={handleSubmit as any} className="btn-sm btn-primary">
-            Save
-          </button>
-          <button type="button" className="btn-sm btn-secondary" >
-            Cancel
-          </button>
+          <button type="submit" onClick={handleSubmit as any} className="btn-sm btn-primary">Save</button>
+          <button type="button" className="btn-sm btn-secondary">Cancel</button>
         </footer>
       </div>
 
@@ -418,26 +324,8 @@ export default function NewEmployee() {
               </div>
               <p className="text-md text-gray-600 mb-7">Choose the employee type that best describes your business</p>
               <div className="flex gap-4 justify-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEmployeeType("staff");
-                    setShowModal(false);
-                  }}
-                  className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white text-gray-800 px-4 py-2 rounded-md w-full"
-                >
-                  Staff
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEmployeeType("Driver");
-                    setShowModal(false);
-                  }}
-                  className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white text-gray-800 px-4 py-2 rounded-md w-full"
-                >
-                  Driver
-                </button>
+                <button type="button" onClick={() => { setEmployeeType("staff"); setShowModal(false); }} className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white text-gray-800 px-4 py-2 rounded-md w-full">Staff</button>
+                <button type="button" onClick={() => { setEmployeeType("Driver"); setShowModal(false); }} className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white text-gray-800 px-4 py-2 rounded-md w-full">Driver</button>
               </div>
             </div>
           </div>

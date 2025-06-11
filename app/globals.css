@@ -59,7 +59,7 @@ body {
 ::-webkit-scrollbar-thumb {
   background-color: #8b8b8b; 
   border-radius: 10px;
-  border: 2px solid #f1f1f1; 
+  border: 2px solid #fff; 
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -90,8 +90,37 @@ input[type="checkbox"] {
     @apply text-sm text-[#1D1D1D];
   }
 
+   .filter-label {
+    @apply block text-sm font-semibold text-[#000000] mb-1.5;
+  }
+
+   .filter-header {
+    @apply py-[0.5rem] px-[0.75rem] border-b border-[#dee2e6] flex justify-between items-center text-sm text-[#12344d];
+  }
+
+     .offcanvas-sidebar {
+    @apply relative w-80 mt-[5.4rem] mb-[0.15rem] rounded-tl-[0.375rem] rounded-bl-[0.375rem] bg-white shadow-[0_4px_16px_#27313a66] transform transition-transform duration-300;
+  }
+
+ 
   .btn-sm {
     @apply py-1 px-2 text-sm rounded border cursor-pointer;
+  }
+
+     .btn-visible-hover {
+    @apply !border-transparent !text-[#384551] hover:bg-[#dce0e5] hover:border-[#ebeff3] text-sm;
+  }
+
+    .btn-hover-ct {
+    @apply !border-transparent !text-[#384551] hover:bg-[#eceff1] hover:border-[#eceff1] text-sm;
+  }
+
+     .tab {
+    @apply  inline-block p-[8px] rounded-t-[0.375rem] text-[#576c7d] cursor-pointer ;
+  }
+
+    .btn-hover {
+    @apply !border-[#cfd7df] text-[#12375d] bg-white hover:bg-[#ebeff3] text-sm;
   }
 
   .btn-primary {
@@ -106,8 +135,8 @@ input[type="checkbox"] {
     @apply bg-gradient-to-b from-white to-[#f5f7f9] text-[#212529] border border-[#cfd7df] hover:from-gray-50 hover:to-[#e9ecef] cursor-pointer transition;
   }
 
-  .dropdown-hover {
-    @apply px-1 py-[0.075rem] rounded hover:bg-[#dce0e5];
+  .dropdown-icon-hover {
+    @apply px-1 py-[0.075rem] rounded hover:bg-[#dce0e5] cursor-pointer;
   }
 
   .sticky-table-header {
@@ -137,4 +166,21 @@ input[type="checkbox"] {
   .counter-badge {
     @apply inline-block min-w-[20px] h-[20px] px-[6px] text-xs leading-[20px] rounded-full text-center bg-[#009333] text-white;
   }
+
+  .footer-list {
+    @apply bg-[#ebeff3] py-3 h-[56.9px] px-4 flex items-center justify-start;
+  }
+
+  .tr-hover {
+    @apply hover:bg-[#f5f7f9] text-sm cursor-pointer;
+  }
+
+   .edit-icon {
+    @apply p-1 rounded border border-[#cfd7df] text-[#4d5e6c];
+  }
+
+  .badge-selected {
+  @apply py-[10px] px-[15px] text-sm rounded-full shadow-[0_2px_10px_#27313a66] bg-[#fef1e1] text-[#12344d];
+}
+
 }

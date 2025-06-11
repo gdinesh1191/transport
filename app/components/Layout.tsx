@@ -5,6 +5,7 @@ import Header from './Header';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
+
 interface LayoutProps {
   children: React.ReactNode;
   pageTitle?: string;
@@ -12,6 +13,7 @@ interface LayoutProps {
 
 export default function Layout({ children, pageTitle }: LayoutProps) {
   return (
+ 
  
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <div className="flex h-screen overflow-hidden">

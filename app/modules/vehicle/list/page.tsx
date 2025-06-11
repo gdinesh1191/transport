@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Layout from "../../../components/Layout";
- 
 
-import { useRouter } from "next/navigation";  
+
+import { useRouter } from "next/navigation";
 
 // Define tab key types
 type TabKey = "all" | "active" | "in-active";
@@ -12,6 +12,28 @@ type TabKey = "all" | "active" | "in-active";
 const VehicleList = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectAll, setSelectAll] = useState(false);
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    setSelectAll(checked);
+    if (checked) {
+      setSelectedIds(filteredVehicles.map((v) => v.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+
+  const handleCheckboxChange = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+
+
 
   const tabs: TabKey[] = ["all", "active", "in-active"];
 
@@ -20,7 +42,7 @@ const VehicleList = () => {
     active: 4,
     "in-active": 6,
   };
-  
+
   const router = useRouter();
 
 
@@ -69,9 +91,17 @@ const VehicleList = () => {
 
   const filteredVehicles = activeTab === "all" ? vehicles : vehicles.filter((v) => v.status.toLowerCase() === activeTab);
 
+  useEffect(() => {
+    setSelectAll(
+      filteredVehicles.length > 0 &&
+      selectedIds.length === filteredVehicles.length
+    );
+  }, [selectedIds, filteredVehicles]);
+
+
   return (
     <Layout pageTitle="Vehicle List">
- 
+
       <main className="flex-1">
         <div className="overflow-y-hidden h-[calc(100vh-103px)]">
           {/* Tabs */}
@@ -79,7 +109,7 @@ const VehicleList = () => {
             <ul className="flex flex-nowrap text-sm font-medium text-center">
               {tabs.map((tab) => (
                 <li key={tab}>
-                  <button onClick={() => setActiveTab(tab)} className={`tab inline-block p-[8px] rounded-t-[0.375rem] text-[#576c7d] cursor-pointer ${activeTab === tab ? "bg-[#ebeff3] text-[#384551]" : "hover:text-[#6689b8] hover:bg-[#f5f7f9]"}`}>
+                  <button onClick={() => setActiveTab(tab)} className={`tab ${activeTab === tab ? "bg-[#ebeff3] text-[#384551]" : "hover:text-[#6689b8] hover:bg-[#f5f7f9]"}`}>
                     <span className="flex items-center gap-1">
                       {tab === "all" ? "All List" : tab.charAt(0).toUpperCase() + tab.slice(1)}
                       {activeTab === tab && (
@@ -90,13 +120,13 @@ const VehicleList = () => {
                       )}
                     </span>
                   </button>
- 
+
                 </li>
               ))}
             </ul>
 
             <div className="flex items-center flex-shrink-0 ml-auto">
-              <button id="openSidebarCustomize" className="btn-sm !border-transparent !text-[#384551] hover:bg-[#eceff1] hover:border-[#eceff1] text-sm">
+              <button id="openSidebarCustomize" className="btn-sm btn-hover-ct">
                 <i className="ri-equalizer-line mr-1"></i>
                 <span className="text-sm">Customize Table</span>
               </button>
@@ -111,7 +141,7 @@ const VehicleList = () => {
                 </button>
               </div>
 
-              <button className="btn-sm btn-primary ml-2 text-sm"  onClick={() => router.push('/modules/vehicle/new')} >
+              <button className="btn-sm btn-primary ml-2 text-sm" onClick={() => router.push('/modules/vehicle/new')} >
                 <i className="ri-add-fill mr-1"></i>
                 <span className="text-sm">Add Vehicle</span>
               </button>
@@ -121,50 +151,73 @@ const VehicleList = () => {
           {/* View Mode / Bulk Actions / Search */}
           <div className="flex justify-between items-center px-1.5 py-1.5 bg-[#ebeff3]">
             <div className="flex items-center space-x-2 ml-2">
-              <button className="btn-sm !border-[#cfd7df] text-[#12375d] bg-white hover:bg-[#ebeff3] text-sm">
-                <i className="ri-table-fill mr-1"></i>
-                <span className="text-sm">Table</span>
-                <i className="ri-arrow-down-s-line ml-1"></i> 
-              </button>
+              {/* First 3 buttons (shown when no checkbox is selected) */}
+              {!selectedIds.length && (
+                <>
+                  <button className="btn-sm btn-hover">
+                    <i className="ri-table-fill mr-1"></i>
+                    <span className="text-sm">Table</span>
+                    <i className="ri-arrow-down-s-line ml-1"></i>
+                  </button>
 
-              <div className="relative inline-block">
-                <button id="viewModeBtn" className="btn-sm !border-transparent !text-[#384551] hover:bg-[#dce0e5] hover:border-[#ebeff3] text-sm">
-                  <i className="ri-layout-5-line"></i>
-                </button>
-              </div>
+                  <div className="relative inline-block">
+                    <button id="viewModeBtn" className="btn-sm btn-visible-hover">
+                      <i className="ri-layout-5-line"></i>
+                    </button>
+                  </div>
 
-              <button className="btn-sm !border-transparent !text-[#384551] hover:bg-[#dce0e5] hover:border-[#ebeff3] text-sm" id="bulkActionsBtn">
-                <i className="ri-stack-fill mr-1"></i>
-                Bulk Actions
-              </button>
+                  <button
+                    className="btn-sm btn-visible-hover"
+                    id="bulkActionsBtn"
+                    onClick={() => {
+                      setSelectAll(true);
+                      setSelectedIds(filteredVehicles.map((v) => v.id));
+                    }}
+                  >
+                    <i className="ri-stack-fill mr-1"></i>
+                    Bulk Actions
+                  </button>
 
-              <div id="bulkActionButtons" className="bulk-actions flex items-center space-x-2">
-                <button className="btn-sm !border-[#cfd7df] text-[#12375d] bg-white hover:bg-[#ebeff3] text-sm" id="cancelSelectionBtn" style={{ display: "none" }}>
-                  <i className="ri-close-line"></i>
-                  Cancel
-                </button>
-                <button className="btn-sm !border-[#cfd7df] text-[#12375d] bg-white hover:bg-[#ebeff3] text-sm" id="deleteBtn" style={{ display: "none" }}>
-                  <i className="ri-delete-bin-6-line"></i>
-                  Delete
-                </button>
-                <button className="btn-sm !border-[#cfd7df] text-[#12375d] bg-white hover:bg-[#ebeff3] text-sm" id="downloadBtn" style={{ display: "none" }}>
-                  <i className="ri-arrow-down-line"></i>
-                  Download
-                </button>
-                <button className="btn-sm !border-[#cfd7df] text-[#12375d] bg-white hover:bg-[#ebeff3] text-sm" id="printBtn" style={{ display: "none" }}>
-                  <i className="ri-printer-line"></i>
-                  Print
-                </button>
-                <button className="btn-sm !border-[#cfd7df] text-[#12375d] bg-white hover:bg-[#ebeff3] text-sm" id="summaryBtn" style={{ display: "none" }}>
-                  <i className="ri-sticky-note-line"></i>
-                  Summary
-                </button>
-              </div>
+                </>
+              )}
+
+              {/* Bulk action buttons (shown when at least 1 is selected) */}
+              {selectedIds.length > 0 && (
+                <div className="bulk-actions flex items-center space-x-2">
+                  <button className="btn-sm btn-hover" id="printBtn">
+                    <i className="ri-printer-line mr-1"></i>
+                    Print
+                  </button>
+                  <button className="btn-sm btn-hover" id="summaryBtn">
+                    <i className="ri-sticky-note-line mr-1"></i>
+                    Summary
+                  </button>
+
+                  <button className="btn-sm btn-hover" id="downloadBtn">
+                    <i className="ri-arrow-down-line mr-1"></i>
+                    Download
+                  </button>
+                  <button className="btn-sm btn-hover" id="deleteBtn">
+                    <i className="ri-delete-bin-6-line mr-1"></i>
+                    Delete
+                  </button>
+
+                  <button className="btn-sm btn-visible-hover" id="cancelSelectionBtn" onClick={() => setSelectedIds([])}>
+                    <i className="ri-close-line mr-1"></i>
+                    Cancel Bulk Actions
+                  </button>
+
+
+
+                </div>
+              )}
             </div>
+
+
 
             <div className="flex items-center relative space-x-2">
               <input className="form-control !h-[31px]" type="text" placeholder="Enter Vehicle Number" />
-              <button className="btn-sm !border-transparent !text-[#384551] hover:bg-[#dce0e5] hover:border-[#ebeff3] text-sm" onClick={() => setIsSidebarOpen(true)}>
+              <button className="btn-sm btn-visible-hover" onClick={() => setIsSidebarOpen(true)}>
                 <i className="ri-sort-desc" ></i>
               </button>
             </div>
@@ -176,12 +229,12 @@ const VehicleList = () => {
             <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)]" onClick={() => setIsSidebarOpen(false)}></div>
 
             {/* Sidebar Content */}
-            <div className={`relative w-80 mt-[5.4rem] mb-[0.15rem] rounded-tl-[0.375rem] rounded-bl-[0.375rem] bg-white shadow-[0_4px_16px_#27313a66] transform transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
+            <div className={`offcanvas-sidebar flex flex-col  ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'} `}>
 
               {/* Header */}
-              <div className="py-[0.5rem] px-[0.75rem] border-b border-[#dee2e6] flex justify-between items-center">
-                <h5 className="text-sm text-[#12344d]">Add Filters</h5>
-                <button onClick={() => setIsSidebarOpen(false)} className="text-[#12344d] cursor-pointer">
+              <div className="filter-header">
+                <h5 className="">Add Filters</h5>
+                <button onClick={() => setIsSidebarOpen(false)} className="cursor-pointer">
                   <i className="ri-close-line"></i>
                 </button>
               </div>
@@ -189,20 +242,20 @@ const VehicleList = () => {
               {/* Scrollable Content */}
               <div className="p-4 overflow-y-auto flex-1">
                 <div className="mb-4">
-                  <label className="block text-sm font-semibold text-[#000000] mb-1.5">Vehicle Number</label>
+                  <label className="filter-label">Vehicle Number</label>
                   <input type="text" placeholder="Enter vehicle number" className="form-control" />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-sm font-semibold text-[#000000] mb-1.5">Owner Name</label>
+                  <label className="filter-label">Owner Name</label>
                   <input type="text" placeholder="Enter owner name" className="form-control" />
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-semibold text-[#000000] mb-1.5">Chassis Number</label>
+                  <label className="filter-label">Chassis Number</label>
                   <input type="text" placeholder="Enter chassis number" className="form-control" />
                 </div>
 
-               
+
                 {/* Add more filters as needed */}
               </div>
 
@@ -221,13 +274,29 @@ const VehicleList = () => {
 
           {/* Table */}
           <div className="bg-[#ebeff3]">
+
+            {selectedIds.length > 1 && (
+              <div className=" fixed top-42 left-1/2 transform -translate-x-1/2 z-50  badge-selected">
+                {selectedIds.length} Vehicles selected
+              </div>
+            )}
+
+
+
             <div className="mx-2 h-[calc(100vh-187px)] overflow-hidden rounded-lg bg-white">
               <div className="h-full overflow-y-auto">
-                <table className="w-full border-collapse">
+                <table className="w-full">
                   <thead className="sticky-table-header">
                     <tr>
                       <th className="th-cell" id="checkboxColumn">
-                        <input type="checkbox" id="selectAll" className="form-check" />
+                        <input
+                          type="checkbox"
+                          id="selectAll"
+                          className="form-check"
+                          checked={selectAll}
+                          onChange={handleSelectAll}
+                        />
+
                       </th>
                       <th className="th-cell">
                         <div className="flex justify-between items-center gap-1">
@@ -237,57 +306,68 @@ const VehicleList = () => {
                       <th className="th-cell">
                         <div className="flex justify-between items-center gap-1">
                           <span>Vehicle Number</span>
-                          <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
+                          <i className="dropdown-icon-hover ri-arrow-down-s-fill"></i>
                         </div>
                       </th>
                       <th className="th-cell">
                         <div className="flex justify-between items-center gap-1">
                           <span>Owner Name</span>
-                          <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
+                          <i className="dropdown-icon-hover ri-arrow-down-s-fill"></i>
                         </div>
                       </th>
                       <th className="th-cell">
                         <div className="flex justify-between items-center gap-1">
                           <span>Chassis Number</span>
-                          <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
+                          <i className="dropdown-icon-hover ri-arrow-down-s-fill"></i>
                         </div>
                       </th>
                       <th className="th-cell">
                         <div className="flex justify-between items-center gap-1">
                           <span>FC Expiry Date</span>
-                          <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
+                          <i className="dropdown-icon-hover ri-arrow-down-s-fill"></i>
                         </div>
                       </th>
                       <th className="th-cell">
                         <div className="flex justify-between items-center gap-1">
                           <span>Status</span>
-                          <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
+                          <i className="dropdown-icon-hover ri-arrow-down-s-fill"></i>
                         </div>
                       </th>
                       <th className="th-cell">
                         <div className="flex justify-between items-center gap-1">
                           <span>Next Due</span>
-                          <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
+                          <i className="dropdown-icon-hover ri-arrow-down-s-fill"></i>
                         </div>
                       </th>
                       <th className="last-th-cell">
                         <div className="flex justify-between items-center gap-1">
                           <span>Year</span>
-                          <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
+                          <i className="dropdown-icon-hover ri-arrow-down-s-fill"></i>
                         </div>
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredVehicles.map((vehicle, index) => (
-                      <tr key={vehicle.id} className="group hover:bg-[#f5f7f9] text-sm cursor-pointer">
+                      <tr
+                        key={vehicle.id}
+                        className={`tr-hover group ${selectedIds.includes(vehicle.id) ? "bg-[#e5f2fd] hover:bg-[#f5f7f9]" : ""
+                          }`}
+                      >
+
                         <td className="td-cell">
-                          <input type="checkbox" className="form-check" />
+                          <input
+                            type="checkbox"
+                            className="form-check"
+                            checked={selectedIds.includes(vehicle.id)}
+                            onChange={() => handleCheckboxChange(vehicle.id)}
+                          />
+
                         </td>
                         <td className="td-cell">
                           <span className="float-left">{index + 1}</span>
-                          <span className="float-right cursor-pointer">
-                            <i className="p-1 rounded border border-[#cfd7df] text-[#4d5e6c] ri-pencil-fill opacity-0 group-hover:opacity-100"></i>
+                          <span className="float-right">
+                            <i className="ri-pencil-fill edit-icon opacity-0 group-hover:opacity-100"></i>
                           </span>
                         </td>
                         <td className="td-cell">{vehicle.number}</td>
@@ -303,17 +383,17 @@ const VehicleList = () => {
                 </table>
               </div>
             </div>
- 
+
           </div>
         </div>
       </main>
 
-      <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex items-center justify-start">
+      <footer className="footer-list">
         <span className="text-sm">
           Showing <span className="text-red-600">20</span> of <span className="text-blue-600">400</span>
         </span>
       </footer>
- 
+
     </Layout>
   );
 };

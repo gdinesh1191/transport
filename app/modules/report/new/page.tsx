@@ -1,600 +1,339 @@
- "use client";
 
-import { useRef, useState, useEffect } from "react";
-import Layout from "../../../components/Layout";
-import { validateForm } from "@/app/utils/formValidations"; // Import the utility
+'use client';
 
-import 'vanillajs-datepicker/css/datepicker.css';
+import { useState } from 'react';
+import Layout from '../../../components/Layout';
 
-const FormField = ({
-  label,
-  required = false,
-  children,
-  className = "",
-}: {
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-  className?: string;
-}) => (
-  <div
-    className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}
-  >
-    <label className="form-label w-50">
-      {label}
-      {required && <span className="form-required text-red-500">*</span>}
-    </label>
-    <div className="flex flex-col w-3/4 flex-grow">{children}</div>
-  </div>
-);
+const ReportsPage = () => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeReport, setActiveReport] = useState<string | null>(null);
+    // New state to manage the active category title
+    const [activeCategory, setActiveCategory] = useState<string | null>(null);
+    const vehicles = [
+        { id: 1, number: "TN29N1212", owner: "Arumugam", chassis: "AD33323C3212", fcExpiry: "12/02/2023", status: "Active", nextDue: "22/08/2025", year: 2017 },
+        { id: 2, number: "TN45Z2321", owner: "Kumar", chassis: "ZX92133QWER", fcExpiry: "01/05/2024", status: "In-Active", nextDue: "15/09/2025", year: 2015 },
+        { id: 3, number: "TN37A5678", owner: "Ravi", chassis: "CH45321ZX", fcExpiry: "30/11/2022", status: "Active", nextDue: "10/10/2025", year: 2019 },
+        { id: 4, number: "TN10B1234", owner: "Suresh", chassis: "GH12345JKL", fcExpiry: "05/04/2023", status: "Active", nextDue: "01/12/2025", year: 2016 },
+        { id: 5, number: "TN11C5678", owner: "Venkatesh", chassis: "KL98765YTR", fcExpiry: "10/06/2024", status: "In-Active", nextDue: "25/01/2026", year: 2014 },
+        { id: 6, number: "TN12D9101", owner: "Mohan", chassis: "MN56789ASD", fcExpiry: "20/03/2023", status: "Active", nextDue: "15/05/2026", year: 2018 },
+        { id: 7, number: "TN13E1213", owner: "Rajesh", chassis: "PO34567FGH", fcExpiry: "01/12/2022", status: "In-Active", nextDue: "10/04/2026", year: 2013 },
+        { id: 8, number: "TN14F1415", owner: "Balaji", chassis: "QR56789LKJ", fcExpiry: "25/10/2023", status: "Active", nextDue: "05/02/2026", year: 2020 },
+        { id: 9, number: "TN15G1617", owner: "Saravanan", chassis: "ST45678MNB", fcExpiry: "30/08/2022", status: "In-Active", nextDue: "20/06/2026", year: 2012 },
+        { id: 10, number: "TN16H1819", owner: "Prakash", chassis: "UV12345XCV", fcExpiry: "15/09/2024", status: "Active", nextDue: "30/07/2026", year: 2015 },
+        { id: 11, number: "TN17J2021", owner: "Naveen", chassis: "WX56789ZXC", fcExpiry: "18/01/2023", status: "Active", nextDue: "12/03/2026", year: 2011 },
+        { id: 12, number: "TN18K2223", owner: "Dinesh", chassis: "YU34567BNM", fcExpiry: "12/07/2023", status: "In-Active", nextDue: "22/08/2026", year: 2016 },
+        { id: 13, number: "TN19L2425", owner: "Sathish", chassis: "IO78945VFR", fcExpiry: "11/02/2024", status: "Active", nextDue: "18/10/2026", year: 2013 },
+        { id: 14, number: "TN20M2627", owner: "Karthik", chassis: "PL90876TRE", fcExpiry: "29/05/2022", status: "In-Active", nextDue: "09/09/2026", year: 2014 },
+        { id: 15, number: "TN21N2829", owner: "Vijay", chassis: "MJ12346UYT", fcExpiry: "06/11/2024", status: "Active", nextDue: "30/11/2026", year: 2017 },
+        { id: 16, number: "TN22P3031", owner: "Manoj", chassis: "NH54321REW", fcExpiry: "03/08/2023", status: "In-Active", nextDue: "01/03/2026", year: 2010 },
+        { id: 17, number: "TN23Q3233", owner: "Ramesh", chassis: "BT65432PLK", fcExpiry: "12/04/2023", status: "Active", nextDue: "04/06/2026", year: 2019 },
+        { id: 18, number: "TN24R3435", owner: "Selvam", chassis: "CW87654QAZ", fcExpiry: "09/10/2024", status: "Active", nextDue: "15/08/2026", year: 2018 },
+        { id: 19, number: "TN25S3637", owner: "Ganesh", chassis: "XZ12345WSX", fcExpiry: "22/09/2023", status: "In-Active", nextDue: "19/12/2026", year: 2012 },
+        { id: 20, number: "TN26T3839", owner: "Harish", chassis: "CV09876EDC", fcExpiry: "17/06/2022", status: "Active", nextDue: "07/07/2026", year: 2016 },
+        { id: 21, number: "TN27U4041", owner: "Yogesh", chassis: "VB123456LKJ", fcExpiry: "05/03/2022", status: "In-Active", nextDue: "10/10/2026", year: 2011 },
+        { id: 22, number: "TN28V4243", owner: "Lokesh", chassis: "ZXCVB12345", fcExpiry: "12/08/2023", status: "Active", nextDue: "01/02/2026", year: 2020 },
+        { id: 23, number: "TN29W4445", owner: "Anand", chassis: "QAZWSX0987", fcExpiry: "15/09/2022", status: "Active", nextDue: "25/03/2026", year: 2015 },
+        { id: 24, number: "TN30X4647", owner: "Deepak", chassis: "LKJHGF5678", fcExpiry: "21/12/2023", status: "In-Active", nextDue: "12/12/2026", year: 2013 },
+        { id: 25, number: "TN31Y4849", owner: "Ashok", chassis: "MNBVCX4321", fcExpiry: "30/11/2024", status: "Active", nextDue: "03/01/2027", year: 2017 },
+        { id: 26, number: "TN32Z5051", owner: "Jagan", chassis: "POIUYT7890", fcExpiry: "11/05/2022", status: "In-Active", nextDue: "14/02/2026", year: 2012 },
+        { id: 27, number: "TN33A5253", owner: "Ragul", chassis: "ASDFGH3210", fcExpiry: "16/07/2024", status: "Active", nextDue: "17/05/2026", year: 2019 },
+        { id: 28, number: "TN34B5455", owner: "Naresh", chassis: "ZXCVBN5643", fcExpiry: "08/01/2023", status: "Active", nextDue: "20/06/2026", year: 2014 },
+        { id: 29, number: "TN35C5657", owner: "Surya", chassis: "PLMKJN9087", fcExpiry: "19/02/2023", status: "In-Active", nextDue: "10/04/2026", year: 2016 },
+        { id: 30, number: "TN36D5859", owner: "Jeeva", chassis: "XSWQAZ2345", fcExpiry: "07/10/2023", status: "Active", nextDue: "15/05/2026", year: 2018 },
+        { id: 31, number: "TN37E6061", owner: "Shankar", chassis: "EDCRFV0987", fcExpiry: "25/03/2022", status: "In-Active", nextDue: "06/06/2026", year: 2010 },
+        { id: 32, number: "TN38F6263", owner: "Bhaskar", chassis: "UJMNBV6543", fcExpiry: "18/08/2023", status: "Active", nextDue: "09/07/2026", year: 2015 },
+        { id: 33, number: "TN39G6465", owner: "Siva", chassis: "RFVTGB1234", fcExpiry: "23/06/2024", status: "Active", nextDue: "13/09/2026", year: 2019 },
+        { id: 34, number: "TN40H6667", owner: "Parthiban", chassis: "YHNMLK4321", fcExpiry: "02/05/2022", status: "In-Active", nextDue: "11/08/2026", year: 2011 },
+        { id: 35, number: "TN41I6869", owner: "Kishore", chassis: "BGTRFD6789", fcExpiry: "01/09/2023", status: "Active", nextDue: "16/12/2026", year: 2016 },
+        { id: 36, number: "TN42J7071", owner: "Abdul", chassis: "NJMKIU7890", fcExpiry: "28/02/2024", status: "In-Active", nextDue: "22/10/2026", year: 2013 },
+        { id: 37, number: "TN43K7273", owner: "Siddharth", chassis: "VCXZAS1234", fcExpiry: "17/12/2022", status: "Active", nextDue: "03/11/2026", year: 2017 },
+        { id: 38, number: "TN44L7475", owner: "Ilayaraja", chassis: "REWQAZ7654", fcExpiry: "04/06/2023", status: "In-Active", nextDue: "28/12/2026", year: 2012 },
+        { id: 39, number: "TN45M7677", owner: "Vimal", chassis: "MLKJNH5432", fcExpiry: "20/10/2023", status: "Active", nextDue: "18/01/2027", year: 2014 },
+        { id: 40, number: "TN46N7879", owner: "Natarajan", chassis: "POIUYT8765", fcExpiry: "06/11/2024", status: "Active", nextDue: "08/03/2027", year: 2018 },
+    ];
 
-const Input = ({
-  name,
-  placeholder,
-  type = "text",
-  className = "",
-  ...props
-}: {
-  name: string;
-  placeholder?: string;
-  type?: string;
-  className?: string;
-  [key: string]: any;
-}) => (
-  <input
-    type={type}
-    name={name}
-    placeholder={placeholder}
-    className={`form-control ${className}`}
-    {...props}
-  />
-);
-
-const RadioGroup = ({
-  name,
-  options,
-  required = false,
-}: {
-  name: string;
-  options: { value: string; label: string }[];
-  required?: boolean;
-}) => (
-  <div className="space-x-4">
-    {options.map((option) => (
-      <label key={option.value} className="form-label">
-        <input
-          type="radio"
-          name={name}
-          value={option.value}
-          className="form-radio"
-          // Add data-validate to one of the radio inputs in the group if required
-          {...(required ? { "data-validate": "required" } : {})}
-        />
-        <span className="ml-2">{option.label}</span>
-      </label>
-    ))}
-  </div>
-);
-
-const Typeahead = ({
-  name,
-  placeholder = "Enter text",
-  data = [],
-  required = false,
-  onSelect,
-  onAddNew,
-  className = "",
-  searchFields = ['name'],
-  displayField = 'name',
-  minSearchLength = 3,
-  ...props
-}: {
-  name: string;
-  placeholder?: string;
-  data: any[];
-  required?: boolean;
-  onSelect?: (item: any) => void;
-  onAddNew?: () => void;
-  className?: string;
-  searchFields?: string[];
-  displayField?: string;
-  minSearchLength?: number;
-  [key: string]: any;
-}) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [filteredData, setFilteredData] = useState<any[]>([]);
-  const [hoveredItem, setHoveredItem] = useState<any>(null);
-  const [hoveredPosition, setHoveredPosition] = useState({ x: 0, y: 0 });
-  const [selectedItem, setSelectedItem] = useState<any>(null);
-  const [keyboardSelectedIndex, setKeyboardSelectedIndex] = useState(-1);
-  const [navigationMode, setNavigationMode] = useState<'mouse' | 'keyboard'>('mouse');
-  
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-  // Filter data based on search criteria
-  const filterData = (term: string) => {
-    if (!term.trim()) return [];
-    
-    const searchTerms = term.toLowerCase().split(' ').filter((t: string) => t.length > 0);
-    
-    return data.filter(item => {
-      return searchFields.some(field => {
-        const fieldValue = item[field]?.toLowerCase() || '';
-        
-        return searchTerms.every((searchTerm: string) => {
-          if (searchTerm.length < minSearchLength) return false;
-          
-          const words = fieldValue.split(' ');
-          return words.some((word: string) => word.startsWith(searchTerm));
-        });
-      });
-    });
-  };
-
-  // Check if current input matches selected item exactly
-  const isCurrentInputValid = () => {
-    return selectedItem && searchTerm === selectedItem[displayField];
-  };
-
-  // Get currently highlighted item (either by mouse or keyboard)
-  const getCurrentHighlightedItem = () => {
-    if (navigationMode === 'keyboard' && keyboardSelectedIndex >= 0) {
-      return filteredData[keyboardSelectedIndex];
-    }
-    return hoveredItem;
-  };
-
-  // Update description card position (fixed position like original)
-  const updateDescriptionPosition = () => {
-    if (!dropdownRef.current) return;
-    
-    const dropdownRect = dropdownRef.current.getBoundingClientRect();
-    setHoveredPosition({
-      x: dropdownRect.right + 10,
-      y: dropdownRect.top + 40
-    });
-  };
-
-  // Handle input change
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    
-    // If user modifies a previously selected item, clear the selection
-    if (selectedItem && value !== selectedItem[displayField]) {
-      setSelectedItem(null);
-    }
-    
-    const filtered = filterData(value);
-    setFilteredData(filtered);
-    const shouldOpen = value.length >= minSearchLength && filtered.length > 0;
-    setIsDropdownOpen(shouldOpen);
-    
-    // Reset keyboard navigation and hover states when input changes
-    setKeyboardSelectedIndex(-1);
-    setNavigationMode('mouse');
-    
-    // Hide description card immediately if dropdown should close
-    if (!shouldOpen) {
-      setHoveredItem(null);
-    }
-  };
-
-  // Handle keyboard navigation
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!isDropdownOpen || filteredData.length === 0) return;
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setNavigationMode('keyboard');
-        const nextIndex = keyboardSelectedIndex < filteredData.length - 1 ? keyboardSelectedIndex + 1 : 0;
-        setKeyboardSelectedIndex(nextIndex);
-        setHoveredItem(filteredData[nextIndex]);
-        updateDescriptionPosition();
-        
-        // Scroll into view
-        if (itemRefs.current[nextIndex]) {
-          itemRefs.current[nextIndex]?.scrollIntoView({ block: 'nearest' });
+    const filteredVehicles = vehicles;
+    const reportCategories = [
+        {
+            title: "Outstanding",
+            items: [
+                { name: "Sales", icon: "ri-file-3-line" },
+                { name: "Purchase", icon: "ri-file-3-line" }
+            ]
+        },
+        {
+            title: "Statement",
+            items: [
+                { name: "Creditors Balance", icon: "ri-file-3-line" },
+                { name: "Debtors Balance", icon: "ri-file-3-line" },
+                { name: "Balance Sheet", icon: "ri-file-3-line" },
+                { name: "Customer Statement", icon: "ri-file-3-line" },
+                { name: "Supplier Statement", icon: "ri-file-3-line" }
+            ]
+        },
+        {
+            title: "Stock",
+            items: [
+                { name: "Closing Stock", icon: "ri-file-3-line" },
+                { name: "Product Sales", icon: "ri-file-3-line" },
+                { name: "Stock Value", icon: "ri-file-3-line" },
+                { name: "Sales Profit", icon: "ri-file-3-line" },
+                { name: "Customer Sales", icon: "ri-file-3-line" }
+            ]
+        },
+        {
+            title: "Accounts",
+            items: [
+                { name: "Day Book", icon: "ri-file-3-line" },
+                { name: "Cash Book", icon: "ri-file-3-line" },
+                { name: "Trail Balance", icon: "ri-file-3-line" }
+            ]
+        },
+        {
+            title: "GST Report",
+            items: [
+                { name: "GSTR 1", icon: "ri-file-3-line" },
+                { name: "B2B", icon: "ri-file-3-line" },
+                { name: "HSN Wise Sales", icon: "ri-file-3-line" },
+                { name: "All Purchase Excel", icon: "ri-file-3-line" },
+                { name: "All Sales Excel", icon: "ri-file-3-line" },
+                { name: "Sales Summary", icon: "ri-file-3-line" },
+                { name: "Purchase Summary", icon: "ri-file-3-line" }
+            ]
         }
-        break;
-        
-      case 'ArrowUp':
-        e.preventDefault();
-        setNavigationMode('keyboard');
-        const prevIndex = keyboardSelectedIndex > 0 ? keyboardSelectedIndex - 1 : filteredData.length - 1;
-        setKeyboardSelectedIndex(prevIndex);
-        setHoveredItem(filteredData[prevIndex]);
-        updateDescriptionPosition();
-        
-        // Scroll into view
-        if (itemRefs.current[prevIndex]) {
-          itemRefs.current[prevIndex]?.scrollIntoView({ block: 'nearest' });
-        }
-        break;
-        
-      case 'Enter':
-        e.preventDefault();
-        const itemToSelect = getCurrentHighlightedItem();
-        if (itemToSelect) {
-          handleItemSelect(itemToSelect);
-        }
-        break;
-        
-      case 'Escape':
-        setIsDropdownOpen(false);
-        setHoveredItem(null);
-        setKeyboardSelectedIndex(-1);
-        inputRef.current?.blur();
-        break;
-    }
-  };
+    ];
 
-  // Handle item selection
-  const handleItemSelect = (item: any) => {
-    setSelectedItem(item);
-    setSearchTerm(item[displayField]);
-    setIsDropdownOpen(false);
-    setHoveredItem(null);
-    setKeyboardSelectedIndex(-1);
-    setNavigationMode('mouse');
-    onSelect?.(item);
-  };
-
-  // Handle clear button click
-  const handleClearInput = () => {
-    setSearchTerm("");
-    setSelectedItem(null);
-    setIsDropdownOpen(false);
-    setHoveredItem(null);
-    setKeyboardSelectedIndex(-1);
-    setNavigationMode('mouse');
-    inputRef.current?.focus();
-  };
-
-  // Handle mouse enter on item
-  const handleMouseEnter = (item: any, index: number, event: React.MouseEvent) => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-    }
-    
-    // Switch to mouse navigation mode
-    setNavigationMode('mouse');
-    setKeyboardSelectedIndex(index);
-    updateDescriptionPosition();
-    setHoveredItem(item);
-  };
-
-  // Handle mouse leave from item
-  const handleMouseLeave = () => {
-    hoverTimeoutRef.current = setTimeout(() => {
-      if (navigationMode === 'mouse') {
-        setHoveredItem(null);
-      }
-    }, 100);
-  };
-
-  // Handle description card mouse events
-  const handleDescriptionMouseEnter = () => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-    }
-  };
-
-  const handleDescriptionMouseLeave = () => {
-    if (navigationMode === 'mouse') {
-      setHoveredItem(null);
-    }
-  };
-
-  // Handle click outside to close dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-        setHoveredItem(null);
-        setKeyboardSelectedIndex(-1);
-        setNavigationMode('mouse');
-        
-        // Clear input if it doesn't match a selected item or if no valid selection
-        if (!isCurrentInputValid() && searchTerm.trim() !== "") {
-          setSearchTerm("");
-          setSelectedItem(null);
-        }
-      }
+    const handleReportClick = (reportName: string) => {
+        console.log(`Selected report: ${reportName}`);
+        setActiveReport(reportName);
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [searchTerm, selectedItem, isCurrentInputValid, navigationMode]);
 
-  // Reset item refs when filtered data changes
-  useEffect(() => {
-    itemRefs.current = itemRefs.current.slice(0, filteredData.length);
-  }, [filteredData]);
+    const handleCategoryClick = (categoryTitle: string) => {
+        console.log(`Selected category: ${categoryTitle}`);
+        setActiveCategory(categoryTitle);
+    };
 
-  // Close description card when dropdown closes
-  useEffect(() => {
-    if (!isDropdownOpen) {
-      setHoveredItem(null);
-      setKeyboardSelectedIndex(-1);
-      setNavigationMode('mouse');
-    }
-  }, [isDropdownOpen]);
+    const filteredCategories = reportCategories.map(category => ({
+        ...category,
+        items: category.items.filter(item =>
+            item.name.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+    })).filter(category => category.items.length > 0);
 
-  return (
-    <div className="relative w-full" ref={dropdownRef}>
-      {/* Input with Typeahead */}
-      <div className="relative">
-        <input
-          ref={inputRef}
-          type="text"
-          name={name}
-          value={searchTerm}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          className={`form-control w-full pr-8 ${className}`}
-          {...(required ? { "data-validate": "required" } : {})}
-          {...props}
-        />
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer">
-          {searchTerm ? (
-            <i 
-              className="ri-close-line text-gray-400 hover:text-gray-600"
-              onClick={handleClearInput}
-            ></i>
-          ) : (
-            <i className="ri-arrow-down-s-line text-gray-400"></i>
-          )}
-        </div>
-      </div>
+    return (
+        <Layout pageTitle="Reports">
+            <div className="flex">
+                <aside className="w-[240px] h-[100vh] bg-[#f8f9fa] border-[#ebeff3] px-3 flex flex-col space-y-4">
 
-      {/* Dropdown */}
-      {isDropdownOpen && (
-        <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-sm shadow-lg z-50 max-h-64 overflow-hidden flex flex-col">
-          {/* Scrollable Suggestions Area */}
-          <div className="flex-1 overflow-y-auto py-1">
-            {filteredData.length > 0 ? (
-              filteredData.map((item: any, index: number) => (
-                <div
-                  key={item.id}
-                  ref={el => { itemRefs.current[index] = el; }}
-                  className={`px-3 py-2 cursor-pointer text-sm text-gray-700 ${
-                    (navigationMode === 'keyboard' && keyboardSelectedIndex === index) ||
-                    (navigationMode === 'mouse' && hoveredItem?.id === item.id)
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'hover:bg-gray-50'
-                  }`}
-                  onClick={() => handleItemSelect(item)}
-                  onMouseEnter={(e) => handleMouseEnter(item, index, e)}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  {item[displayField]}
-                </div>
-              ))
-            ) : (
-              <div className="px-3 py-2 text-sm text-gray-500">
-                No data found
-              </div>
-            )}
-          </div>
-          
-          {/* Fixed Add New Button */}
-          {onAddNew && (
-            <div className="border-t border-gray-200 px-3 py-2 bg-white">
-              <button type="button" onClick={onAddNew} className="flex items-center gap-2 text-green-600 text-sm hover:text-green-700">
-                <i className="ri-add-line text-green-600"></i>
-                Add New
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Description Card */}
-      {hoveredItem && hoveredItem.description && isDropdownOpen && (
-        <div
-          className="fixed bg-white border border-gray-200 rounded-sm shadow-lg p-3 z-[60] max-w-xs"
-          style={{
-            left: `${hoveredPosition.x}px`,
-            top: `${hoveredPosition.y}px`,
-          }}
-          onMouseEnter={handleDescriptionMouseEnter}
-          onMouseLeave={handleDescriptionMouseLeave}
-        >
-          <div className="text-sm">
-            <div className="font-medium text-gray-700 mb-1">
-              Name: {hoveredItem[displayField]}
-            </div>
-            {/* Uncomment if you want to show description
-            <div className="text-gray-600 text-xs leading-relaxed">
-              {hoveredItem.description}
-            </div> */}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const DatepickerField = ({
-  name,
-  placeholder = 'Select date',
-  required = false,
-  className = '',
-}: {
-  name: string;
-  placeholder?: string;
-  required?: boolean;
-  className?: string;
-}) => {
-  const inputRef = useRef<HTMLInputElement>(null);
- 
-  return (
-    <input
-      ref={inputRef}
-      type="text"
-      name={name}
-      placeholder={placeholder}
-      className={`form-control w-full ${className}`}
-      {...(required ? { 'data-validate': 'required' } : {})}
-    />
-  );
-};
-
-const NewExpense = () => {
-  const [fileName, setFileName] = useState('No file chosen');
-  const formRef = useRef<HTMLFormElement>(null);
-
-  // Sample name data - replace with your actual data
-  const nameData = [
-    { id: 1, name: "Aaaaaaaaaaaaaaaa", description: "This is a detailed description for Aaaaaaaaaaaaaaaa item with more information about its features and usage." },
-    { id: 2, name: "Ad Agency Solutions", description: "Professional advertising and marketing solutions for businesses of all sizes." },
-    { id: 3, name: "Anil Alta Technologies", description: "Advanced technology solutions and IT services provider." },
-    { id: 4, name: "Anil Maggie Foods", description: "Quality food products and catering services for various occasions." },
-    { id: 5, name: "Anil Kumar Enterprises", description: "Multi-business enterprise offering various commercial services." },
-    { id: 6, name: "Arun Suppliers", description: "Reliable supplier of industrial and commercial goods and materials." },
-    { id: 7, name: "Asdfasf Industries", description: "Manufacturing and industrial solutions provider with quality products." },
-    { id: 8, name: "Alpha Beta Corp", description: "Corporate solutions and business consulting services." },
-    { id: 9, name: "Amazing Products Ltd", description: "Innovative product development and distribution company." },
-    { id: 10, name: "Advance Systems", description: "Advanced system integration and technical support services." }
-  ];
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formRef.current) {
-      if (validateForm(formRef.current)) {
-        const formData = new FormData(formRef.current);
-        console.log("Form submitted successfully", Object.fromEntries(formData.entries()));
-        setFileName("No file chosen"); 
-      }
-    }
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFileName(e.target.files[0].name);
-    } else {
-      setFileName('No file chosen');
-    }
-  };
-
-  const handleNameSelect = (item: any) => {
-    console.log("Selected name:", item);
-  };
-
-  const handleAddNewName = () => {
-    console.log("Add new name clicked");
-    // Handle add new logic here
-  };
-
-  return (
-    <Layout pageTitle="Expense New">
-      <div className="flex-1">
-        <main id="main-content" className="flex-1 overflow-y-auto">
-          <div className="px-4 py-6 h-[calc(100vh-103px)] overflow-y-auto">
-            <form ref={formRef} onSubmit={handleSubmit} autoComplete="off">
-              {/* Basic Vehicle Information */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
-                <div className="space-y-4">
-                  <FormField label="Date" required>
-                    <DatepickerField name="date" required />
-                  </FormField>
-
-                  <FormField label="Category" required>
-                    <select name="category" className="form-control px-3 py-2" data-validate="required">
-                      <option value="">Select Category</option>
-                      <option value="fuelCharges">Fuel Charges</option>
-                      <option value="tollCharges">Toll Charges</option>
-                      <option value="driverAllowance">Driver Allowance</option>
-                      <option value="service">Vehicle Service on Trip</option>
-                    </select>
-                  </FormField>
-
-                  <FormField label="Description" className="md:items-start">
-                    <textarea 
-                      name="description" 
-                      id="description" 
-                      placeholder="Enter description" 
-                      data-validate="required" 
-                      className="form-control capitalize h-[80px]"
-                    ></textarea>
-                  </FormField>
-
-                  <FormField label="Amount" required>
-                    <Input 
-                      name="amount" 
-                      placeholder="Enter amount" 
-                      className="form-control numbers-decimal" 
-                      data-validate="required" 
-                    />
-                  </FormField>
-
-                  <FormField label="Name" required>
-                    <Typeahead
-                      name="name"
-                      placeholder="Enter name"
-                      data={nameData}
-                      required={true}
-                      onSelect={handleNameSelect}
-                      onAddNew={handleAddNewName}
-                      searchFields={['name']}
-                      displayField="name"
-                      minSearchLength={1}
-                    />
-                  </FormField>
-
-                  <FormField label="Payment Method" required>
-                    <RadioGroup 
-                      name="paymentMethod" 
-                      options={[
-                        { value: "Cash", label: "Cash" }, 
-                        { value: "UPI", label: "UPI" }, 
-                        { value: "Net Banking", label: "Net Banking" }
-                      ]} 
-                      required 
-                    />
-                  </FormField>
-
-                  <FormField label="Attachments" required>
-                    <div className="w-full flex-grow flex flex-col">
-                      <div className="flex items-center justify-start gap-3">
-                        <div className="border border-gray-200 rounded-sm px-3 py-1 cursor-pointer">
-                          <label htmlFor="attachmentInput" className="flex items-center gap-1 text-[#009333] text-sm cursor-pointer">
-                            <i className="ri-upload-2-line text-md"></i>Upload File
-                          </label>
+                    <div className="relative">
+                        <div className="flex items-center  overflow-hidden ">
+                            <i className="ri-search-line absolute left-2 text-sm"></i>
+                            <input
+                                type="text"
+                                placeholder="Search here..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="form-control  pl-7"
+                            />
                         </div>
-                        <span id="fileName" className="text-gray-600 text-sm truncate">{fileName}</span>
-                      </div>
-                      <input 
-                        type="file" 
-                        id="attachmentInput" 
-                        name="attachment" 
-                        className="hidden" 
-                        data-validate="required" 
-                        onChange={handleFileUpload} 
-                        required
-                      />
                     </div>
-                  </FormField>
-                </div>
-              </div>
-            </form>
-          </div>
-        </main>
 
-        <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-          <button type="submit" onClick={handleSubmit} className="btn-sm btn-primary">Save</button>
-          <button type="button" className="btn-sm btn-secondary">Cancel</button>
-        </footer>
-      </div>
-    </Layout>
-  );
-};
 
-export default NewExpense;
+                    <div className="flex flex-col gap-4 text-sm bg-[#f8f9fa] overflow-y-auto pr-2 max-h-[calc(100vh-110px)]">
+                        {filteredCategories.map((category, categoryIndex) => (
+                            <div key={categoryIndex}>
+
+                                <p
+                                    className=""
+                                    onClick={() => handleCategoryClick(category.title)}
+                                >
+                                    {category.title}
+                                </p>
+                                <ul>
+                                    {category.items.map((item, itemIndex) => (
+                                        <li
+                                            key={itemIndex}
+                                            className={`cursor-pointer report-list-item p-1 rounded transition-colors duration-200 ${activeReport === item.name
+                                                ? 'bg-[#f0f0f0] text-[#009333] rounded-[5px]'
+                                                : ''
+                                                }`}
+                                            onClick={() => handleReportClick(item.name)}
+                                        >
+                                            <i className={`${item.icon} text-lg me-2`}></i>
+                                            {item.name}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+
+                        {filteredCategories.length === 0 && searchTerm && (
+                            <div className="text-center text-gray-500 py-4">
+                                No reports found matching "{searchTerm}"
+                            </div>
+                        )}
+                    </div>
+                </aside>
+
+                {/* Main Content Area */}
+                <main className="flex-1">
+                    <div className="">
+                        {/* Tabs */}
+
+
+                        {/* View Mode / Bulk Actions / Search */}
+                        <div className="flex justify-between items-center px-1.5 py-1.5 bg-[#ebeff3]">
+                            <div className="flex items-center space-x-2 ml-2">
+                                <button className="btn-sm !border-[#cfd7df] text-[#12375d] bg-white hover:bg-[#ebeff3] text-sm">
+                                    <i className="ri-table-fill mr-1"></i>
+                                    <span className="text-sm">Table</span>
+                                    <i className="ri-arrow-down-s-line ml-1"></i>
+                                </button>
+
+                                <div className="relative inline-block">
+                                    <button id="viewModeBtn" className="btn-sm !border-transparent !text-[#384551] hover:bg-[#dce0e5] hover:border-[#ebeff3] text-sm">
+                                        <i className="ri-layout-5-line"></i>
+                                    </button>
+                                </div>
+
+                                <button className="btn-sm !border-transparent !text-[#384551] hover:bg-[#dce0e5] hover:border-[#ebeff3] text-sm" id="bulkActionsBtn">
+                                    <i className="ri-stack-fill mr-1"></i>
+                                    Bulk Actions
+                                </button>
+
+                                <div id="bulkActionButtons" className="bulk-actions flex items-center space-x-2">
+                                    <button className="btn-sm !border-[#cfd7df] text-[#12375d] bg-white hover:bg-[#ebeff3] text-sm" id="cancelSelectionBtn" style={{ display: "none" }}>
+                                        <i className="ri-close-line"></i>
+                                        Cancel
+                                    </button>
+                                    <button className="btn-sm !border-[#cfd7df] text-[#12375d] bg-white hover:bg-[#ebeff3] text-sm" id="deleteBtn" style={{ display: "none" }}>
+                                        <i className="ri-delete-bin-6-line"></i>
+                                        Delete
+                                    </button>
+                                    <button className="btn-sm !border-[#cfd7df] text-[#12375d] bg-white hover:bg-[#ebeff3] text-sm" id="downloadBtn" style={{ display: "none" }}>
+                                        <i className="ri-arrow-down-line"></i>
+                                        Download
+                                    </button>
+                                    <button className="btn-sm !border-[#cfd7df] text-[#12375d] bg-white hover:bg-[#ebeff3] text-sm" id="printBtn" style={{ display: "none" }}>
+                                        <i className="ri-printer-line"></i>
+                                        Print
+                                    </button>
+                                    <button className="btn-sm !border-[#cfd7df] text-[#12375d] bg-white hover:bg-[#ebeff3] text-sm" id="summaryBtn" style={{ display: "none" }}>
+                                        <i className="ri-sticky-note-line"></i>
+                                        Summary
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center relative space-x-2">
+                                <input className="form-control !h-[31px]" type="text" placeholder="Enter Vehicle Number" />
+                                <button className="btn-sm !border-transparent !text-[#384551] hover:bg-[#dce0e5] hover:border-[#ebeff3] text-sm"  >
+                                    <i className="ri-sort-desc" ></i>
+                                </button>
+                            </div>
+                        </div>
+
+
+                        <div className="bg-[#ebeff3]">
+                            <div className="mx-2  h-[calc(100vh-129px)] overflow-hidden rounded-lg bg-white">
+                                <div className="h-full overflow-y-auto">
+                                    <table className="w-full border-collapse">
+                                        <thead className="sticky-table-header">
+                                            <tr>
+                                                <th className="th-cell" id="checkboxColumn">
+                                                    <input type="checkbox" id="selectAll" className="form-check" />
+                                                </th>
+                                                <th className="th-cell">
+                                                    <div className="flex justify-between items-center gap-1">
+                                                        <span>S.No.</span>
+                                                    </div>
+                                                </th>
+                                                <th className="th-cell">
+                                                    <div className="flex justify-between items-center gap-1">
+                                                        <span>Vehicle Number</span>
+                                                        <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
+                                                    </div>
+                                                </th>
+                                                <th className="th-cell">
+                                                    <div className="flex justify-between items-center gap-1">
+                                                        <span>Owner Name</span>
+                                                        <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
+                                                    </div>
+                                                </th>
+                                                <th className="th-cell">
+                                                    <div className="flex justify-between items-center gap-1">
+                                                        <span>Chassis Number</span>
+                                                        <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
+                                                    </div>
+                                                </th>
+                                                <th className="th-cell">
+                                                    <div className="flex justify-between items-center gap-1">
+                                                        <span>FC Expiry Date</span>
+                                                        <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
+                                                    </div>
+                                                </th>
+                                                <th className="th-cell">
+                                                    <div className="flex justify-between items-center gap-1">
+                                                        <span>Status</span>
+                                                        <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
+                                                    </div>
+                                                </th>
+                                                <th className="th-cell">
+                                                    <div className="flex justify-between items-center gap-1">
+                                                        <span>Next Due</span>
+                                                        <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
+                                                    </div>
+                                                </th>
+                                                <th className="last-th-cell">
+                                                    <div className="flex justify-between items-center gap-1">
+                                                        <span>Year</span>
+                                                        <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
+                                                    </div>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredVehicles.map((vehicle, index) => (
+                                                <tr key={vehicle.id} className="group hover:bg-[#f5f7f9] text-sm cursor-pointer">
+                                                    <td className="td-cell">
+                                                        <input type="checkbox" className="form-check" />
+                                                    </td>
+                                                    <td className="td-cell">
+                                                        <span className="float-left">{index + 1}</span>
+                                                        <span className="float-right cursor-pointer">
+                                                            <i className="p-1 rounded border border-[#cfd7df] text-[#4d5e6c] ri-pencil-fill opacity-0 group-hover:opacity-100"></i>
+                                                        </span>
+                                                    </td>
+                                                    <td className="td-cell">{vehicle.number}</td>
+                                                    <td className="td-cell">{vehicle.owner}</td>
+                                                    <td className="td-cell">{vehicle.chassis}</td>
+                                                    <td className="td-cell">{vehicle.fcExpiry}</td>
+                                                    <td className="td-cell">{vehicle.status}</td>
+                                                    <td className="td-cell">{vehicle.nextDue}</td>
+                                                    <td className="last-td-cell">{vehicle.year}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <footer className="bg-[#ebeff3] py-3  px-4 flex items-center justify-start">
+                        <span className="text-sm">
+                            Showing <span className="text-red-600">20</span> of <span className="text-blue-600">400</span>
+                        </span>
+                    </footer>
+
+                </main>
+
+            </div>
+
+        </Layout>
+    );
+}
+
+export default ReportsPage; 

@@ -3,11 +3,16 @@
 import { useState } from 'react';
 import Layout from '../../../components/Layout';
 
+
 const ReportsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeReport, setActiveReport] = useState<string | null>(null);
-  // New state to manage the active category title
+ 
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  
+  
   const vehicles = [
     { id: 1, number: "TN29N1212", owner: "Arumugam", chassis: "AD33323C3212", fcExpiry: "12/02/2023", status: "Active", nextDue: "22/08/2025", year: 2017 },
     { id: 2, number: "TN45Z2321", owner: "Kumar", chassis: "ZX92133QWER", fcExpiry: "01/05/2024", status: "In-Active", nextDue: "15/09/2025", year: 2015 },
@@ -52,6 +57,7 @@ const ReportsPage = () => {
   ];
 
   const filteredVehicles =  vehicles ;
+  
   const reportCategories = [
     {
       title: "Outstanding",
@@ -120,6 +126,7 @@ const ReportsPage = () => {
     )
   })).filter(category => category.items.length > 0);
 
+
   return (
     <Layout pageTitle="Reports">
       <div className="flex max-h-screen">
@@ -181,7 +188,7 @@ const ReportsPage = () => {
         
         {/* Main Content Area */}
           <main className="flex-1">
-        <div className="overflow-y-hidden h-[calc(105vh-136px)]">
+        <div className="overflow-y-hidden h-[calc(105vh-119px)]">
           {/* Tabs */}
            
 
@@ -231,12 +238,59 @@ const ReportsPage = () => {
 
             <div className="flex items-center relative space-x-2">
               <input className="form-control !h-[31px]" type="text" placeholder="Enter Vehicle Number" />
-              <button className="btn-sm !border-transparent !text-[#384551] hover:bg-[#dce0e5] hover:border-[#ebeff3] text-sm"  >
+              <button className="btn-sm !border-transparent !text-[#384551] hover:bg-[#dce0e5] hover:border-[#ebeff3] text-sm"  onClick={() => setIsSidebarOpen(true)} >
                 <i className="ri-sort-desc" ></i>
               </button>
             </div>
           </div>
+         {/* Offcanvas Sidebar */}
+          <div className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            {/* Backdrop */}
+            <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)]" onClick={() => setIsSidebarOpen(false)}></div>
 
+            {/* Sidebar Content */}
+            <div className={`relative w-80 mt-[5.4rem] mb-[0.15rem] rounded-tl-[0.375rem] rounded-bl-[0.375rem] bg-white shadow-[0_4px_16px_#27313a66] transform transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
+
+              {/* Header */}
+              <div className="py-[0.5rem] px-[0.75rem] border-b border-[#dee2e6] flex justify-between items-center">
+                <h5 className="text-sm text-[#12344d]">Add Filters</h5>
+                <button onClick={() => setIsSidebarOpen(false)} className="text-[#12344d] cursor-pointer">
+                  <i className="ri-close-line"></i>
+                </button>
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="p-4 overflow-y-auto flex-1">
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-[#000000] mb-1.5">Vehicle Number</label>
+                  <input type="text" placeholder="Enter vehicle number" className="form-control" />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-[#000000] mb-1.5">Owner Name</label>
+                  <input type="text" placeholder="Enter owner name" className="form-control" />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-[#000000] mb-1.5">Chassis Number</label>
+                  <input type="text" placeholder="Enter chassis number" className="form-control" />
+                </div>
+
+               
+                {/* Add more filters as needed */}
+              </div>
+
+
+              <div className="p-2 border-t border-[#dee2e6] flex justify-end gap-2">
+                <button className="btn-sm btn-light" onClick={() => { setIsSidebarOpen(false); }}>
+                  Reset All
+                </button>
+                <button className="btn-sm btn-primary" onClick={() => { setIsSidebarOpen(false); }}>
+                  Apply
+                </button>
+              </div>
+            </div>
+
+          </div>
           
           <div className="bg-[#ebeff3]">
             <div className="mx-2 h-[calc(100vh-129px)] overflow-hidden rounded-lg bg-white">
@@ -324,7 +378,7 @@ const ReportsPage = () => {
  
           </div>
         </div>
-        <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex items-center justify-start">
+        <footer className="bg-[#ebeff3] py-3  px-4 flex items-center justify-start">
         <span className="text-sm">
           Showing <span className="text-red-600">20</span> of <span className="text-blue-600">400</span>
         </span>

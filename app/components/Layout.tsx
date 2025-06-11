@@ -16,7 +16,9 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
       <div className="flex-1 flex flex-col">
         <Header pageTitle={pageTitle} />
         
-        <main>
+ 
+        <main className="overflow-auto custom-scrollbar bg-white ">
+ 
           {children}
         </main>
       </div>

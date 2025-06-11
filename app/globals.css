@@ -45,19 +45,7 @@ body {
   border-color: transparent rgb(18, 52, 77) transparent transparent;
 }
  
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
 
-::-webkit-scrollbar-thumb {
-  background-color: #6d6d6d;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background-color: #f1f1f1;
-}
 
  
 .border-l-5 {
@@ -130,4 +118,7 @@ input[type="checkbox"] {
   .counter-badge {
     @apply inline-block min-w-[20px] h-[20px] px-[6px] text-xs leading-[20px] rounded-full text-center bg-[#009333] text-white;
   }
+
+
+  
 }

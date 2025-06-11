@@ -18,7 +18,7 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
         
  
  
-        <main className="overflow-auto custom-scrollbar bg-white ">
+        <main className="  custom-scrollbar bg-white ">
  
  
           {children}

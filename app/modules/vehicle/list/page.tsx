@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import Layout from "../../../components/Layout";
+ 
+
+import { useRouter } from "next/navigation";  
 
 // Define tab key types
 type TabKey = "all" | "active" | "in-active";
@@ -17,6 +20,9 @@ const VehicleList = () => {
     active: 4,
     "in-active": 6,
   };
+  
+  const router = useRouter();
+
 
   const vehicles = [
     { id: 1, number: "TN29N1212", owner: "Arumugam", chassis: "AD33323C3212", fcExpiry: "12/02/2023", status: "Active", nextDue: "22/08/2025", year: 2017 },
@@ -67,7 +73,7 @@ const VehicleList = () => {
     <Layout pageTitle="Vehicle List">
  
       <main className="flex-1">
-        <div className="overflow-y-auto h-[calc(100vh-103px)]">
+        <div className="overflow-y-hidden h-[calc(100vh-103px)]">
           {/* Tabs */}
           <div className="flex justify-between items-center bg-white px-1.5 mt-[5px] ml-2 whitespace-nowrap">
             <ul className="flex flex-nowrap text-sm font-medium text-center">
@@ -105,7 +111,7 @@ const VehicleList = () => {
                 </button>
               </div>
 
-              <button className="btn-sm btn-primary ml-2 text-sm">
+              <button className="btn-sm btn-primary ml-2 text-sm"  onClick={() => router.push('/modules/vehicle/new')} >
                 <i className="ri-add-fill mr-1"></i>
                 <span className="text-sm">Add Vehicle</span>
               </button>
@@ -118,7 +124,7 @@ const VehicleList = () => {
               <button className="btn-sm !border-[#cfd7df] text-[#12375d] bg-white hover:bg-[#ebeff3] text-sm">
                 <i className="ri-table-fill mr-1"></i>
                 <span className="text-sm">Table</span>
-                <i className="ri-arrow-down-s-line ml-1"></i>
+                <i className="ri-arrow-down-s-line ml-1"></i> 
               </button>
 
               <div className="relative inline-block">

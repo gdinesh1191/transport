@@ -13,6 +13,7 @@ interface LayoutProps {
 export default function Layout({ children, pageTitle }: LayoutProps) {
   return (
  
+ 
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <div className="flex h-screen overflow-hidden">
         <Sidebar />

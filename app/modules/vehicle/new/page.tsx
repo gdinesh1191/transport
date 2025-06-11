@@ -244,6 +244,7 @@ export default function NewVehicle() {
   return (
     <Layout pageTitle="Vehicle Registration">
       <div className="flex-1">
+ 
         <div className="flex-1">
           <main id="main-content" className="flex-1 overflow-y-auto">
             <div className="px-4 py-6 overflow-y-auto h-[calc(100vh-103px)]">
@@ -270,6 +271,7 @@ export default function NewVehicle() {
                       <Input name="goods-weight" placeholder="Enter weight" className="capitalize alphanumeric" data-validate="required" />
                     </FormField>
                   </div>
+ 
                 </div>
 
                 <div className="mx-2 mt-5">

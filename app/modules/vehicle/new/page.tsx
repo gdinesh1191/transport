@@ -1,5 +1,6 @@
 "use client";
 
+ 
 import { useEffect, useRef, useState } from "react";
 import Layout from "../../../components/Layout";
 import useInputValidation from "@/app/utils/inputValidations";
@@ -122,6 +123,7 @@ const FormField = ({
   required?: boolean;
   children: React.ReactNode;
   className?: string;
+ 
 }) => (
   <div
     className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}
@@ -134,6 +136,7 @@ const FormField = ({
   </div>
 );
 
+ 
 const Input = ({
   name,
   placeholder,
@@ -146,6 +149,7 @@ const Input = ({
   type?: string;
   className?: string;
   [key: string]: any;
+ 
 }) => (
   <input
     type={type}
@@ -559,6 +563,7 @@ export default function NewVehicle() {
   return (
     <Layout pageTitle="Vehicle Registration">
       <div className="flex-1">
+ 
         <main id="main-content" className="flex-1 overflow-y-auto">
           <div
             className="px-4 py-6"
@@ -625,9 +630,10 @@ export default function NewVehicle() {
                       data-validate="required"
                     />
                   </FormField>
+ 
                 </div>
-              </div>
 
+ 
               <div className="mx-2 mt-5">
                 <ul className="flex whitespace-nowrap w-full border-b border-gray-300 mr-3">
                   {tabs.map((tab) => (
@@ -667,6 +673,7 @@ export default function NewVehicle() {
         
         </footer>
         <ToastContainer />
+ 
       </div>
     </Layout>
   );

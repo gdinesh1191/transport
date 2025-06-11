@@ -1,3 +1,4 @@
+ 
 'use client';
 
 import { useState } from 'react';
@@ -6,8 +7,10 @@ import Layout from '../../../components/Layout';
 const ReportsPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeReport, setActiveReport] = useState<string | null>(null);
+ 
+    // New state to manage the active category title
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+ 
     const vehicles = [
         { id: 1, number: "TN29N1212", owner: "Arumugam", chassis: "AD33323C3212", fcExpiry: "12/02/2023", status: "Active", nextDue: "22/08/2025", year: 2017 },
         { id: 2, number: "TN45Z2321", owner: "Kumar", chassis: "ZX92133QWER", fcExpiry: "01/05/2024", status: "In-Active", nextDue: "15/09/2025", year: 2015 },
@@ -50,7 +53,7 @@ const ReportsPage = () => {
         { id: 39, number: "TN45M7677", owner: "Vimal", chassis: "MLKJNH5432", fcExpiry: "20/10/2023", status: "Active", nextDue: "18/01/2027", year: 2014 },
         { id: 40, number: "TN46N7879", owner: "Natarajan", chassis: "POIUYT8765", fcExpiry: "06/11/2024", status: "Active", nextDue: "08/03/2027", year: 2018 },
     ];
-
+ 
     const filteredVehicles = vehicles;
     const reportCategories = [
         {
@@ -103,12 +106,14 @@ const ReportsPage = () => {
     ];
 
     const handleReportClick = (reportName: string) => {
-       setActiveReport(reportName);
+        console.log(`Selected report: ${reportName}`);
+        setActiveReport(reportName);
     };
 
 
     const handleCategoryClick = (categoryTitle: string) => {
-       setActiveCategory(categoryTitle);
+        console.log(`Selected category: ${categoryTitle}`);
+        setActiveCategory(categoryTitle);
     };
 
     const filteredCategories = reportCategories.map(category => ({
@@ -117,25 +122,9 @@ const ReportsPage = () => {
             item.name.toLowerCase().includes(searchTerm.toLowerCase())
         )
     })).filter(category => category.items.length > 0);
+ 
 
-    return (
-        <Layout pageTitle="Reports">
-            <div className="flex">
-                <aside className="w-[240px] h-[100vh] bg-[#f8f9fa] border-[#ebeff3] px-3 flex flex-col space-y-4">
-
-                    <div className="relative">
-                        <div className="flex items-center  overflow-hidden ">
-                            <i className="ri-search-line absolute left-2 text-sm"></i>
-                            <input
-                                type="text"
-                                placeholder="Search here..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="form-control  pl-7"
-                            />
-                        </div>
-                    </div>
-
+ 
 
                     <div className="flex flex-col gap-4 text-sm bg-[#f8f9fa] overflow-y-auto pr-2 max-h-[calc(100vh-110px)]">
                         {filteredCategories.map((category, categoryIndex) => (
@@ -225,60 +214,12 @@ const ReportsPage = () => {
 
                             <div className="flex items-center relative space-x-2">
                                 <input className="form-control !h-[31px]" type="text" placeholder="Enter Vehicle Number" />
-                                <button className="btn-sm !border-transparent !text-[#384551] hover:bg-[#dce0e5] hover:border-[#ebeff3] text-sm" onClick={() => setIsSidebarOpen(true)} >
+                                <button className="btn-sm !border-transparent !text-[#384551] hover:bg-[#dce0e5] hover:border-[#ebeff3] text-sm"  >
                                     <i className="ri-sort-desc" ></i>
                                 </button>
                             </div>
                         </div>
-   {/* Offcanvas Sidebar */}
-          <div className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-            {/* Backdrop */}
-            <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)]" onClick={() => setIsSidebarOpen(false)}></div>
-
-            {/* Sidebar Content */}
-            <div className={`relative w-80 mt-[5.4rem] mb-[0.15rem] rounded-tl-[0.375rem] rounded-bl-[0.375rem] bg-white shadow-[0_4px_16px_#27313a66] transform transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
-
-              {/* Header */}
-              <div className="py-[0.5rem] px-[0.75rem] border-b border-[#dee2e6] flex justify-between items-center">
-                <h5 className="text-sm text-[#12344d]">Add Filters</h5>
-                <button onClick={() => setIsSidebarOpen(false)} className="text-[#12344d] cursor-pointer">
-                  <i className="ri-close-line"></i>
-                </button>
-              </div>
-
-              {/* Scrollable Content */}
-              <div className="p-4 overflow-y-auto flex-1">
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-[#000000] mb-1.5">Vehicle Number</label>
-                  <input type="text" placeholder="Enter vehicle number" className="form-control" />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-[#000000] mb-1.5">Owner Name</label>
-                  <input type="text" placeholder="Enter owner name" className="form-control" />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-[#000000] mb-1.5">Chassis Number</label>
-                  <input type="text" placeholder="Enter chassis number" className="form-control" />
-                </div>
-
-               
-                {/* Add more filters as needed */}
-              </div>
-
-
-              <div className="p-2 border-t border-[#dee2e6] flex justify-end gap-2">
-                <button className="btn-sm btn-light" onClick={() => { setIsSidebarOpen(false); }}>
-                  Reset All
-                </button>
-                <button className="btn-sm btn-primary" onClick={() => { setIsSidebarOpen(false); }}>
-                  Apply
-                </button>
-              </div>
-            </div>
-
-          </div>
-
+ 
                         <div className="bg-[#ebeff3]">
                             <div className="mx-2  h-[calc(100vh-129px)] overflow-hidden rounded-lg bg-white">
                                 <div className="h-full overflow-y-auto">

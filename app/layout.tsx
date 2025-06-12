@@ -50,6 +50,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+      <link rel="icon" href="favig.png" />
         <link
           href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css"
           rel="stylesheet"

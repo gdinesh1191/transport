@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Layout from "../../../components/Layout";
 import { useRouter } from "next/navigation";
 import { apiCall } from "../../../utils/api";
+import ToastContainer, { showToast } from "@/app/utils/toaster";
 type TabKey = "all" | "new" | "existing";
 const tabs: TabKey[] = ["all", "new", "existing"];
 interface Vehicle {
@@ -31,7 +32,7 @@ const VehicleList = () => {
       setLoading(true);
       setError(null);
       setNoData(false);
-       const payload = {
+      const payload = {
         token: "getVehicle",
         data: {
           columns: [
@@ -48,7 +49,7 @@ const VehicleList = () => {
         },
       };
       const response = await apiCall(payload);
-       if (
+      if (
         response &&
         response.data &&
         Array.isArray(response.data) &&
@@ -104,10 +105,48 @@ const VehicleList = () => {
         selectedIds.length === filteredVehicles.length
     );
   }, [selectedIds, filteredVehicles]);
-   
+
   const handleRefresh = () => {
     fetchVehicles();
   };
+
+  const handleDelete = async () => {
+    if (selectedIds.length === 0) {
+      alert("Please select at least one vehicle to delete.");
+      return;
+    }
+
+    if (
+      window.confirm(
+        `Are you sure you want to delete ${selectedIds.length} vehicle(s)?`
+      )
+    ) {
+      try {
+        setLoading(true);
+        setError(null);
+        const payload = {
+          token: "deleteVehicles",
+          data: {
+            ids: selectedIds,
+          },
+        };
+        const response = await apiCall(payload);
+        if (response && response.status === 200) {
+          setSelectedIds([]);
+          fetchVehicles();
+          showToast.success("Vehicle Deleted successfully!");
+        } else {
+          showToast.error("Error in deleting !");
+        }
+      } catch (err) {
+        console.error("Error deleting vehicles:", err);
+        setError("An error occurred while deleting vehicles.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   return (
     <Layout pageTitle="Vehicle List">
       <main className="flex-1">
@@ -260,7 +299,12 @@ const VehicleList = () => {
                         <i className="ri-arrow-down-line mr-1"></i>
                         Download
                       </button>
-                      <button className="btn-sm btn-hover" id="deleteBtn">
+                      <button
+                        className="btn-sm btn-hover"
+                        id="deleteBtn"
+                        onClick={handleDelete}
+                        disabled={loading}
+                      >
                         <i className="ri-delete-bin-6-line mr-1"></i>
                         Delete
                       </button>
@@ -458,7 +502,14 @@ const VehicleList = () => {
                             <td className="td-cell">
                               <span className="float-left">{index + 1}</span>
                               <span className="float-right">
-                                <i className="ri-pencil-fill edit-icon opacity-0 group-hover:opacity-100"></i>
+                                <i
+                                  onClick={() =>
+                                    router.push(
+                                      `/modules/vehicle/new?id=${vehicle.id}`
+                                    )
+                                  }
+                                  className="ri-pencil-fill edit-icon opacity-0 group-hover:opacity-100"
+                                />
                               </span>
                             </td>
                             <td className="td-cell">
@@ -488,6 +539,8 @@ const VehicleList = () => {
           <span className="text-blue-600">{vehicles.length}</span>
         </span>
       </footer>
+
+      <ToastContainer />
     </Layout>
   );
 };

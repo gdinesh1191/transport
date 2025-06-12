@@ -25,10 +25,10 @@ export default function Sidebar() {
 
   // Auto-expand menus based on current path
   useEffect(() => {
-    if (pathname.includes('/modules/vehicle') || pathname.includes('/modules/employee')) {
+    if (pathname.includes('/modules/vehicle') || pathname.includes('/modules/employee') || pathname.includes('/modules/options')) {
       setMasterMenuOpen(true)
     }
-    if (pathname.includes('/modules/trip-sheet') || pathname.includes('/modules/expense')) {
+    if (pathname.includes('/modules/trip-sheet') || pathname.includes('/modules/expense') ) {
       setTripMenuOpen(true)
     }
   }, [pathname])
@@ -69,7 +69,7 @@ export default function Sidebar() {
           <ul>
             <li
               className={`px-4 py-2 hover:bg-[#191f26] border-l-5 border-l-transparent hover:border-l-[#1aed59] flex items-center justify-between cursor-pointer ${
-                masterMenuOpen || isSectionActive(['/modules/vehicle', '/modules/employee']) 
+                masterMenuOpen || isSectionActive(['/modules/vehicle', '/modules/employee','/modules/options']) 
                   ? 'text-white ' 
                   : 'text-[#b0b3b7]'
               }`}
@@ -77,7 +77,7 @@ export default function Sidebar() {
             >
               <div className="flex items-center">
                 <i className={`ri-dashboard-line mr-3 text-lg ${
-                  masterMenuOpen || isSectionActive(['/modules/vehicle', '/modules/employee']) ? 'text-white' : ''
+                  masterMenuOpen || isSectionActive(['/modules/vehicle', '/modules/employee','/modules/options']) ? 'text-white' : ''
                 }`}></i>
                 <span>Master</span>
               </div>
@@ -126,6 +126,21 @@ export default function Sidebar() {
                     onClick={() => router.push('/modules/employee/new')} 
                     className={`ri-add-fill text-lg ${isActive('/modules/employee/new') ? 'text-white' : ''}`}
                   ></i>
+                </li>
+
+                <li
+                  className={`py-2 pr-4 pl-12 hover:bg-[#191f26] border-l-5  hover:border-l-[#1aed59] flex items-center justify-between cursor-pointer ${
+                    isActive('/modules/options')
+                      ? 'bg-[#191f26] border-l-[#1aed59] text-white' 
+                      : 'text-[#b0b3b7] border-l-transparent'
+                  }`}
+                >
+                  <span 
+                    onClick={() => router.push('/modules/options')}
+                    className={`${isActive('/modules/options') ? 'text-white' : ''}`}
+                  >
+                    Options
+                  </span>
                 </li>
               </ul>
             )}
@@ -235,7 +250,7 @@ export default function Sidebar() {
         <ul>
           <li
             className={`relative group menu-item px-4 py-2 hover:bg-[#191f26] border-l-5 hover:border-l-[#1aed59] flex items-center justify-between cursor-pointer ${
-              isSectionActive(['/modules/vehicle', '/modules/employee']) 
+              isSectionActive(['/modules/vehicle', '/modules/employee','/modules/options']) 
                 ? 'bg-[#191f26] border-l-[#1aed59] text-white' 
                 : 'text-[#b0b3b7]  border-l-transparent'
             }`}
@@ -244,7 +259,7 @@ export default function Sidebar() {
           >
             <div className="flex items-center">
               <i className={`ri-dashboard-line text-lg ${
-                isSectionActive(['/modules/vehicle', '/modules/employee']) ? 'text-white' : ''
+                isSectionActive(['/modules/vehicle', '/modules/employee','/modules/options']) ? 'text-white' : ''
               }`}></i>
             </div>
 
@@ -282,6 +297,14 @@ export default function Sidebar() {
                     onClick={() => router.push('/modules/employee/list')}
                   >
                     <i className="ri-list-unordered text-[16px]"></i> Employee List
+                  </li>
+                  <li 
+                    className={`px-3 py-2 flex items-center text-white text-[15px] rounded-md hover:bg-[#103d5a] hover:border-l-4 border-l-4  hover:border-[#1aed59] cursor-pointer gap-2 ${
+                      isActive('/modules/options') ? 'bg-[#103d5a] border-[#1aed59] text-[#fff]' : 'border-l-transparent'
+                    }`}
+                    onClick={() => router.push('/modules/options')}
+                  >
+                    <i className="ri-list-unordered text-[16px]"></i> Options
                   </li>
                 </ul>
               </div>

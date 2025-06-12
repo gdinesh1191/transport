@@ -159,7 +159,6 @@ const NewExpense = () => {
                       name="description"
                       id="description"
                       placeholder="Enter description"
-                      data-validate="required"
                       className="form-control capitalize h-[80px]"
                     ></textarea>
                   </FormField>

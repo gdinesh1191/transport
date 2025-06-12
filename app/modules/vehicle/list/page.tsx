@@ -4,17 +4,20 @@ import Layout from "../../../components/Layout";
 import { useRouter } from "next/navigation";
 import { apiCall } from "../../../utils/api";
 import ToastContainer, { showToast } from "@/app/utils/toaster";
+import { useLoading } from "@/app/utils/pageLoader";
+
+
 type TabKey = "all" | "new" | "existing";
 const tabs: TabKey[] = ["all", "new", "existing"];
 interface Vehicle {
   id: number;
   registrationNumber: string;
   owner: string;
-  chassis: string;
-  fcExpiry: string;
+  modelYear: string;
+  chasisNumber: string;
   status: string;
-  nextDue: string;
-  year: number;
+  truckType: string;
+  npExpiryDate: string;
   truckStatus: string;
 }
 const VehicleList = () => {
@@ -40,11 +43,11 @@ const VehicleList = () => {
             "registrationNumber",
             "owner",
             "ownerName",
-            "chassis",
-            "fcExpiry",
+            "modelYear",
+            "chasisNumber",
             "truckStatus",
-            "nextDue",
-            "year",
+            "truckType",
+            "npExpiryDate",
           ],
         },
       };
@@ -146,7 +149,16 @@ const VehicleList = () => {
       }
     }
   };
+  const { startLoading, stopLoading } = useLoading();
 
+  useEffect(() => {
+    startLoading();
+    const timer = setTimeout(() => {
+      stopLoading();
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
   return (
     <Layout pageTitle="Vehicle List">
       <main className="flex-1">
@@ -449,13 +461,13 @@ const VehicleList = () => {
                           </th>
                           <th className="th-cell">
                             <div className="flex justify-between items-center gap-1">
-                              <span>Chassis Number</span>
+                              <span>Model Year</span>
                               <i className="dropdown-icon-hover ri-arrow-down-s-fill"></i>
                             </div>
                           </th>
                           <th className="th-cell">
                             <div className="flex justify-between items-center gap-1">
-                              <span>FC Expiry Date</span>
+                              <span>Chasis Number</span>
                               <i className="dropdown-icon-hover ri-arrow-down-s-fill"></i>
                             </div>
                           </th>
@@ -467,13 +479,13 @@ const VehicleList = () => {
                           </th>
                           <th className="th-cell">
                             <div className="flex justify-between items-center gap-1">
-                              <span>Next Due</span>
+                              <span>Truck Type</span>
                               <i className="dropdown-icon-hover ri-arrow-down-s-fill"></i>
                             </div>
                           </th>
                           <th className="last-th-cell">
                             <div className="flex justify-between items-center gap-1">
-                              <span>Year</span>
+                              <span>NP Expiry</span>
                               <i className="dropdown-icon-hover ri-arrow-down-s-fill"></i>
                             </div>
                           </th>
@@ -516,11 +528,11 @@ const VehicleList = () => {
                               {vehicle.registrationNumber}
                             </td>
                             <td className="td-cell">{vehicle.owner}</td>
-                            <td className="td-cell">{vehicle.chassis}</td>
-                            <td className="td-cell">{vehicle.fcExpiry}</td>
+                            <td className="td-cell">{vehicle.modelYear}</td>
+                            <td className="td-cell">{vehicle.chasisNumber}</td>
                             <td className="td-cell">{vehicle.truckStatus}</td>
-                            <td className="td-cell">{vehicle.nextDue}</td>
-                            <td className="last-td-cell">{vehicle.year}</td>
+                            <td className="td-cell">{vehicle.truckType}</td>
+                            <td className="last-td-cell">{vehicle.npExpiryDate}</td>
                           </tr>
                         ))}
                       </tbody>

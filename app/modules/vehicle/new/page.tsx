@@ -4,9 +4,11 @@ import Layout from "../../../components/Layout";
 import useInputValidation from "@/app/utils/inputValidations";
 import ToastContainer, { showToast } from "@/app/utils/toaster";
 import { Input, RadioGroup } from "@/app/utils/form-controls";
+ 
 import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
 import { validateForm } from "@/app/utils/formValidations";
 import DatePicker from "@/app/utils/commonDatepicker";
+ 
 
 const FormField = ({ label, required = false, children, className = "" }: { label: string; required?: boolean; children: React.ReactNode; className?: string }) => (
   <div className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}>
@@ -84,7 +86,9 @@ export default function NewVehicle() {
                   <Input name="ownerAddress" placeholder="Enter Address" className="capitalize" data-validate="required" />
                 </FormField>
                 <FormField label="Registration Date" required>
+ 
                   <DatePicker date={registerationDate} setDate={setregisterationDate} placeholder="Select date" className="w-full" />
+ 
                 </FormField>
               </div>
               <div>

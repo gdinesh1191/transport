@@ -235,7 +235,7 @@ export default function NewTrip() {
               </div>
             </form>
             <div className="mt-8 flex justify-end space-x-3">
-              <button onClick={handleCancelTrip} className="btn-sm btn-secondary">Cancel</button>
+              <button onClick={handleCancelTrip} className="btn-sm btn-light">Cancel</button>
               <button id="createTrip" onClick={handleCreateTrip} className={`btn-sm btn-primary ${!isTripValid ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`} disabled={!isTripValid}>
                 Create Trip
               </button>

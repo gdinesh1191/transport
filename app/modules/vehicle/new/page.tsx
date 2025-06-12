@@ -9,7 +9,7 @@ import SearchableSelect from "@/app/utils/searchableSelect";
 import { Option } from "@/app/utils/searchableSelect";
 import { validateForm } from "@/app/utils/formValidations"; // Import the utility
 
-import DatePicker from "@/app/utils/commonDatepicker";
+
 
 const FormField = ({
   label,
@@ -114,11 +114,11 @@ export default function NewVehicle() {
                   />
                 </FormField>
                 <FormField label="Registration Date" required>
-                  <DatePicker
-                    date={selectedDate}
-                    setDate={setSelectedDate}
-                    placeholder="Select date"
-                    className="w-full"
+                   <Input
+                    name="registrationDate"
+                    className="form-control"
+                    type="date"
+                    data-validate="required"
                   />
                 </FormField>
               </div>

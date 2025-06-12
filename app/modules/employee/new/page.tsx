@@ -3,6 +3,7 @@
 import { useState, ChangeEvent, FormEvent } from "react";
 import Layout from "../../../components/Layout";
 
+
 // Type definitions
 interface BankDetails {
   id: number;
@@ -44,7 +45,7 @@ interface RadioGroupProps {
 
 // Form field components for reusability
 const FormField: React.FC<FormFieldProps> = ({ label, required = false, children, className = "" }) => (
-  <div className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}>
+  <div className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4  ${className}`}>
     <label className="form-label w-1/2">
       {label}
       {required && <span className="form-required text-red-500">*</span>}
@@ -57,21 +58,13 @@ const Input: React.FC<InputProps> = ({ name, placeholder, type = "text", classNa
   <input type={type} name={name} placeholder={placeholder} className={`form-control ${className}`} {...props} />
 );
 
-const RadioGroup: React.FC<RadioGroupProps> = ({ name, options, required = false }) => (
-  <div className="space-x-4">
-    {options.map((option, index) => (
-      <label key={option.value} className="form-label">
-        <input type="radio" name={name} value={option.value} className="form-radio" {...(required && index === 0 ? { "data-validate": "required" } : {})} />
-        <span className="ml-2">{option.label}</span>
-      </label>
-    ))}
-  </div>
-);
+
 
 export default function NewEmployee() {
   const [activeTab, setActiveTab] = useState<string>("Bank_details");
   const [showModal, setShowModal] = useState<boolean>(true);
   const [employeeType, setEmployeeType] = useState<string>("");
+   const [fileName, setFileName] = useState('No file chosen');
 
   const [bankForm, setBankForm] = useState<Omit<BankDetails, "id">>({
     bankName: "", accountNumber: "", accountName: "", ifscCode: "", branchName: "",
@@ -135,6 +128,14 @@ export default function NewEmployee() {
     }
   };
 
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setFileName(e.target.files[0].name);
+    } else {
+      setFileName('No file chosen');
+    }
+  };
+
   const handleDeleteBank = (id: number) => {
     setBankList((prev) => prev.filter((b) => b.id !== id));
   };
@@ -168,7 +169,7 @@ export default function NewEmployee() {
                 <FormField label="Bank Name" required><Input name="bankName" type="text" value={bankForm.bankName} onChange={handleBankChange} placeholder="Enter Bank Name" className="capitalize" data-validate="required" /></FormField>
                 <FormField label="Branch Name" required><Input name="branchName" type="text" value={bankForm.branchName} onChange={handleBankChange} placeholder="Enter Branch Name" className="capitalize" data-validate="required" /></FormField>
                 {bankError && (<div className="text-red-500 text-sm mt-2 text-end">{bankError}</div>)}
-                <FormField label=""><input type="button" value="Add Bank" onClick={handleAddBank} className="mt-2 w-full px-4 py-2 rounded bg-[#009333] text-white text-sm font-medium hover:bg-[#007a2a]" /></FormField>
+                <FormField label=""><input type="button" value="Add Bank" onClick={handleAddBank} className="btn-sm btn-primary" /></FormField>
               </div>
             </div>
 
@@ -242,7 +243,7 @@ export default function NewEmployee() {
           <div className="flex-1 overflow-y-auto h-[calc(100vh-103px)]">
             <form onSubmit={handleSubmit}>
               <div className="border-b border-gray-300">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-2">
+                <div className="grid grid-cols-1 lg:grid-cols-2 px-4 py-2">
                   <FormField label="Name" required>
                     <div>
                       <div className="flex gap-2">
@@ -258,7 +259,7 @@ export default function NewEmployee() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-6 px-4 py-6">
                 <div className="space-y-4 lg:border-r lg:border-gray-300 lg:pr-4">
                   <FormField label="DOB" required><Input name="dob" type="date" className="form-control w-full" data-validate="required" /></FormField>
                   <FormField label="Gender" required>
@@ -278,7 +279,28 @@ export default function NewEmployee() {
                 <div className="space-y-4">
                   <FormField label="Address Line 1"><Input name="addressLine1" placeholder="Enter Address Line 1" className="form-control w-full capitalize" /></FormField>
                   <FormField label=""><Input name="addressLine2" placeholder="Enter Address Line 2" className="form-control w-full capitalize" /></FormField>
-                  <FormField label="Picture Path"><Input type="file" name="picture" className="w-full" /></FormField>
+                 
+                  <FormField label="Picture Path" required>
+                    <div className="w-full flex-grow flex flex-col">
+                      <div className="flex items-center justify-start gap-3">
+                        <div className="border border-gray-200 rounded-sm px-3 py-1 cursor-pointer">
+                          <label htmlFor="picturepathInput" className="flex items-center gap-1 text-[#009333] text-sm cursor-pointer">
+                            <i className="ri-upload-2-line text-md"></i>Upload File
+                          </label>
+                        </div>
+                        <span id="fileName" className="text-gray-600 text-sm truncate">{fileName}</span>
+                      </div>
+                      <input
+                        type="file"
+                        id="picturepathInput"
+                        name="picturepath"
+                        className="hidden"
+                        data-validate="required"
+                        onChange={handleFileUpload}
+                        required
+                      />
+                    </div>
+                  </FormField>
                   <FormField label="Remarks"><Input name="remarks" placeholder="Enter Remarks" className="form-control w-full capitalize" /></FormField>
                   <div>
                     <FormField label="State" required>
@@ -325,7 +347,7 @@ export default function NewEmployee() {
               <p className="text-md text-gray-600 mb-7">Choose the employee type that best describes your business</p>
               <div className="flex gap-4 justify-center">
                 <button type="button" onClick={() => { setEmployeeType("staff"); setShowModal(false); }} className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white text-gray-800 px-4 py-2 rounded-md w-full">Staff</button>
-                <button type="button" onClick={() => { setEmployeeType("Driver"); setShowModal(false); }} className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white text-gray-800 px-4 py-2 rounded-md w-full">Driver</button>
+                <button type="button" onClick={() => { setEmployeeType("Driver"); setShowModal(false); }} className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white  text-gray-800 px-4 py-2 rounded-md w-full">Driver</button>
               </div>
             </div>
           </div>

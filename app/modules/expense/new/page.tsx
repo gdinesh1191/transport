@@ -3,9 +3,8 @@
 import { useRef, useState, useEffect } from "react";
 import Layout from "../../../components/Layout";
 import { validateForm } from "@/app/utils/formValidations"; // Import the utility
-
-// Import the new common components
-import CommonDatePicker from "@/app/utils/commonDatepicker";
+ 
+import DatePicker from "@/app/utils/commonDatepicker";
 import CommonTypeahead from "@/app/utils/commonTypehead";
 
 import dayjs, { Dayjs } from 'dayjs';
@@ -81,11 +80,12 @@ const RadioGroup = ({
 );
 
 const NewExpense = () => {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+
   const [fileName, setFileName] = useState('No file chosen');
   const formRef = useRef<HTMLFormElement>(null);
-  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
-
-  // Sample name data - remains in this specific page
+  
+   
   const nameData = [
     { id: 1, name: "Aaaaaaaaaaaaaaaa", description: "This is a detailed description for Aaaaaaaaaaaaaaaa item with more information about its features and usage." },
     { id: 2, name: "Ad Agency Solutions", description: "Professional advertising and marketing solutions for businesses of all sizes." },
@@ -105,10 +105,8 @@ const NewExpense = () => {
       if (validateForm(formRef.current)) {
         const formData = new FormData(formRef.current);
         const formValues = Object.fromEntries(formData.entries());
-
-        // Add the selected date to form values, formatted as needed
-        formValues.date = selectedDate ? selectedDate.format('YYYY-MM-DD') : '';
-
+ 
+        
         console.log("Form submitted successfully", formValues);
         setFileName("No file chosen");
       }
@@ -153,12 +151,7 @@ const NewExpense = () => {
                   </FormField>
 
                   <FormField label="Date" className="md:items-start" required>
-                    <CommonDatePicker
-                      name="date" // This name will be used for form data
-                      value={selectedDate}
-                      onChange={setSelectedDate}
-                      required={true}
-                    />
+                  <DatePicker date={selectedDate} setDate={setSelectedDate} placeholder="Select date" className="w-full" />  
                   </FormField>
 
                   <FormField label="Description" className="md:items-start">

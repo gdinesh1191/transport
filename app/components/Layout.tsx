@@ -2,8 +2,7 @@
 
 import Sidebar from './Sidebar';
 import Header from './Header';
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+ 
 
 
 interface LayoutProps {
@@ -14,9 +13,7 @@ interface LayoutProps {
 export default function Layout({ children, pageTitle }: LayoutProps) {
   return (
  
- 
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden">
         <Sidebar />
 
         <div className="flex-1 flex flex-col">
@@ -28,6 +25,6 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
         </div>
  
       </div>
-    </LocalizationProvider>
+    
   );
 }

@@ -20,7 +20,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ date, setDate, className, place
 
   const handleSelect = (selectedDate: Date | undefined) => {
     setDate(selectedDate);
-    setOpen(false); // Close the popover
+    setOpen(false); 
   };
 
   return (

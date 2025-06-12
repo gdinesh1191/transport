@@ -242,61 +242,61 @@ const EmployeeList = () => {
                                                 <input type="checkbox" id="selectAll" className="form-check" />
                                             </th>
                                             <th className="th-cell">
-                                                <div className="flex justify-between items-center gap-1">
+                                                <div className="flex justify-between items-start gap-1">
                                                     <span>S.No.</span>
                                                 </div>
                                             </th>
                                             <th className="th-cell">
-                                                <div className="flex justify-between items-center gap-1">
+                                                <div className="flex justify-between items-start gap-1">
                                                     <span>Employee Name</span>
                                                     <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
                                                 </div>
                                             </th>
                                             <th className="th-cell">
-                                                <div className="flex justify-between items-center gap-1">
+                                                <div className="flex justify-between items-start gap-1">
                                                     <span>Phone Number</span>
                                                     <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
                                                 </div>
                                             </th>
                                             <th className="th-cell">
-                                                <div className="flex justify-between items-center gap-1">
+                                                <div className="flex justify-between items-start gap-1">
                                                     <span>Whatsapp Number</span>
                                                     <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
                                                 </div>
                                             </th>
                                             <th className="th-cell">
-                                                <div className="flex justify-between items-center gap-1">
+                                                <div className="flex justify-between items-start gap-1">
                                                     <span>Aadhar Number</span>
                                                     <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
                                                 </div>
                                             </th>
                                             <th className="th-cell">
-                                                <div className="flex justify-between items-center gap-1">
+                                                <div className="flex justify-between items-start gap-1">
                                                     <span>PAN Number</span>
                                                     <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
                                                 </div>
                                             </th>
                                             <th className="th-cell">
-                                                <div className="flex justify-between items-center gap-1">
+                                                <div className="flex justify-between items-start gap-1">
                                                     <span>License Number</span>
                                                     <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
                                                 </div>
                                             </th>
                                             <th className="th-cell">
-                                                <div className="flex justify-between items-center gap-1">
+                                                <div className="flex justify-between items-start gap-1">
                                                     <span>Truck Number</span>
                                                     <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
                                                 </div>
                                             </th>
                                             <th className="th-cell">
-                                                <div className="flex justify-between items-center gap-1">
+                                                <div className="flex justify-between items-start gap-1">
                                                     <span>Employee Type</span>
                                                     <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
                                                 </div>
                                             </th>
 
                                             <th className="last-th-cell">
-                                                <div className="flex justify-between items-center gap-1">
+                                                <div className="flex justify-between items-start gap-1">
                                                     <span>License Expiry Date</span>
                                                     <i className="dropdown-hover ri-arrow-down-s-fill cursor-pointer"></i>
                                                 </div>

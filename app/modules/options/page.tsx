@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import Layout from "../../components/Layout";
 import { validateForm } from "@/app/utils/formValidations"; // Import the utility
+import SweetAlert, { SweetAlertHandler } from "@/app/utils/sweetAlert";
 
 const FormField = ({
   label,
@@ -119,7 +120,9 @@ const Options = () => {
     loanProvider: "Loan Provider",
     classOfTruck: "Class Of Truck"
   };
+const alertRef = useRef<SweetAlertHandler>(null);
 
+ 
  useEffect(()=>{
   loadTableData('insuranceCompany')
  },[])
@@ -172,6 +175,27 @@ const Options = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    alertRef.current?.showAlert(
+    "warning",
+    "Are you sure?",
+    "This cannot be undone.",
+    () => {
+      alertRef.current?.showAlert(
+        "success",
+        "Deleted!",
+        "Your file was successfully deleted.",
+        () => alertRef.current?.hideAlert() // ← Manually close it
+      );
+    },
+    () => {
+      alertRef.current?.showAlert(
+        "error",
+        "Cancelled!",
+        "Your file is safe.",
+        () => alertRef.current?.hideAlert() // ← Same here
+      );
+    }
+  );
     if (formRef.current) {
         
       if (validateForm(formRef.current)) {
@@ -371,6 +395,7 @@ const Options = () => {
                       </tbody>
                     </table>
                   </div>
+                   <SweetAlert ref={alertRef} />
                 </div>
               )}
             </div>
@@ -382,3 +407,45 @@ const Options = () => {
 };
 
 export default Options;
+
+// const showWarning = () => {
+//   alertRef.current?.showAlert(
+//     "warning",
+//     "Are you sure?",
+//     "You won't be able to revert this!",
+//     async () => {
+//       // Simulate an API call
+//       try {
+//         const res = await fakeDeleteApi();
+//         if (res.success) {
+//           alertRef.current?.showAlert(
+//             "success",
+//             "Deleted!",
+//             "Your file has been deleted."
+//           );
+//         } else {
+//           alertRef.current?.showAlert(
+//             "error",
+//             "Oops!",
+//             "Something went wrong. Try again."
+//           );
+//         }
+//       } catch (err) {
+//         alertRef.current?.showAlert(
+//           "error",
+//           "Error!",
+//           "Failed to delete file."
+//         );
+//       }
+//     },
+//     () => {
+//       alertRef.current?.showAlert(
+//         "error",
+//         "Cancelled!",
+//         "Your file is safe."
+//       );
+//     }
+//   );
+// };
+
+

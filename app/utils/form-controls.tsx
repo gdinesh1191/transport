@@ -34,14 +34,17 @@ export const RadioGroup = ({
   options: { value: string; label: string }[];
   required?: boolean;
 }) => (
-  <div className="space-x-4">
+  <div className="flex flex-wrap items-center gap-6 ">
     {options.map((option, index) => (
-      <label key={option.value} className="form-label">
+      <label
+        key={option.value}
+        className="inline-flex items-center text-sm"
+      >
         <input
           type="radio"
           name={name}
           value={option.value}
-          className="form-radio"
+          className="form-radio text-[#009333] focus:ring-[#009333]"
           {...(required && index === 0 ? { "data-validate": "required" } : {})}
         />
         <span className="ml-2">{option.label}</span>

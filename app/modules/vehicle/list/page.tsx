@@ -4,6 +4,9 @@ import Layout from "../../../components/Layout";
 import { useRouter } from "next/navigation";
 import { apiCall } from "../../../utils/api";
 import ToastContainer, { showToast } from "@/app/utils/toaster";
+import { useLoading } from "@/app/utils/pageLoader";
+
+
 type TabKey = "all" | "new" | "existing";
 const tabs: TabKey[] = ["all", "new", "existing"];
 interface Vehicle {
@@ -146,7 +149,16 @@ const VehicleList = () => {
       }
     }
   };
+  const { startLoading, stopLoading } = useLoading();
 
+  useEffect(() => {
+    startLoading();
+    const timer = setTimeout(() => {
+      stopLoading();
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
   return (
     <Layout pageTitle="Vehicle List">
       <main className="flex-1">

@@ -1,15 +1,10 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import Layout from "../../../components/Layout";
 import { useRouter } from "next/navigation";
 import { apiCall } from "../../../utils/api";
-
-// Define tab key types
 type TabKey = "all" | "new" | "existing";
-
 const tabs: TabKey[] = ["all", "new", "existing"];
-
 interface Vehicle {
   id: number;
   registrationNumber: string;
@@ -21,7 +16,6 @@ interface Vehicle {
   year: number;
   truckStatus: string;
 }
-
 const VehicleList = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -31,18 +25,13 @@ const VehicleList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [noData, setNoData] = useState(false);
-
   const router = useRouter();
-
-  // Fetch vehicles data from API
   const fetchVehicles = async () => {
     try {
       setLoading(true);
       setError(null);
       setNoData(false);
-
-      // Define the payload for this specific API call
-      const payload = {
+       const payload = {
         token: "getVehicle",
         data: {
           columns: [
@@ -58,11 +47,8 @@ const VehicleList = () => {
           ],
         },
       };
-
       const response = await apiCall(payload);
-
-      // Check if response has data
-      if (
+       if (
         response &&
         response.data &&
         Array.isArray(response.data) &&
@@ -81,12 +67,9 @@ const VehicleList = () => {
       setLoading(false);
     }
   };
-
-  // Load vehicles on component mount
   useEffect(() => {
     fetchVehicles();
   }, []);
-
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked;
     setSelectAll(checked);
@@ -96,7 +79,6 @@ const VehicleList = () => {
       setSelectedIds([]);
     }
   };
-
   const handleCheckboxChange = (id: number) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
@@ -108,7 +90,6 @@ const VehicleList = () => {
       : vehicles.filter(
           (v) => (v.truckStatus || "").toLowerCase() === activeTab.toLowerCase()
         );
-
   const counts: Record<TabKey, number> = {
     all: vehicles.length,
     new: vehicles.filter((v) => (v.truckStatus || "").toLowerCase() === "new")
@@ -117,19 +98,16 @@ const VehicleList = () => {
       (v) => (v.truckStatus || "").toLowerCase() === "existing"
     ).length,
   };
-
   useEffect(() => {
     setSelectAll(
       filteredVehicles.length > 0 &&
         selectedIds.length === filteredVehicles.length
     );
   }, [selectedIds, filteredVehicles]);
-
-  // Handle refresh functionality
+   
   const handleRefresh = () => {
     fetchVehicles();
   };
-
   return (
     <Layout pageTitle="Vehicle List">
       <main className="flex-1">
@@ -140,7 +118,6 @@ const VehicleList = () => {
               <div className="text-lg">Loading vehicles...</div>
             </div>
           )}
-
           {/* Error State */}
           {error && !loading && (
             <div className="flex items-center justify-center h-64 flex-col">
@@ -155,7 +132,6 @@ const VehicleList = () => {
               </div>
             </div>
           )}
-
           {/* No Data State */}
           {noData && !loading && !error && (
             <div className="flex items-center justify-center h-64">
@@ -164,7 +140,6 @@ const VehicleList = () => {
               </div>
             </div>
           )}
-
           {/* Main Content - Only show if we have data and not loading */}
           {!loading && !error && !noData && (
             <>
@@ -204,7 +179,6 @@ const VehicleList = () => {
                     </li>
                   ))}
                 </ul>
-
                 <div className="flex items-center flex-shrink-0 ml-auto">
                   <button
                     onClick={handleRefresh}
@@ -214,7 +188,6 @@ const VehicleList = () => {
                     <i className="ri-refresh-line mr-1"></i>
                     <span className="text-sm">Refresh</span>
                   </button>
-
                   <button
                     id="openSidebarCustomize"
                     className="btn-sm btn-hover-ct"
@@ -222,7 +195,6 @@ const VehicleList = () => {
                     <i className="ri-equalizer-line mr-1"></i>
                     <span className="text-sm">Customize Table</span>
                   </button>
-
                   <div className="inline-flex border border-[#cfd7df] text-[#12375d] rounded overflow-hidden bg-white text-sm ml-2">
                     <button className="flex items-center py-1 px-2 hover:bg-[#ebeff3] cursor-pointer">
                       <i className="ri-download-line mr-1"></i>
@@ -232,7 +204,6 @@ const VehicleList = () => {
                       <i className="ri-arrow-down-s-line"></i>
                     </button>
                   </div>
-
                   <button
                     className="btn-sm btn-primary ml-2 text-sm"
                     onClick={() => router.push("/modules/vehicle/new")}
@@ -242,7 +213,6 @@ const VehicleList = () => {
                   </button>
                 </div>
               </div>
-
               {/* View Mode / Bulk Actions / Search */}
               <div className="flex justify-between items-center px-1.5 py-1.5 bg-[#ebeff3]">
                 <div className="flex items-center space-x-2 ml-2">
@@ -254,7 +224,6 @@ const VehicleList = () => {
                         <span className="text-sm">Table</span>
                         <i className="ri-arrow-down-s-line ml-1"></i>
                       </button>
-
                       <div className="relative inline-block">
                         <button
                           id="viewModeBtn"
@@ -263,7 +232,6 @@ const VehicleList = () => {
                           <i className="ri-layout-5-line"></i>
                         </button>
                       </div>
-
                       <button
                         className="btn-sm btn-visible-hover"
                         id="bulkActionsBtn"
@@ -277,7 +245,6 @@ const VehicleList = () => {
                       </button>
                     </>
                   )}
-
                   {/* Bulk action buttons (shown when at least 1 is selected) */}
                   {selectedIds.length > 0 && (
                     <div className="bulk-actions flex items-center space-x-2">
@@ -308,7 +275,6 @@ const VehicleList = () => {
                     </div>
                   )}
                 </div>
-
                 <div className="flex items-center relative space-x-2">
                   <input
                     className="form-control !h-[31px]"
@@ -323,7 +289,6 @@ const VehicleList = () => {
                   </button>
                 </div>
               </div>
-
               {/* Offcanvas Sidebar */}
               <div
                 className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ${
@@ -337,7 +302,6 @@ const VehicleList = () => {
                   className="fixed inset-0 bg-[rgba(0,0,0,0.5)]"
                   onClick={() => setIsSidebarOpen(false)}
                 ></div>
-
                 {/* Sidebar Content */}
                 <div
                   className={`offcanvas-sidebar flex flex-col  ${
@@ -354,7 +318,6 @@ const VehicleList = () => {
                       <i className="ri-close-line"></i>
                     </button>
                   </div>
-
                   {/* Scrollable Content */}
                   <div className="p-4 overflow-y-auto flex-1">
                     <div className="mb-4">
@@ -382,7 +345,6 @@ const VehicleList = () => {
                       />
                     </div>
                   </div>
-
                   <div className="p-2 border-t border-[#dee2e6] flex justify-end gap-2">
                     <button
                       className="btn-sm btn-light"
@@ -403,7 +365,6 @@ const VehicleList = () => {
                   </div>
                 </div>
               </div>
-
               {/* Table */}
               <div className="bg-[#ebeff3]">
                 {selectedIds.length > 1 && (
@@ -411,7 +372,6 @@ const VehicleList = () => {
                     {selectedIds.length} Vehicles selected
                   </div>
                 )}
-
                 <div className="mx-2 h-[calc(100vh-187px)] overflow-hidden rounded-lg bg-white">
                   <div className="h-full overflow-y-auto">
                     <table className="w-full">
@@ -531,5 +491,4 @@ const VehicleList = () => {
     </Layout>
   );
 };
-
 export default VehicleList;

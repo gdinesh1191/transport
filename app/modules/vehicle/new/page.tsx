@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Layout from "../../../components/Layout";
 import useInputValidation from "@/app/utils/inputValidations";
 import ToastContainer, { showToast } from "@/app/utils/toaster";
+import { Input, RadioGroup } from "@/app/utils/form-controls";
 
 import SearchableSelect from "@/app/utils/searchableSelect";
 import { Option } from "@/app/utils/searchableSelect";
@@ -29,53 +30,7 @@ const FormField = ({
     <div className="flex flex-col w-3/4">{children}</div>
   </div>
 );
-
-const Input = ({
-  name,
-  placeholder,
-  type = "text",
-  className = "",
-  ...props
-}: {
-  name: string;
-  placeholder?: string;
-  type?: string;
-  className?: string;
-  [key: string]: any;
-}) => (
-  <input
-    type={type}
-    name={name}
-    placeholder={placeholder}
-    className={`form-control ${className}`}
-    {...props}
-  />
-);
-
-const RadioGroup = ({
-  name,
-  options,
-  required = false,
-}: {
-  name: string;
-  options: { value: string; label: string }[];
-  required?: boolean;
-}) => (
-  <div className="space-x-4">
-    {options.map((option, index) => (
-      <label key={option.value} className="form-label">
-        <input
-          type="radio"
-          name={name}
-          value={option.value}
-          className="form-radio"
-          {...(required && index === 0 ? { "data-validate": "required" } : {})}
-        />
-        <span className="ml-2">{option.label}</span>
-      </label>
-    ))}
-  </div>
-);
+ 
 
 export default function NewVehicle() {
   const insuranceOptions: Option[] = [
@@ -97,18 +52,8 @@ export default function NewVehicle() {
   ];
   const vehicleTypeOptions: Option[] = [
     { value: "pickup", label: "Pickup" },
-    { value: "lorry", label: "Lorry" },
-    { value: "trailer", label: "Trailer" },
-    { value: "mini-truck", label: "Mini Truck" },
-    { value: "heavy-truck", label: "Heavy Truck" },
-    { value: "tipper", label: "Tipper" },
-    { value: "container", label: "Container Truck" },
-    { value: "van", label: "Van" },
-    { value: "transit-mixer", label: "Transit Mixer" },
-    { value: "tanker", label: "Tanker" },
-    { value: "lcv", label: "Light Commercial Vehicle" },
-    { value: "mcv", label: "Medium Commercial Vehicle" },
-    { value: "scv", label: "Small Commercial Vehicle" },
+    { value: "lorry", label: "Lorry" } 
+   
   ];
 
   const [activeTab, setActiveTab] = useState("owner_information");
@@ -294,7 +239,7 @@ export default function NewVehicle() {
                     options={insuranceOptions}
                   />
                 </FormField>
-                <FormField label="Insurance Expiry" required>
+                <FormField label="Insurance Expiry" required> 
                   <Input
                     name="insuranceExpiry"
                     type="date"

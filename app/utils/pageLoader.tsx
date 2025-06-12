@@ -27,7 +27,7 @@ export const LoadingProvider = ({ children }: { children: React.ReactNode }) => 
       {isLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-white/30">
           <img
-            src="/images/loader-spinner.svg"
+            src="/images/spinner.svg"
             alt="Loading..."
             className="w-20 h-20"
           />

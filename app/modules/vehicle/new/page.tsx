@@ -1,6 +1,5 @@
 "use client";
-
-import { useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Layout from "../../../components/Layout";
 import useInputValidation from "@/app/utils/inputValidations";
 import ToastContainer, { showToast } from "@/app/utils/toaster";
@@ -8,6 +7,9 @@ import { Input, RadioGroup } from "@/app/utils/form-controls";
 
 import SearchableSelect from "@/app/utils/searchableSelect";
 import { Option } from "@/app/utils/searchableSelect";
+import { validateForm } from "@/app/utils/formValidations"; // Import the utility
+
+import DatePicker from "@/app/utils/commonDatepicker";
 
 const FormField = ({
   label,
@@ -30,7 +32,6 @@ const FormField = ({
     <div className="flex flex-col w-3/4">{children}</div>
   </div>
 );
- 
 
 export default function NewVehicle() {
   const insuranceOptions: Option[] = [
@@ -52,8 +53,7 @@ export default function NewVehicle() {
   ];
   const vehicleTypeOptions: Option[] = [
     { value: "pickup", label: "Pickup" },
-    { value: "lorry", label: "Lorry" } 
-   
+    { value: "lorry", label: "Lorry" },
   ];
 
   const [activeTab, setActiveTab] = useState("owner_information");
@@ -74,10 +74,18 @@ export default function NewVehicle() {
     { id: "load_availed_details", label: "Loan Availed Details" },
     { id: "vehicle_purchase_details", label: "Vehicle Purchase Details" },
   ];
-
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const formRef = useRef<HTMLFormElement>(null);
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Form valid, proceed to save!");
+    if (formRef.current) {
+      if (validateForm(formRef.current)) {
+        const formData = new FormData(formRef.current);
+        const formValues = Object.fromEntries(formData.entries());
+
+        console.log("Form submitted successfully", formValues);
+      }
+    }
   };
 
   const renderTabContent = () => {
@@ -85,7 +93,7 @@ export default function NewVehicle() {
       case "owner_information":
         return (
           <div className="p-2">
-            <div className="grid grid-cols-2 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
               <div>
                 <FormField label="Owner" required>
                   <RadioGroup
@@ -94,7 +102,7 @@ export default function NewVehicle() {
                       { value: "New", label: "New" },
                       { value: "Existing", label: "Existing" },
                     ]}
-                    required
+                     
                   />
                 </FormField>
                 <FormField label="Address" required>
@@ -106,10 +114,11 @@ export default function NewVehicle() {
                   />
                 </FormField>
                 <FormField label="Registration Date" required>
-                  <Input
-                    name="registrationDate"
-                    type="date"
-                    data-validate="required"
+                  <DatePicker
+                    date={selectedDate}
+                    setDate={setSelectedDate}
+                    placeholder="Select date"
+                    className="w-full"
                   />
                 </FormField>
               </div>
@@ -140,7 +149,7 @@ export default function NewVehicle() {
       case "vehicle_details":
         return (
           <div className="p-2">
-            <div className="grid grid-cols-2 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
               <div>
                 <FormField label="Class of Truck" required>
                   <SearchableSelect
@@ -221,7 +230,7 @@ export default function NewVehicle() {
       case "vehicle_expiry_details":
         return (
           <div className="p-2">
-            <div className="grid grid-cols-2 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
               <div>
                 <FormField label="F.C. Expiry Date" required>
                   <Input
@@ -239,7 +248,7 @@ export default function NewVehicle() {
                     options={insuranceOptions}
                   />
                 </FormField>
-                <FormField label="Insurance Expiry" required> 
+                <FormField label="Insurance Expiry" required>
                   <Input
                     name="insuranceExpiry"
                     type="date"
@@ -287,7 +296,7 @@ export default function NewVehicle() {
       case "load_availed_details":
         return (
           <div className="p-2">
-            <div className="grid grid-cols-2 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
               <div>
                 <FormField label="Loan Provider" required>
                   <SearchableSelect
@@ -348,7 +357,7 @@ export default function NewVehicle() {
       case "vehicle_purchase_details":
         return (
           <div className="p-2">
-            <div className="grid  grid-cols-2 lg:grid-cols-2 gap-6">
+            <div className="grid  grid-cols-2 lg:grid-cols-2 gap-10">
               <div>
                 <FormField label="Truck Invoice No." required>
                   <Input
@@ -437,14 +446,10 @@ export default function NewVehicle() {
             className="px-4 py-6"
             style={{ height: "calc(100vh - 103px)", overflowY: "auto" }}
           >
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-2 lg:grid-cols-2    gap-6 mb-5">
+            <form ref={formRef} onSubmit={handleSubmit} autoComplete="off">
+              <div className="grid grid-cols-2 lg:grid-cols-2 gap-6 mb-5">
                 <div className="space-y-4">
-                  <FormField
-                    label="Truck Registration Number"
-                    required
-                  
-                  >
+                  <FormField label="Truck Registration Number" required>
                     <Input
                       name="truck-registration"
                       placeholder="Enter registration number"
@@ -461,11 +466,7 @@ export default function NewVehicle() {
                       required={true}
                     />
                   </FormField>
-                  <FormField
-                    label="Makers Name"
-                    required
-                  
-                  >
+                  <FormField label="Makers Name" required>
                     <Input
                       name="maker-name"
                       placeholder="Enter makers name"
@@ -473,11 +474,7 @@ export default function NewVehicle() {
                       data-validate="required"
                     />
                   </FormField>
-                  <FormField
-                    label="Nature of Goods Weight"
-                    required
-                  
-                  >
+                  <FormField label="Nature of Goods Weight" required>
                     <Input
                       name="goods-weight"
                       placeholder="Enter weight"
@@ -488,27 +485,25 @@ export default function NewVehicle() {
                 </div>
               </div>
 
-             <div className="mx-2 mt-5 md:overflow-x-auto overflow-x-visible">
-  <div className="md:max-w-[650px]">
-    <ul className="flex whitespace-nowrap w-full border-b border-gray-300 mr-3">
-      {tabs.map((tab) => (
-        <li
-          key={tab.id}
-          className={`mr-6 pb-2 cursor-pointer hover:text-[#009333] ${
-            activeTab === tab.id
-              ? "text-[#009333] border-b-2 border-[#009333]"
-              : ""
-          }`}
-          onClick={() => setActiveTab(tab.id)}
-        >
-          {tab.label}
-        </li>
-      ))}
-    </ul>
-  </div>
-</div>
-
-
+              <div className="mx-2 mt-5 md:overflow-x-auto overflow-x-visible">
+                <div className="md:max-w-[650px] lg:max-w-full">
+                  <ul className="flex whitespace-nowrap w-full border-b border-gray-300 mr-3">
+                    {tabs.map((tab) => (
+                      <li
+                        key={tab.id}
+                        className={`mr-6 pb-2 cursor-pointer hover:text-[#009333] ${
+                          activeTab === tab.id
+                            ? "text-[#009333] border-b-2 border-[#009333]"
+                            : ""
+                        }`}
+                        onClick={() => setActiveTab(tab.id)}
+                      >
+                        {tab.label}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
 
               <div className="mt-3">{renderTabContent()}</div>
             </form>
@@ -516,7 +511,7 @@ export default function NewVehicle() {
         </main>
 
         <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-          <button onClick={handleSuccessToast} className="btn-sm btn-primary">
+          <button onClick={handleSubmit} className="btn-sm btn-primary">
             Save
           </button>
           <button className="btn-secondary btn-sm" onClick={handleErrorToast}>

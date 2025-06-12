@@ -5,114 +5,8 @@ import Layout from "../../../components/Layout";
 import useInputValidation from "@/app/utils/inputValidations";
 import ToastContainer, { showToast } from "@/app/utils/toaster";
 
-interface Option {
-  value: string;
-  label: string;
-}
-
-interface Props {
-  name: string;
-  options: Option[];
-  required?: boolean;
-  searchable?: boolean;
-  placeholder?: string;
-  className?: string;
-}
-
-const SearchableSelect = ({
-  name,
-  options,
-  required = false,
-  searchable = false,
-  placeholder = 'Select an option',
-  className = 'text-[13px] ',
-}: Props) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selected, setSelected] = useState<Option | null>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  const filteredOptions = searchable
-    ? options.filter((option) =>
-        option.label.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : options;
-
-  const handleSelect = (option: Option) => {
-    setSelected(option);
-    setIsOpen(false);
-  };
-
-  const handleClickOutside = (e: MouseEvent) => {
-    if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-      setIsOpen(false);
-    }
-  };
-
-  useEffect(() => {
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  return (
-    <div ref={wrapperRef} className={`relative ${className}`}>
-      <input
-        type="hidden"
-        name={name}
-        value={selected?.value || ''}
-        required={required}
-      />
-      <div
-        className="form-control border border-gray-300 rounded px-3 py-2 bg-white cursor-pointer"
-        onClick={() => setIsOpen((prev) => !prev)}
-      >
-        {selected?.label || placeholder}
-      </div>
-
-      {isOpen && (
-        <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow flex flex-col">
-          {searchable && (
-            <div className="m-2">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="form-control w-9.5/10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                autoFocus
-              />
-            </div>
-          )}
-
-          <div className="overflow-y-auto max-h-48 m-1">
-            <ul>
-              {filteredOptions.map((option) => (
-                <li
-                  key={option.value} 
-                  className="px-2 py-1 hover:bg-gray-100 cursor-pointer text-[14px]"
-                  onClick={() => handleSelect(option)}
-                >
-                  {option.label}
-                </li>
-              ))}
-              {filteredOptions.length === 0 && (
-                <li className="p-2 text-gray-400">No results</li>
-              )}
-            </ul>
-          </div>
-
-          {/* Footer */}
-          <div className="flex justify-between items-center p-2 border-t border-gray-200 bg-gray-50">
-            <span className="text-sm cursor-pointer text-[#009333]">
-              <i className="ri-add-circle-fill"></i> Add New
-            </span>
-            <i className="ri-refresh-line text-xl text-blue-700 cursor-pointer hover:text-gray-700"></i>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+import SearchableSelect from "@/app/utils/searchableSelect";
+import { Option } from "@/app/utils/searchableSelect";
 
 const FormField = ({
   label,
@@ -184,17 +78,50 @@ const RadioGroup = ({
 );
 
 export default function NewVehicle() {
+  const insuranceOptions: Option[] = [
+    { value: "icici", label: "ICICI Lombard" },
+    { value: "hdfc", label: "HDFC Ergo" },
+    { value: "newindia", label: "New India Assurance" },
+    { value: "others", label: "Others" },
+  ];
+  const vehicleOptions: Option[] = [
+    { value: "Light", label: "Light" },
+    { value: "Medium", label: "Medium" },
+    { value: "Heavy", label: "Heavy" },
+  ];
+  const bankOptions: Option[] = [
+    { value: "bankA", label: "Bank A" },
+    { value: "bankB", label: "Bank B" },
+    { value: "financeCompany", label: "Finance Company" },
+    { value: "others", label: "Others" },
+  ];
+  const vehicleTypeOptions: Option[] = [
+    { value: "pickup", label: "Pickup" },
+    { value: "lorry", label: "Lorry" },
+    { value: "trailer", label: "Trailer" },
+    { value: "mini-truck", label: "Mini Truck" },
+    { value: "heavy-truck", label: "Heavy Truck" },
+    { value: "tipper", label: "Tipper" },
+    { value: "container", label: "Container Truck" },
+    { value: "van", label: "Van" },
+    { value: "transit-mixer", label: "Transit Mixer" },
+    { value: "tanker", label: "Tanker" },
+    { value: "lcv", label: "Light Commercial Vehicle" },
+    { value: "mcv", label: "Medium Commercial Vehicle" },
+    { value: "scv", label: "Small Commercial Vehicle" },
+  ];
+
   const [activeTab, setActiveTab] = useState("owner_information");
   useInputValidation();
-  
+
   const handleSuccessToast = () => {
-    showToast.success('Vehicle saved successfully!');
+    showToast.success("Vehicle saved successfully!");
   };
 
   const handleErrorToast = () => {
-    showToast.error('Failed to save vehicle information.');
+    showToast.error("Failed to save vehicle information.");
   };
- 
+
   const tabs = [
     { id: "owner_information", label: "Owner Information" },
     { id: "vehicle_details", label: "Vehicle Details" },
@@ -274,18 +201,14 @@ export default function NewVehicle() {
                   <SearchableSelect
                     name="truckClass"
                     placeholder="Select Truck Class"
+                    options={vehicleOptions}
                     searchable={true}
                     required={true}
-                    options={[
-                      { value: 'Light', label: 'Light' },
-                      { value: 'Medium', label: 'Medium' },
-                      { value: 'Heavy', label: 'Heavy' }
-                    ]}
                   />
                 </FormField>
                 <FormField label="Model Number" required>
                   <Input
-                    name="modelNumber" 
+                    name="modelNumber"
                     className="alphanumeric all_uppercase"
                     placeholder="Enter Model Number"
                     data-validate="required"
@@ -310,7 +233,7 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Chassis Number" required>
                   <Input
-                    name="chassisNumber" 
+                    name="chassisNumber"
                     className="alphanumeric all_uppercase"
                     placeholder="Enter Chassis Number"
                     data-validate="required"
@@ -320,16 +243,16 @@ export default function NewVehicle() {
               <div>
                 <FormField label="Engine Number" required>
                   <Input
-                    name="engineNumber" 
+                    name="engineNumber"
                     className="alphanumeric all_uppercase"
                     placeholder="Enter Engine Number"
                     data-validate="required"
                   />
                 </FormField>
-                
+
                 <FormField label="Vehicle Weight (in Kgs)" required>
                   <Input
-                    name="vehicleWeight" 
+                    name="vehicleWeight"
                     className="number_with_decimal"
                     type="text"
                     placeholder="Enter Weight"
@@ -338,7 +261,7 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Unladen Weight (in Kgs)" required>
                   <Input
-                    name="unladenWeight" 
+                    name="unladenWeight"
                     className="number_with_decimal"
                     type="text"
                     placeholder="Enter Unladen Weight"
@@ -368,12 +291,7 @@ export default function NewVehicle() {
                     placeholder="Select Insurance Company"
                     searchable={true}
                     required={true}
-                    options={[
-                      { value: 'icici', label: 'ICICI Lombard' },
-                      { value: 'hdfc', label: 'HDFC Ergo' },
-                      { value: 'newindia', label: 'New India Assurance' },
-                      { value: 'others', label: 'Others' }
-                    ]}
+                    options={insuranceOptions}
                   />
                 </FormField>
                 <FormField label="Insurance Expiry" required>
@@ -430,13 +348,9 @@ export default function NewVehicle() {
                   <SearchableSelect
                     name="loanProvider"
                     placeholder="Select Loan Provider"
+                    options={bankOptions}
                     searchable={true}
-                    options={[
-                      { value: 'bankA', label: 'Bank A' },
-                      { value: 'bankB', label: 'Bank B' },
-                      { value: 'financeCompany', label: 'Finance Company' },
-                      { value: 'others', label: 'Others' },
-                    ]}
+                    required={true}
                   />
                 </FormField>
 
@@ -452,7 +366,7 @@ export default function NewVehicle() {
                 <FormField label="Loan Amount" required>
                   <Input
                     name="loanAmount"
-                    type="text" 
+                    type="text"
                     className="number_with_decimal"
                     placeholder="Enter Loan Amount"
                     data-validate="required"
@@ -463,7 +377,7 @@ export default function NewVehicle() {
                 <FormField label="Loan Tenure" required>
                   <Input
                     name="loanTenure"
-                    type="text" 
+                    type="text"
                     className="whole_number"
                     placeholder="Enter Loan Tenure (months/years)"
                     data-validate="required"
@@ -472,7 +386,7 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Loan Interest" required>
                   <Input
-                    name="loanInterest" 
+                    name="loanInterest"
                     className="number_with_decimal"
                     type="text"
                     placeholder="Enter Loan Interest (%)"
@@ -493,7 +407,7 @@ export default function NewVehicle() {
               <div>
                 <FormField label="Truck Invoice No." required>
                   <Input
-                    name="truckInvoiceNo" 
+                    name="truckInvoiceNo"
                     className="alphanumeric all_uppercase"
                     placeholder="Enter Truck Invoice Number"
                     data-validate="required"
@@ -518,7 +432,7 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Endorsed With">
                   <Input
-                    name="endorsedWith" 
+                    name="endorsedWith"
                     className="alphanumeric capitalize"
                     placeholder="Enter Truck Endorsed With"
                   />
@@ -537,7 +451,7 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Duty Driver Name" required>
                   <Input
-                    name="dutyDriverName" 
+                    name="dutyDriverName"
                     className="alphabet_only capitalize"
                     placeholder="Enter Duty Driver Name"
                     data-validate="required"
@@ -545,7 +459,7 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Dealer Name" required>
                   <Input
-                    name="dealerName" 
+                    name="dealerName"
                     className="alphabet_only capitalize"
                     placeholder="Enter Dealer Name"
                     data-validate="required"
@@ -568,7 +482,7 @@ export default function NewVehicle() {
           </div>
         );
     }
-  }; 
+  };
 
   return (
     <Layout pageTitle="Vehicle Registration">
@@ -597,22 +511,9 @@ export default function NewVehicle() {
                     <SearchableSelect
                       name="truckType"
                       placeholder="Select truck type"
-                      searchable={true} 
-                      options={[
-                        { value: 'pickup', label: 'Pickup' },
-                        { value: 'lorry', label: 'Lorry' },
-                        { value: 'trailer', label: 'Trailer' },
-                        { value: 'mini-truck', label: 'Mini Truck' },
-                        { value: 'heavy-truck', label: 'Heavy Truck' },
-                        { value: 'tipper', label: 'Tipper' },
-                        { value: 'container', label: 'Container Truck' },
-                        { value: 'van', label: 'Van' },
-                        { value: 'transit-mixer', label: 'Transit Mixer' },
-                        { value: 'tanker', label: 'Tanker' },
-                        { value: 'lcv', label: 'Light Commercial Vehicle' },
-                        { value: 'mcv', label: 'Medium Commercial Vehicle' },
-                        { value: 'scv', label: 'Small Commercial Vehicle' }
-                      ]}
+                      options={vehicleTypeOptions}
+                      searchable={true}
+                      required={true}
                     />
                   </FormField>
                   <FormField
@@ -666,15 +567,12 @@ export default function NewVehicle() {
         </main>
 
         <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-          <button
-            onClick={handleSuccessToast}
-            className="btn-sm btn-primary"
-          >
+          <button onClick={handleSuccessToast} className="btn-sm btn-primary">
             Save
           </button>
           <button className="btn-secondary btn-sm" onClick={handleErrorToast}>
             Cancel
-          </button> 
+          </button>
         </footer>
         <ToastContainer />
       </div>

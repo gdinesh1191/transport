@@ -277,4 +277,8 @@ input[type="checkbox"] {
   body {
     @apply bg-background text-foreground;
   }
+  .in-page-title {
+    @apply text-base font-semibold;
+  }
+  
 }

@@ -81,10 +81,67 @@ const RadioGroup = ({
 
 const NewExpense = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-
+ 
   const [fileName, setFileName] = useState('No file chosen');
   const formRef = useRef<HTMLFormElement>(null);
-  
+ const [showModal, setShowModal] = useState(false);
+
+  const [activeTab, setActiveTab] = useState('Product Ledger');
+  const [formData, setFormData] = useState({
+    name: '',
+    remarks: ''
+  });
+
+
+  const [tableData, setTableData] = useState([
+    { id: 1, name: 'aandagalur gate', remarks: 'Gate', status: true },
+    { id: 2, name: 'ban galore', remarks: '', status: false },
+    { id: 3, name: 'Erode', remarks: '', status: true },
+    { id: 4, name: 'gate', remarks: '', status: true },
+    { id: 5, name: 'gate 1', remarks: '', status: true },
+    { id: 6, name: 'gate 2', remarks: '', status: true }
+  ]);
+
+   const sidebarItems = [
+    'Customer Ledger',
+    'Product Ledger',
+    'Expense Ledger',
+    'Unit Ledger',
+    'Bank Accounts',
+    'Mandatory Fields'
+  ];
+ const handleInputChange = (e:any) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSaveUpdate = () => {
+    if (formData.name.trim()) {
+      const newEntry = {
+        id: tableData.length + 1,
+        name: formData.name,
+        remarks: formData.remarks,
+        status: true
+      };
+      setTableData(prev => [...prev, newEntry]);
+      setFormData({ name: '', remarks: '' });
+    }
+  };
+
+  const toggleStatus = (id:any) => {
+    setTableData(prev => 
+      prev.map(item => 
+        item.id === id ? { ...item, status: !item.status } : item
+      )
+    );
+  };
+
+  const handleRefresh = () => {
+    setFormData({ name: '', remarks: '' });
+  };
    
   const nameData = [
     { id: 1, name: "Aaaaaaaaaaaaaaaa", description: "This is a detailed description for Aaaaaaaaaaaaaaaa item with more information about its features and usage." },
@@ -218,7 +275,15 @@ const NewExpense = () => {
                         required
                       />
                     </div>
-                  </FormField>
+              </FormField>
+              <button
+        onClick={() => setShowModal(true)}
+        className="bg-blue-600 text-white px-4 py-2 rounded shadow"
+      >
+        Open Config Modal
+      </button>
+
+
                 </div>
               </div>
             </form>
@@ -230,6 +295,168 @@ const NewExpense = () => {
           <button type="button" className="btn-sm btn-secondary">Cancel</button>
         </footer>
       </div>
+
+
+    {showModal && (
+        <div className=" fixed inset-0 bg-[rgba(0,0,0,0.5)]  flex justify-center items-center z-50">
+          <div className="bg-white max-w-[80%] min-h-[calc(100vh-50px)]  rounded-xl shadow-xl relative">
+            {/* Header */}
+            <div className="flex justify-between items-center  px-4 py-2 border-b bg-gray-50">
+              <h2 className="text-lg font-semibold text-gray-800">Settings</h2>
+              <button 
+                onClick={() => setShowModal(false)} 
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="flex">
+              {/* Sidebar */}
+              <div className="w-50  bg-white">
+                <div className="p-4 space-y-1">
+                  {sidebarItems.map((item) => (
+                    <div
+                      key={item}
+                      onClick={() => setActiveTab(item)}
+                    className={`cursor-pointer px-3 py-2 h-10 text-sm rounded transition-colors ${
+  activeTab === item
+    ? 'font-medium '
+    : 'text-[#000000] hover:bg-gray-100 hover:text-[#000000]'
+}`}
+
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Main Content */}
+              <div className="flex-1 p-6">
+                {/* Form Section */}
+                <div className="bg-gray-50 p-4 mb-6 rounded border">
+                  <div className="flex gap-3 items-end">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Name<span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        placeholder="Enter your name"
+                        className="w-full border border-gray-300 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Remarks
+                      </label>
+                      <input
+                        type="text"
+                        name="remarks"
+                        value={formData.remarks}
+                        onChange={handleInputChange}
+                        placeholder="Enter your Remarks"
+                        className="w-full border border-gray-300 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <button
+                      onClick={handleSaveUpdate}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors whitespace-nowrap"
+                    >
+                      Save & Update
+                    </button>
+                    <button
+                      onClick={handleRefresh}
+                      className="text-blue-500 hover:text-blue-700 p-2 rounded hover:bg-blue-50 transition-colors"
+                      title="Refresh"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Table Section */}
+                <div className="border border-gray-200 rounded overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-100 border-b">
+                      <tr>
+                        <th className="text-left p-3 font-medium text-gray-700 w-16">
+                          <div className="flex items-center gap-2">
+                            <input type="checkbox" className="rounded" />
+                            S.NO
+                          </div>
+                        </th>
+                        <th className="text-left p-3 font-medium text-gray-700">
+                          <div className="flex items-center gap-1">
+                            NAME
+                            <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        </th>
+                        <th className="text-left p-3 font-medium text-gray-700">
+                          Remarks
+                        </th>
+                        <th className="text-left p-3 font-medium text-gray-700 w-24">
+                          <div className="flex items-center gap-1">
+                            Status
+                            <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tableData.map((row, index) => (
+                        <tr key={row.id} className="border-b hover:bg-gray-50">
+                          <td className="p-3">
+                            <div className="flex items-center gap-2">
+                              <input type="checkbox" className="rounded" />
+                              {index + 1}
+                            </div>
+                          </td>
+                          <td className="p-3 text-blue-600 hover:underline cursor-pointer">
+                            {row.name}
+                          </td>
+                          <td className="p-3 text-gray-600">
+                            {row.remarks}
+                          </td>
+                          <td className="p-3">
+                            <div 
+                              onClick={() => toggleStatus(row.id)}
+                              className="cursor-pointer"
+                            >
+                              <div className={`w-11 h-6 rounded-full relative transition-colors ${
+                                row.status ? 'bg-green-500' : 'bg-gray-300'
+                              }`}>
+                                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 shadow transition-transform ${
+                                  row.status ? 'translate-x-5' : 'translate-x-0.5'
+                                }`}></div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  
+                  {/* Table Footer */}
+                  <div className="bg-gray-50 px-4 py-3 text-sm text-gray-600 text-right border-t">
+                    Total Entries: {tableData.length}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };

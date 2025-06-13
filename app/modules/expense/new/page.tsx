@@ -1,4 +1,5 @@
 "use client";
+ 
 import { useRef, useState } from "react";
 import Layout from "../../../components/Layout";
 import { validateForm } from "@/app/utils/formValidations";
@@ -6,6 +7,7 @@ import SearchableSelect from "@/app/utils/searchableSelect";
 import DatePicker from "@/app/utils/commonDatepicker";
 import { Input, RadioGroup } from "@/app/utils/form-controls";
 import useInputValidation from "@/app/utils/inputValidations";
+ 
 import { apiCall } from "@/app/utils/api";
 const FormField = ({
   label,
@@ -18,10 +20,10 @@ const FormField = ({
   children: React.ReactNode;
   className?: string;
 }) => (
+ 
   <div className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}>
     <label className="form-label w-50">
-      {label}
-      {required && <span className="form-required text-red-500">*</span>}
+      {label}{required && <span className="form-required text-red-500">*</span>}
     </label>
     <div className="flex flex-col w-3/4 flex-grow">{children}</div>
   </div>
@@ -31,6 +33,7 @@ const NewExpense = () => {
   const [fileName, setFileName] = useState("No file chosen");
   const formRef = useRef<HTMLFormElement>(null);
   useInputValidation();
+ 
   const categoryOptions = [
     { value: "fuelCharges", label: "Fuel Charges" },
     { value: "tollCharges", label: "Toll Charges" },
@@ -58,6 +61,7 @@ const NewExpense = () => {
     { value: "dieselPetty", label: "Diesel Petty (Cash)" },
     { value: "spareParts", label: "Spare Parts Purchase" },
   ];
+ 
   
     const handleSubmit = async (e: React.FormEvent) => {
        e.preventDefault();
@@ -83,6 +87,7 @@ const NewExpense = () => {
        }
     
      };
+ 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFileName(e.target.files?.[0]?.name || "No file chosen");
   };
@@ -95,8 +100,11 @@ const NewExpense = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
                 <div className="space-y-4">
                   <FormField label="Date" required>
+ 
                     <DatePicker date={selectedDate} setDate={setSelectedDate} placeholder="Select date" className="w-full"  name="expenseDate"/>
+ 
                   </FormField>
+
                   <FormField label="Category" required>
                     <SearchableSelect name="category" placeholder="Select Category" options={categoryOptions} searchable data-validate="required" />
                   </FormField>
@@ -107,15 +115,11 @@ const NewExpense = () => {
                     <Input name="amount" placeholder="Enter amount" className="number_with_decimal" data-validate="required" />
                   </FormField>
                   <FormField label="Payment Method" required>
-                    <RadioGroup
-                      name="paymentMethod"
-                      options={[
-                        { value: "Cash", label: "Cash" },
-                        { value: "UPI", label: "UPI" },
-                        { value: "Net Banking", label: "Net Banking" },
-                      ]}
-                      required
-                    />
+                    <RadioGroup name="paymentMethod" options={[
+                      { value: "Cash", label: "Cash" },
+                      { value: "UPI", label: "UPI" },
+                      { value: "Net Banking", label: "Net Banking" }
+                    ]} required />
                   </FormField>
                   <FormField label="Attachments" required>
                     <div className="w-full flex-grow flex flex-col">
@@ -127,15 +131,7 @@ const NewExpense = () => {
                         </div>
                         <span id="fileName" className="text-gray-600 text-sm truncate">{fileName}</span>
                       </div>
-                      <input
-                        type="file"
-                        id="attachmentInput"
-                        name="attachment"
-                        className="hidden"
-                        data-validate="required"
-                        onChange={handleFileUpload}
-                        required
-                      />
+                      <input type="file" id="attachmentInput" name="attachment" className="hidden" data-validate="required" onChange={handleFileUpload} required />
                     </div>
                   </FormField>
                   <FormField label="">

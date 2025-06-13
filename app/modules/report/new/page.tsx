@@ -131,7 +131,7 @@ const ReportsPage = () => {
                                 placeholder="Search here..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="form-control  pl-7"
+                                className="form-control pl-7"
                             />
                         </div>
                     </div>

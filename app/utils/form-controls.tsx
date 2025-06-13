@@ -24,7 +24,6 @@ export const Input = ({
     {...props}
   />
 );
-
 export const RadioGroup = ({
   name,
   options,
@@ -34,21 +33,23 @@ export const RadioGroup = ({
   options: { value: string; label: string }[];
   required?: boolean;
 }) => (
-  <div className="flex flex-wrap items-center gap-6 ">
-    {options.map((option, index) => (
-      <label
-        key={option.value}
-        className="inline-flex items-center text-sm"
-      >
-        <input
-          type="radio"
-          name={name}
-          value={option.value}
-          className="form-radio text-[#009333] focus:ring-[#009333]"
-          {...(required && index === 0 ? { "data-validate": "required" } : {})}
-        />
-        <span className="ml-2">{option.label}</span>
-      </label>
-    ))}
+  <div
+    className="flex flex-col"
+    {...(required ? { 'data-validate': 'required' } : {})}
+  >
+    <div className="flex flex-wrap items-center gap-6">
+      {options.map((option) => (
+        <label key={option.value} className="inline-flex items-center text-sm">
+          <input
+            type="radio"
+            name={name}
+            value={option.value}
+            className="form-radio text-[#009333] focus:ring-[#009333]"
+          />
+          <span className="ml-2">{option.label}</span>
+        </label>
+      ))}
+    </div>
+    <p className="error-message text-red-500 text-xs mt-1 hidden"></p>
   </div>
 );

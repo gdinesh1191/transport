@@ -4,7 +4,7 @@ import { useState, ChangeEvent, FormEvent } from "react";
 import Layout from "../../../components/Layout";
 
 
-// Type definitions
+ 
 interface BankDetails {
   id: number;
   bankName: string;

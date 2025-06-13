@@ -1,4 +1,4 @@
- // utils/formValidator.ts
+// utils/formValidator.ts
 
 export type ValidationRule = "required" | `minlength:${number}` | `maxlength:${number}`;
 
@@ -20,32 +20,52 @@ function validateField(element: HTMLElement, rules: ValidationRule[]): boolean {
 
   rules.forEach(rule => {
     if (!isValid) return;  
-     const inputElement = element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+    
+    const inputElement = element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
     if (rule === "required") {
-      if ('value' in inputElement && inputElement.value.trim() === "") {
-        isValid = false;
-        errorMessage = `${element.previousElementSibling?.textContent?.replace('*', '').trim() || element.getAttribute('name') || 'Field'} is required.`;
-      } else if (inputElement.tagName === "INPUT" && (inputElement as HTMLInputElement).type === "radio") {
-        const radioGroupName = (inputElement as HTMLInputElement).name;
-        const form = element.closest('form');
-        if (form && !form.querySelector(`input[name="${radioGroupName}"]:checked`)) {
+      // Handle SearchableSelect (custom component with hidden input)
+      if (inputElement.type === "hidden") {
+        if (inputElement.value.trim() === "") {
           isValid = false;
-           
-          errorMessage = `${(element.closest('.form-label') || element.parentElement?.querySelector('.form-label'))?.textContent?.replace('*', '').trim() || radioGroupName || 'Field'} is required.`;
+          // Look for the placeholder text in the visible div to determine field name
+          const visibleDiv = element.parentElement?.querySelector('.form-control');
+          const fieldName = getFieldName(element, visibleDiv);
+          errorMessage = `${fieldName} is required.`;
         }
       }
-    } else if (rule.startsWith("minlength:")) {
+      // Handle standard form inputs
+      else if ('value' in inputElement && inputElement.value.trim() === "") {
+        isValid = false;
+        errorMessage = `${getFieldName(element)} is required.`;
+      } 
+      // Handle radio button groups (wrapper div)
+      else if (inputElement.tagName === "DIV" && element.getAttribute("data-validate")?.includes("required")) {
+        const radioInputs = element.querySelectorAll<HTMLInputElement>('input[type="radio"]');
+        if (radioInputs.length > 0) {
+          const isChecked = Array.from(radioInputs).some(radio => radio.checked);
+          if (!isChecked) {
+            isValid = false;
+            const labelText = element.parentElement?.querySelector(".form-label")?.textContent?.replace('*', '').trim() || radioInputs[0].name;
+            errorMessage = `${labelText} is required.`;
+            displayErrorMessage(element, errorMessage);
+            return false;
+          }
+        }
+      }
+    }
+    else if (rule.startsWith("minlength:")) {
       const minLength = parseInt(rule.split(":")[1], 10);
       if ('value' in inputElement && inputElement.value.length < minLength) {
         isValid = false;
-        errorMessage = `${element.previousElementSibling?.textContent?.replace('*', '').trim() || element.getAttribute('name') || 'Field'} must be at least ${minLength} characters long.`;
+        errorMessage = `${getFieldName(element)} must be at least ${minLength} characters long.`;
       }
-    } else if (rule.startsWith("maxlength:")) {
+    } 
+    else if (rule.startsWith("maxlength:")) {
       const maxLength = parseInt(rule.split(":")[1], 10);
       if ('value' in inputElement && inputElement.value.length > maxLength) {
         isValid = false;
-        errorMessage = `${element.previousElementSibling?.textContent?.trim().replace('*', '') || element.getAttribute('name') || 'Field'} cannot exceed ${maxLength} characters.`;
+        errorMessage = `${getFieldName(element)} cannot exceed ${maxLength} characters.`;
       }
     }
   });
@@ -55,21 +75,57 @@ function validateField(element: HTMLElement, rules: ValidationRule[]): boolean {
 }
 
 /**
+ * Helper function to get field name for error messages
+ * @param element The form element
+ * @param visibleElement Optional visible element (for custom components)
+ * @returns The field name to use in error messages
+ */
+function getFieldName(element: HTMLElement, visibleElement?: Element | null): string {
+  // Try to get from previous sibling label
+  const labelFromSibling = element.previousElementSibling?.textContent?.replace('*', '').trim();
+  if (labelFromSibling) return labelFromSibling;
+  
+  // Try to get from parent's label
+  const labelFromParent = element.parentElement?.querySelector("label")?.textContent?.replace('*', '').trim();
+  if (labelFromParent) return labelFromParent;
+  
+  // For SearchableSelect, try to get from placeholder or name attribute
+  if (visibleElement) {
+    const placeholder = visibleElement.textContent?.trim();
+    if (placeholder && placeholder !== "Select an option" && !placeholder.startsWith("Select")) {
+      return placeholder;
+    }
+  }
+  
+  // Fallback to name attribute or generic "Field"
+  return element.getAttribute('name') || 'Field';
+}
+
+/**
  * Displays an error message for a given form field.
  * @param element The HTML element that failed validation.
  * @param message The error message to display.
  */
 function displayErrorMessage(element: HTMLElement, message: string) {
-  // Find the parent div of the input (FormField's flex-grow div)
-  const formFieldChildrenWrapper = element.closest('.flex-grow.flex.flex-col') || element.parentElement;
-  if (!formFieldChildrenWrapper) return; // Should not happen if structure is consistent
+  // For SearchableSelect (hidden input), attach error to parent container
+  let container: Element | null = null;
+  
+  if ((element as HTMLInputElement).type === "hidden") {
+    // This is likely a SearchableSelect - find the parent container
+    container = element.parentElement;
+  } else {
+    // Standard form field
+    container = element.closest('.flex-grow.flex.flex-col') || element.parentElement;
+  }
+  
+  if (!container) return;
 
-  let errorContainer = formFieldChildrenWrapper.querySelector('.error-message') as HTMLElement;
+  let errorContainer = container.querySelector('.error-message') as HTMLElement;
 
   if (!errorContainer) {
     errorContainer = document.createElement('p');
     errorContainer.className = 'error-message text-red-500 text-xs mt-1';
-    formFieldChildrenWrapper.appendChild(errorContainer);
+    container.appendChild(errorContainer);
   }
 
   errorContainer.textContent = message;
@@ -83,7 +139,9 @@ function displayErrorMessage(element: HTMLElement, message: string) {
  */
 export function validateForm(formElement: HTMLFormElement): boolean {
   let isFormValid = true;
-  const formFields = formElement.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>('[data-validate]');
+  
+  // Get all elements with data-validate attribute (including hidden inputs from SearchableSelect)
+  const formFields = formElement.querySelectorAll<HTMLElement>('[data-validate]');
 
   // Clear all previous error messages
   formElement.querySelectorAll('.error-message').forEach(el => el.remove());

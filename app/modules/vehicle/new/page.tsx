@@ -96,7 +96,7 @@ export default function NewVehicle() {
   const [loanStartDate, setLoanStartDate] = useState<Date | undefined>();
 
   const formRef = useRef<HTMLFormElement>(null);
-<< 
+ 
  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,7 +154,7 @@ export default function NewVehicle() {
                 <FormField label="Registration Date" required>
                   <DatePicker
  
-                    date={registrationDate}
+                    date={registerationDate}
  
                     setDate={setregisterationDate}
                     placeholder="Select date"
@@ -197,15 +197,15 @@ export default function NewVehicle() {
                 <SearchableSelect
         name="vehicleType"
         options={vehicleOptions}
-        value={vehicleType}
-        onChange={handleSelectChange}
+        // value={vehicleType}
+        // onChange={handleSelectChange}
         // onAddNew={handleAddNew}
         // onRefresh={handleRefresh}
         required
         searchable
         placeholder="Choose a vehicle"
         data-validate="required"
-        error={error}
+        // error={error}
         className="w-full"
       />
 
@@ -331,7 +331,7 @@ export default function NewVehicle() {
                 <FormField label="Quarterly Tax Expiry" required>
                   <DatePicker
  
-                    date={quaterlyTaxExpiry}
+                    date={quarterlyTaxExpiry}
  
                     setDate={setQuarterlyTaxExpiry}
                     placeholder="Quarterly Tax Expiry"

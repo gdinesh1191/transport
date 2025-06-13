@@ -14,6 +14,7 @@ interface Props {
   searchable?: boolean;
   placeholder?: string;
   className?: string;
+  'data-validate'?: string; // Add this prop to accept validation rules
 }
 
 const SearchableSelect = ({
@@ -23,6 +24,7 @@ const SearchableSelect = ({
   searchable = false,
   placeholder = 'Select an option',
   className = 'text-[13px]',
+  'data-validate': dataValidate, // Destructure the data-validate prop
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,6 +40,7 @@ const SearchableSelect = ({
   const handleSelect = (option: Option) => {
     setSelected(option);
     setIsOpen(false);
+    setSearchTerm(''); // Clear search term when option is selected
   };
 
   const handleClickOutside = (e: MouseEvent) => {
@@ -58,12 +61,17 @@ const SearchableSelect = ({
         name={name}
         value={selected?.value || ''}
         required={required}
+        data-validate={dataValidate} // Pass the validation rules to the hidden input
       />
       <div
-        className="form-control border border-gray-300 rounded px-3 py-2 bg-white cursor-pointer"
+        className={`form-control border border-gray-300 rounded px-3 py-2 bg-white cursor-pointer ${
+          isOpen ? 'border-blue-500' : ''
+        }`}
         onClick={() => setIsOpen((prev) => !prev)}
       >
-        {selected?.label || placeholder}
+        <span className={selected ? 'text-black' : 'text-gray-500'}>
+          {selected?.label || placeholder}
+        </span>
       </div>
 
       {isOpen && (
@@ -73,7 +81,7 @@ const SearchableSelect = ({
               <input
                 type="text"
                 placeholder="Search..."
-                className="form-control w-9.5/10"
+                className="form-control w-full px-2 py-1 border border-gray-300 rounded"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 autoFocus

@@ -8,7 +8,9 @@ import { Input, RadioGroup } from "@/app/utils/form-controls";
 import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
 import { validateForm } from "@/app/utils/formValidations";
 import DatePicker from "@/app/utils/commonDatepicker";
+ 
 import { apiCall } from "@/app/utils/api";
+ 
 
 const FormField = ({
   label,
@@ -34,6 +36,15 @@ const FormField = ({
 
 export default function NewVehicle() {
   const insuranceOptions: Option[] = [
+    { value: "icici", label: "ICICI Lombard" },
+    { value: "hdfc", label: "HDFC Ergo" },
+    { value: "newindia", label: "New India Assurance" },
+    { value: "icici", label: "ICICI Lombard" },
+    { value: "hdfc", label: "HDFC Ergo" },
+    { value: "newindia", label: "New India Assurance" },
+    { value: "icici", label: "ICICI Lombard" },
+    { value: "hdfc", label: "HDFC Ergo" },
+    { value: "newindia", label: "New India Assurance" },
     { value: "icici", label: "ICICI Lombard" },
     { value: "hdfc", label: "HDFC Ergo" },
     { value: "newindia", label: "New India Assurance" },
@@ -69,11 +80,15 @@ export default function NewVehicle() {
     { id: "vehicle_purchase_details", label: "Vehicle Purchase Details" },
   ];
 
-  const [registrationDate, setregisterationDate] = useState<Date | undefined>();
+ 
+  const [registerationDate, setregisterationDate] = useState<
+    Date | undefined
+  >();
   const [insuranceExpiry, setInsuranceExpiry] = useState<Date | undefined>();
   const [permitExpiryDate, setPermitExpiryDate] = useState<Date | undefined>();
   const [npExpiryDate, setNpExpiryDate] = useState<Date | undefined>();
-  const [quaterlyTaxExpiry, setQuarterlyTaxExpiry] = useState<
+  const [quarterlyTaxExpiry, setQuarterlyTaxExpiry] = useState<
+ 
     Date | undefined
   >();
   const [truckInvoiceDate, setTruckInvoiceDate] = useState<Date | undefined>();
@@ -81,6 +96,8 @@ export default function NewVehicle() {
   const [loanStartDate, setLoanStartDate] = useState<Date | undefined>();
 
   const formRef = useRef<HTMLFormElement>(null);
+<< 
+ 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formRef.current && validateForm(formRef.current)) {
@@ -103,6 +120,7 @@ export default function NewVehicle() {
         console.log(error);
       }
     }
+ 
   };
 
   const renderTabContent = () => {
@@ -114,7 +132,9 @@ export default function NewVehicle() {
               <div>
                 <FormField label="Owner" required>
                   <RadioGroup
+ 
                     name="owner"
+ 
                     options={[
                       { value: "New", label: "New" },
                       { value: "Existing", label: "Existing" },
@@ -123,7 +143,9 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Address" required>
                   <Input
+ 
                     name="address"
+ 
                     placeholder="Enter Address"
                     className="capitalize"
                     data-validate="required"
@@ -131,7 +153,9 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Registration Date" required>
                   <DatePicker
+ 
                     date={registrationDate}
+ 
                     setDate={setregisterationDate}
                     placeholder="Select date"
                     className="w-full"
@@ -149,7 +173,9 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Ownership Type" required>
                   <RadioGroup
-                    name="ownerShipType"
+ 
+                    name="ownershipType"
+ 
                     options={[
                       { value: "Owned", label: "Owned" },
                       { value: "Leased", label: "Leased" },
@@ -167,13 +193,23 @@ export default function NewVehicle() {
             <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
               <div>
                 <FormField label="Class of Truck" required>
-                  <SearchableSelect
-                    name="classOfTruck"
-                    placeholder="Select Truck Class"
-                    options={vehicleOptions}
-                    searchable
-                    required
-                  />
+ 
+                <SearchableSelect
+        name="vehicleType"
+        options={vehicleOptions}
+        value={vehicleType}
+        onChange={handleSelectChange}
+        // onAddNew={handleAddNew}
+        // onRefresh={handleRefresh}
+        required
+        searchable
+        placeholder="Choose a vehicle"
+        data-validate="required"
+        error={error}
+        className="w-full"
+      />
+
+ 
                 </FormField>
                 <FormField label="Model Number" required>
                   <Input
@@ -202,7 +238,9 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Chassis Number" required>
                   <Input
+ 
                     name="chasisNumber"
+ 
                     className="alphanumeric all_uppercase"
                     placeholder="Enter Chassis Number"
                     data-validate="required"
@@ -247,7 +285,9 @@ export default function NewVehicle() {
               <div>
                 <FormField label="F.C. Expiry Date" required>
                   <DatePicker
+ 
                     date={fcExpiry}
+ 
                     setDate={setFcexpiryDate}
                     placeholder="Select date"
                     className="w-full"
@@ -290,7 +330,9 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Quarterly Tax Expiry" required>
                   <DatePicker
+ 
                     date={quaterlyTaxExpiry}
+ 
                     setDate={setQuarterlyTaxExpiry}
                     placeholder="Quarterly Tax Expiry"
                     className="w-full"
@@ -378,7 +420,9 @@ export default function NewVehicle() {
               <div>
                 <FormField label="Truck Invoice No." required>
                   <Input
+ 
                     name="truckInvoiceNumber"
+ 
                     className="alphanumeric all_uppercase"
                     placeholder="Enter Truck Invoice Number"
                     data-validate="required"
@@ -468,7 +512,9 @@ export default function NewVehicle() {
                 <div className="space-y-4">
                   <FormField label="Truck Registration Number" required>
                     <Input
+ 
                       name="registrationNumber"
+ 
                       placeholder="Enter registration number"
                       className="alphanumeric no_space all_uppercase"
                       data-validate="required"
@@ -485,7 +531,9 @@ export default function NewVehicle() {
                   </FormField>
                   <FormField label="Makers Name" required>
                     <Input
+ 
                       name="makerName"
+ 
                       placeholder="Enter makers name"
                       className="capitalize alphanumeric"
                       data-validate="required"
@@ -493,7 +541,9 @@ export default function NewVehicle() {
                   </FormField>
                   <FormField label="Nature of Goods Weight" required>
                     <Input
+ 
                       name="natureOfGoodsWeight"
+ 
                       placeholder="Enter weight"
                       className="only_number"
                       data-validate="required"

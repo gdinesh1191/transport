@@ -168,56 +168,43 @@ const SearchableSelect = ({
       
       {/* Main select button */}
       <div
-        id={id}
-        className={`form-control border rounded px-3 py-2 bg-white cursor-pointer min-h-[40px] flex items-center justify-between ${
-          disabled 
-            ? 'bg-gray-100 cursor-not-allowed opacity-60' 
-            : 'hover:border-gray-400'
-        } ${
-          isOpen ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-300'
-        } ${
-          error ? 'border-red-500' : ''
-        }`}
-        onClick={handleToggle}
-        onKeyDown={handleKeyDown}
-        tabIndex={disabled ? -1 : 0}
-        role="combobox"
-        aria-expanded={isOpen}
-        aria-haspopup="listbox"
-        aria-labelledby={id}
-      >
-        <span className={`flex-1 truncate ${
-          selected ? 'text-black' : 'text-gray-500'
-        }`}>
-          {selected?.label || placeholder}
-        </span>
-        
-        <div className="flex items-center gap-2">
-          {/* Clear button */}
-          {selected && !disabled && (
-            <button
-              type="button"
-              onClick={handleClear}
-              className="text-gray-400 hover:text-gray-600 text-lg leading-none"
-              aria-label="Clear selection"
-            >
-              ×
-            </button>
-          )}
-          
-          {/* Dropdown arrow */}
-          <svg
-            className={`w-4 h-4 text-gray-400 transition-transform ${
-              isOpen ? 'rotate-180' : ''
-            }`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </div>
+  id={id}
+  className={`form-control flex items-center justify-between border rounded-md px-3 py-2 cursor-pointer ${
+    disabled
+      ? 'bg-gray-100 cursor-not-allowed opacity-60'
+      : ''
+  } ${
+    isOpen ? 'border-[#009333] ring-0.5 ring-[#009333]' : 'border-gray-300'
+  } ${error ? 'border-red-500' : ''}`}
+  onClick={handleToggle}
+  onKeyDown={handleKeyDown}
+  tabIndex={disabled ? -1 : 0}
+  role="combobox"
+  aria-expanded={isOpen}
+  aria-haspopup="listbox"
+  aria-labelledby={id}
+>
+  {/* Selected value or placeholder */}
+  <span
+    className={`flex-1 truncate ${
+      selected ? 'text-black' : 'text-gray-500'
+    }`}
+  >
+    {selected?.label || placeholder}
+  </span>
+
+  {/* Dropdown arrow */}
+  <svg
+    className={`w-4 h-4 text-gray-400 transition-transform ${
+      isOpen ? 'rotate-180' : ''
+    }`}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  </svg>
+</div>
 
       {/* Error message */}
       {error && (
@@ -234,7 +221,7 @@ const SearchableSelect = ({
                 ref={searchInputRef}
                 type="text"
                 placeholder="Search..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="form-control"
                 value={searchTerm}
                 onChange={handleSearchChange}
                 onClick={(e) => e.stopPropagation()}

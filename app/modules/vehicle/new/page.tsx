@@ -8,6 +8,9 @@ import { Input, RadioGroup } from "@/app/utils/form-controls";
 import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
 import { validateForm } from "@/app/utils/formValidations";
 import DatePicker from "@/app/utils/commonDatepicker";
+ 
+import { apiCall } from "@/app/utils/api";
+ 
 
 const FormField = ({
   label,
@@ -77,6 +80,7 @@ export default function NewVehicle() {
     { id: "vehicle_purchase_details", label: "Vehicle Purchase Details" },
   ];
 
+ 
   const [registerationDate, setregisterationDate] = useState<
     Date | undefined
   >();
@@ -84,44 +88,39 @@ export default function NewVehicle() {
   const [permitExpiryDate, setPermitExpiryDate] = useState<Date | undefined>();
   const [npExpiryDate, setNpExpiryDate] = useState<Date | undefined>();
   const [quarterlyTaxExpiry, setQuarterlyTaxExpiry] = useState<
+ 
     Date | undefined
   >();
   const [truckInvoiceDate, setTruckInvoiceDate] = useState<Date | undefined>();
-  const [fcexpiryDate, setFcexpiryDate] = useState<Date | undefined>();
+  const [fcExpiry, setFcexpiryDate] = useState<Date | undefined>();
   const [loanStartDate, setLoanStartDate] = useState<Date | undefined>();
 
   const formRef = useRef<HTMLFormElement>(null);
-  // const handleSubmit = () => {
-  //   console.log("Selected date:", registerationDate);
-     
-  //   // Format the date as needed
-  //   if (registerationDate) {
-  //     console.log("ISO string:", registerationDate.toISOString());
-  //     console.log("Formatted date:", registerationDate.toLocaleDateString());
-  //     console.log("Date for database:", registerationDate.toISOString().split('T')[0]); // YYYY-MM-DD
-  //     console.log(vehicleType);
-  //   } else {
-  //     console.log("No date selected");
-  //   }
-  // };
-  const [vehicleType, setVehicleType] = useState<string>("");
-  const [error, setError] = useState<string | undefined>(undefined); 
-  const handleSelectChange = (selectedOption: Option | null) => {
-    if (selectedOption) {
-      setVehicleType(selectedOption.value);
-      setError(undefined); // clear error
-    } else {
-      setVehicleType("");
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+<< 
+ 
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
-     
-      console.log("Submitting vehicle type:", vehicleType); 
-      alert("Form submitted with vehicle type: " + vehicleType);
-     
+    if (formRef.current && validateForm(formRef.current)) {
+      const formData = new FormData(formRef.current);
+      const formValues = Object.fromEntries(formData.entries());
+      console.log("Form submitted successfully", formValues);
+      try {
+        const payload = {
+          token: "putVehicle",
+          data: {
+            formValues,
+          },
+        };
+        const response=await apiCall(payload)
+        if(response.status===200){
+          console.log(response);
+          
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+ 
   };
 
   const renderTabContent = () => {
@@ -133,7 +132,9 @@ export default function NewVehicle() {
               <div>
                 <FormField label="Owner" required>
                   <RadioGroup
-                    name="ownerType"
+ 
+                    name="owner"
+ 
                     options={[
                       { value: "New", label: "New" },
                       { value: "Existing", label: "Existing" },
@@ -142,7 +143,9 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Address" required>
                   <Input
-                    name="ownerAddress"
+ 
+                    name="address"
+ 
                     placeholder="Enter Address"
                     className="capitalize"
                     data-validate="required"
@@ -150,7 +153,9 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Registration Date" required>
                   <DatePicker
-                    date={registerationDate}
+ 
+                    date={registrationDate}
+ 
                     setDate={setregisterationDate}
                     placeholder="Select date"
                     className="w-full"
@@ -168,7 +173,9 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Ownership Type" required>
                   <RadioGroup
+ 
                     name="ownershipType"
+ 
                     options={[
                       { value: "Owned", label: "Owned" },
                       { value: "Leased", label: "Leased" },
@@ -186,6 +193,7 @@ export default function NewVehicle() {
             <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
               <div>
                 <FormField label="Class of Truck" required>
+ 
                 <SearchableSelect
         name="vehicleType"
         options={vehicleOptions}
@@ -201,6 +209,7 @@ export default function NewVehicle() {
         className="w-full"
       />
 
+ 
                 </FormField>
                 <FormField label="Model Number" required>
                   <Input
@@ -229,7 +238,9 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Chassis Number" required>
                   <Input
-                    name="chassisNumber"
+ 
+                    name="chasisNumber"
+ 
                     className="alphanumeric all_uppercase"
                     placeholder="Enter Chassis Number"
                     data-validate="required"
@@ -274,7 +285,9 @@ export default function NewVehicle() {
               <div>
                 <FormField label="F.C. Expiry Date" required>
                   <DatePicker
-                    date={fcexpiryDate}
+ 
+                    date={fcExpiry}
+ 
                     setDate={setFcexpiryDate}
                     placeholder="Select date"
                     className="w-full"
@@ -317,7 +330,9 @@ export default function NewVehicle() {
                 </FormField>
                 <FormField label="Quarterly Tax Expiry" required>
                   <DatePicker
-                    date={quarterlyTaxExpiry}
+ 
+                    date={quaterlyTaxExpiry}
+ 
                     setDate={setQuarterlyTaxExpiry}
                     placeholder="Quarterly Tax Expiry"
                     className="w-full"
@@ -405,7 +420,9 @@ export default function NewVehicle() {
               <div>
                 <FormField label="Truck Invoice No." required>
                   <Input
-                    name="truckInvoiceNo"
+ 
+                    name="truckInvoiceNumber"
+ 
                     className="alphanumeric all_uppercase"
                     placeholder="Enter Truck Invoice Number"
                     data-validate="required"
@@ -495,7 +512,9 @@ export default function NewVehicle() {
                 <div className="space-y-4">
                   <FormField label="Truck Registration Number" required>
                     <Input
-                      name="truck-registration"
+ 
+                      name="registrationNumber"
+ 
                       placeholder="Enter registration number"
                       className="alphanumeric no_space all_uppercase"
                       data-validate="required"
@@ -512,7 +531,9 @@ export default function NewVehicle() {
                   </FormField>
                   <FormField label="Makers Name" required>
                     <Input
-                      name="maker-name"
+ 
+                      name="makerName"
+ 
                       placeholder="Enter makers name"
                       className="capitalize alphanumeric"
                       data-validate="required"
@@ -520,7 +541,9 @@ export default function NewVehicle() {
                   </FormField>
                   <FormField label="Nature of Goods Weight" required>
                     <Input
-                      name="goods-weight"
+ 
+                      name="natureOfGoodsWeight"
+ 
                       placeholder="Enter weight"
                       className="only_number"
                       data-validate="required"

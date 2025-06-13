@@ -13,10 +13,12 @@ interface DatePickerProps {
   setDate: (date: Date | undefined) => void;
   className?: string;
   placeholder?: string;
+ h
   name?: string;
   required?: boolean;
   "data-validate"?: string;
   id?: string;
+ 
 }
 
 // Format date as DD/MM/YYYY
@@ -88,8 +90,10 @@ const DatePicker: React.FC<DatePickerProps> = ({
   };
 
   return (
+ 
     <div className={cn("relative", className)}>
       {/* Hidden input for form submission */}
+ 
       {name && (
         <input
           type="hidden"
@@ -99,6 +103,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
           data-validate={dataValidate}
         />
       )}
+ 
 
       <div className="relative flex gap-2">
         <Input
@@ -138,6 +143,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
           </PopoverContent>
         </Popover>
       </div>
+ 
     </div>
   );
 };

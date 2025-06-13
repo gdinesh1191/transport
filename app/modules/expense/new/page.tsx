@@ -1,13 +1,13 @@
- "use client";
+"use client";
 
 import { useRef, useState, useEffect } from "react";
 import Layout from "../../../components/Layout";
 import { validateForm } from "@/app/utils/formValidations"; // Import the utility
- 
+
 import DatePicker from "@/app/utils/commonDatepicker";
 import CommonTypeahead from "@/app/utils/commonTypehead";
 
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs, { Dayjs } from "dayjs";
 
 const FormField = ({
   label,
@@ -70,7 +70,6 @@ const RadioGroup = ({
           name={name}
           value={option.value}
           className="form-radio"
-
           {...(required ? { "data-validate": "required" } : {})}
         />
         <span className="ml-2">{option.label}</span>
@@ -81,79 +80,116 @@ const RadioGroup = ({
 
 const NewExpense = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
- 
-  const [fileName, setFileName] = useState('No file chosen');
+
+  const [fileName, setFileName] = useState("No file chosen");
   const formRef = useRef<HTMLFormElement>(null);
- const [showModal, setShowModal] = useState(false);
-
-  const [activeTab, setActiveTab] = useState('Product Ledger');
-  const [formData, setFormData] = useState({
-    name: '',
-    remarks: ''
-  });
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("Customer Ledger");
+  const [name, setName] = useState("");
+  const [remarks, setRemarks] = useState("");
 
   const [tableData, setTableData] = useState([
-    { id: 1, name: 'aandagalur gate', remarks: 'Gate', status: true },
-    { id: 2, name: 'ban galore', remarks: '', status: false },
-    { id: 3, name: 'Erode', remarks: '', status: true },
-    { id: 4, name: 'gate', remarks: '', status: true },
-    { id: 5, name: 'gate 1', remarks: '', status: true },
-    { id: 6, name: 'gate 2', remarks: '', status: true }
+    { id: 1, sNo: 1, name: "Bangalore", remarks: "-", status: false },
+    { id: 2, sNo: 2, name: "Chennai", remarks: "South India", status: true },
+    { id: 3, sNo: 3, name: "Delhi", remarks: "-", status: false },
+    { id: 4, sNo: 4, name: "Mumbai", remarks: "Financial Hub", status: true },
+    { id: 5, sNo: 5, name: "Kolkata", remarks: "-", status: false },
+    { id: 6, sNo: 6, name: "Hyderabad", remarks: "IT City", status: true },
+    { id: 7, sNo: 7, name: "Pune", remarks: "-", status: false },
+    { id: 8, sNo: 8, name: "Ahmedabad", remarks: "-", status: true },
+    { id: 9, sNo: 9, name: "Bangalore", remarks: "-", status: false },
+    { id: 10, sNo: 10, name: "Chennai", remarks: "South India", status: true },
+    { id: 11, sNo: 11, name: "Delhi", remarks: "-", status: false },
+    { id: 12, sNo: 12, name: "Mumbai", remarks: "Financial Hub", status: true },
+    { id: 13, sNo: 13, name: "Kolkata", remarks: "-", status: false },
+    { id: 14, sNo: 14, name: "Hyderabad", remarks: "IT City", status: true },
+    { id: 15, sNo: 15, name: "Pune", remarks: "-", status: false },
+    { id: 16, sNo: 16, name: "Ahmedabad", remarks: "-", status: true },
+
+    // Add more data as needed
   ]);
 
-   const sidebarItems = [
-    'Customer Ledger',
-    'Product Ledger',
-    'Expense Ledger',
-    'Unit Ledger',
-    'Bank Accounts',
-    'Mandatory Fields'
-  ];
- const handleInputChange = (e:any) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
 
   const handleSaveUpdate = () => {
-    if (formData.name.trim()) {
-      const newEntry = {
-        id: tableData.length + 1,
-        name: formData.name,
-        remarks: formData.remarks,
-        status: true
-      };
-      setTableData(prev => [...prev, newEntry]);
-      setFormData({ name: '', remarks: '' });
-    }
+    // Logic to save/update data
+    console.log("Save & Update:", { name, remarks });
+    // In a real application, you'd typically send this data to an API
   };
 
-  const toggleStatus = (id:any) => {
-    setTableData(prev => 
-      prev.map(item => 
-        item.id === id ? { ...item, status: !item.status } : item
+  const handleRefresh = () => {
+    // Logic to refresh data
+    console.log("Refreshing data...");
+    // In a real application, you'd typically refetch data from an API
+  };
+
+  const handleToggleStatus = (id: any) => {
+    setTableData((prevData) =>
+      prevData.map((row) =>
+        row.id === id ? { ...row, status: !row.status } : row
       )
     );
   };
 
-  const handleRefresh = () => {
-    setFormData({ name: '', remarks: '' });
-  };
-   
   const nameData = [
-    { id: 1, name: "Aaaaaaaaaaaaaaaa", description: "This is a detailed description for Aaaaaaaaaaaaaaaa item with more information about its features and usage." },
-    { id: 2, name: "Ad Agency Solutions", description: "Professional advertising and marketing solutions for businesses of all sizes." },
-    { id: 3, name: "Anil Alta Technologies", description: "Advanced technology solutions and IT services provider." },
-    { id: 4, name: "Anil Maggie Foods", description: "Quality food products and catering services for various occasions." },
-    { id: 5, name: "Anil Kumar Enterprises", description: "Multi-business enterprise offering various commercial services." },
-    { id: 6, name: "Arun Suppliers", description: "Reliable supplier of industrial and commercial goods and materials." },
-    { id: 7, name: "Asdfasf Industries", description: "Manufacturing and industrial solutions provider with quality products." },
-    { id: 8, name: "Alpha Beta Corp", description: "Corporate solutions and business consulting services." },
-    { id: 9, name: "Amazing Products Ltd", description: "Innovative product development and distribution company." },
-    { id: 10, name: "Advance Systems", description: "Advanced system integration and technical support services." }
+    {
+      id: 1,
+      name: "Aaaaaaaaaaaaaaaa",
+      description:
+        "This is a detailed description for Aaaaaaaaaaaaaaaa item with more information about its features and usage.",
+    },
+    {
+      id: 2,
+      name: "Ad Agency Solutions",
+      description:
+        "Professional advertising and marketing solutions for businesses of all sizes.",
+    },
+    {
+      id: 3,
+      name: "Anil Alta Technologies",
+      description: "Advanced technology solutions and IT services provider.",
+    },
+    {
+      id: 4,
+      name: "Anil Maggie Foods",
+      description:
+        "Quality food products and catering services for various occasions.",
+    },
+    {
+      id: 5,
+      name: "Anil Kumar Enterprises",
+      description:
+        "Multi-business enterprise offering various commercial services.",
+    },
+    {
+      id: 6,
+      name: "Arun Suppliers",
+      description:
+        "Reliable supplier of industrial and commercial goods and materials.",
+    },
+    {
+      id: 7,
+      name: "Asdfasf Industries",
+      description:
+        "Manufacturing and industrial solutions provider with quality products.",
+    },
+    {
+      id: 8,
+      name: "Alpha Beta Corp",
+      description: "Corporate solutions and business consulting services.",
+    },
+    {
+      id: 9,
+      name: "Amazing Products Ltd",
+      description: "Innovative product development and distribution company.",
+    },
+    {
+      id: 10,
+      name: "Advance Systems",
+      description:
+        "Advanced system integration and technical support services.",
+    },
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -162,8 +198,7 @@ const NewExpense = () => {
       if (validateForm(formRef.current)) {
         const formData = new FormData(formRef.current);
         const formValues = Object.fromEntries(formData.entries());
- 
-        
+
         console.log("Form submitted successfully", formValues);
         setFileName("No file chosen");
       }
@@ -174,7 +209,7 @@ const NewExpense = () => {
     if (e.target.files && e.target.files.length > 0) {
       setFileName(e.target.files[0].name);
     } else {
-      setFileName('No file chosen');
+      setFileName("No file chosen");
     }
   };
 
@@ -196,9 +231,12 @@ const NewExpense = () => {
               {/* Basic Vehicle Information */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
                 <div className="space-y-4">
-
                   <FormField label="Category" required>
-                    <select name="category" className="form-control px-3 py-2" data-validate="required">
+                    <select
+                      name="category"
+                      className="form-control px-3 py-2"
+                      data-validate="required"
+                    >
                       <option value="">Select Category</option>
                       <option value="fuelCharges">Fuel Charges</option>
                       <option value="tollCharges">Toll Charges</option>
@@ -208,7 +246,12 @@ const NewExpense = () => {
                   </FormField>
 
                   <FormField label="Date" className="md:items-start" required>
-                  <DatePicker date={selectedDate} setDate={setSelectedDate} placeholder="Select date" className="w-full" />  
+                    <DatePicker
+                      date={selectedDate}
+                      setDate={setSelectedDate}
+                      placeholder="Select date"
+                      className="w-full"
+                    />
                   </FormField>
 
                   <FormField label="Description" className="md:items-start">
@@ -237,7 +280,7 @@ const NewExpense = () => {
                       required={true}
                       onSelect={handleNameSelect}
                       onAddNew={handleAddNewName}
-                      searchFields={['name']}
+                      searchFields={["name"]}
                       displayField="name"
                       minSearchLength={1}
                     />
@@ -249,7 +292,7 @@ const NewExpense = () => {
                       options={[
                         { value: "Cash", label: "Cash" },
                         { value: "UPI", label: "UPI" },
-                        { value: "Net Banking", label: "Net Banking" }
+                        { value: "Net Banking", label: "Net Banking" },
                       ]}
                       required
                     />
@@ -259,11 +302,20 @@ const NewExpense = () => {
                     <div className="w-full flex-grow flex flex-col">
                       <div className="flex items-center justify-start gap-3">
                         <div className="border border-gray-200 rounded-sm px-3 py-1 cursor-pointer">
-                          <label htmlFor="attachmentInput" className="flex items-center gap-1 text-[#009333] text-sm cursor-pointer">
-                            <i className="ri-upload-2-line text-md"></i>Upload File
+                          <label
+                            htmlFor="attachmentInput"
+                            className="flex items-center gap-1 text-[#009333] text-sm cursor-pointer"
+                          >
+                            <i className="ri-upload-2-line text-md"></i>Upload
+                            File
                           </label>
                         </div>
-                        <span id="fileName" className="text-gray-600 text-sm truncate">{fileName}</span>
+                        <span
+                          id="fileName"
+                          className="text-gray-600 text-sm truncate"
+                        >
+                          {fileName}
+                        </span>
                       </div>
                       <input
                         type="file"
@@ -275,15 +327,14 @@ const NewExpense = () => {
                         required
                       />
                     </div>
-              </FormField>
-              <button
-        onClick={() => setShowModal(true)}
-        className="bg-blue-600 text-white px-4 py-2 rounded shadow"
-      >
-        Open Config Modal
-      </button>
-
-
+                  </FormField>
+                  <button
+                    id="ModalBtn"
+                    onClick={openModal}
+                    className="flex items-center bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-md cursor-pointer"
+                  >
+                    Open Configuration Modal
+                  </button>
                 </div>
               </div>
             </form>
@@ -291,165 +342,217 @@ const NewExpense = () => {
         </main>
 
         <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-          <button type="submit" onClick={handleSubmit} className="btn-sm btn-primary">Save</button>
-          <button type="button" className="btn-sm btn-secondary">Cancel</button>
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            className="btn-sm btn-primary"
+          >
+            Save
+          </button>
+          <button type="button" className="btn-sm btn-secondary">
+            Cancel
+          </button>
         </footer>
       </div>
 
-
-    {showModal && (
-        <div className=" fixed inset-0 bg-[rgba(0,0,0,0.5)]  flex justify-center items-center z-50">
-          <div className="bg-white max-w-[80%] min-h-[calc(100vh-50px)]  rounded-xl shadow-xl relative">
-            {/* Header */}
-            <div className="flex justify-between items-center  px-4 py-2 border-b bg-gray-50">
-              <h2 className="text-lg font-semibold text-gray-800">Settings</h2>
-              <button 
-                onClick={() => setShowModal(false)} 
-                className="text-gray-500 hover:text-gray-700 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200"
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center p-4 z-50"  onClick={() => setIsModalOpen(false)}>
+          <div className="bg-white rounded-[0.5rem] w-full max-w-[85%] min-h-[calc(100vh-90px)] flex flex-col custom-helvetica">
+            {/* Modal Header */}
+            <div className="relative border-b border-[#dee2e6] px-4 py-2 bg-[#f8f8f8] rounded-tl-md">
+              <span className="text-[16px] text-[#212529]">Settings</span>
+              <button
+                onClick={closeModal}
+                className="absolute -top-[10px] -right-[10px] text-gray-500 hover:text-gray-700 bg-[#909090] hover:bg-[#cc0000] rounded-full w-[30px] h-[30px] border-2 border-white cursor-pointer"
               >
-                ×
+                <i className="ri-close-line text-white"></i>
               </button>
             </div>
 
-            <div className="flex">
-              {/* Sidebar */}
-              <div className="w-50  bg-white">
-                <div className="p-4 space-y-1">
-                  {sidebarItems.map((item) => (
-                    <div
-                      key={item}
-                      onClick={() => setActiveTab(item)}
-                    className={`cursor-pointer px-3 py-2 h-10 text-sm rounded transition-colors ${
-  activeTab === item
-    ? 'font-medium '
-    : 'text-[#000000] hover:bg-gray-100 hover:text-[#000000]'
-}`}
+            {/* Modal Body (Sidebar + Content) */}
+            <div className="row p-[16px] m-0 flex-1 flex flex-col">
+              <div className="grid grid-cols-12 min-h-[calc(100vh-250px)] flex-1">
+                {/* Sidebar */}
+               <div className="col-span-2 bg-[#f0f0f0] rounded-bl-md -m-4 overflow-y-auto h-[calc(100vh-90px)]">
 
-                    >
-                      {item}
-                    </div>
-                  ))}
+                  <ul className="text-[14px] text-[#000000]">
+                    {[
+                      "Customer Ledger",
+                      "Product Ledger",
+                      "Expense Ledger",
+                      "Unit Ledger",
+                      "Bank Accounts",
+                      "Mandatory Fields",
+                    ].map((tab) => (
+                      <li
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`cursor-pointer px-4 py-2 sidebar-tab ${
+                          activeTab === tab ? "bg-white " : ""
+                        }`}
+                      >
+                        <a
+                          href="#"
+                          className="block px-1 py-1 w-full whitespace-normal"
+                        >
+                          {tab}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              </div>
-
-              {/* Main Content */}
-              <div className="flex-1 p-6">
-                {/* Form Section */}
-                <div className="bg-gray-50 p-4 mb-6 rounded border">
-                  <div className="flex gap-3 items-end">
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Name<span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        placeholder="Enter your name"
-                        className="w-full border border-gray-300 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Remarks
-                      </label>
-                      <input
-                        type="text"
-                        name="remarks"
-                        value={formData.remarks}
-                        onChange={handleInputChange}
-                        placeholder="Enter your Remarks"
-                        className="w-full border border-gray-300 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <button
-                      onClick={handleSaveUpdate}
-                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors whitespace-nowrap"
-                    >
-                      Save & Update
-                    </button>
-                    <button
-                      onClick={handleRefresh}
-                      className="text-blue-500 hover:text-blue-700 p-2 rounded hover:bg-blue-50 transition-colors"
-                      title="Refresh"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Table Section */}
-                <div className="border border-gray-200 rounded overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-100 border-b">
-                      <tr>
-                        <th className="text-left p-3 font-medium text-gray-700 w-16">
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" className="rounded" />
-                            S.NO
-                          </div>
-                        </th>
-                        <th className="text-left p-3 font-medium text-gray-700">
-                          <div className="flex items-center gap-1">
-                            NAME
-                            <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                        </th>
-                        <th className="text-left p-3 font-medium text-gray-700">
-                          Remarks
-                        </th>
-                        <th className="text-left p-3 font-medium text-gray-700 w-24">
-                          <div className="flex items-center gap-1">
-                            Status
-                            <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tableData.map((row, index) => (
-                        <tr key={row.id} className="border-b hover:bg-gray-50">
-                          <td className="p-3">
-                            <div className="flex items-center gap-2">
-                              <input type="checkbox" className="rounded" />
-                              {index + 1}
-                            </div>
-                          </td>
-                          <td className="p-3 text-blue-600 hover:underline cursor-pointer">
-                            {row.name}
-                          </td>
-                          <td className="p-3 text-gray-600">
-                            {row.remarks}
-                          </td>
-                          <td className="p-3">
-                            <div 
-                              onClick={() => toggleStatus(row.id)}
-                              className="cursor-pointer"
-                            >
-                              <div className={`w-11 h-6 rounded-full relative transition-colors ${
-                                row.status ? 'bg-green-500' : 'bg-gray-300'
-                              }`}>
-                                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 shadow transition-transform ${
-                                  row.status ? 'translate-x-5' : 'translate-x-0.5'
-                                }`}></div>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                {/* Main Content Area */}
+                <div className="col-span-10 pl-4 pr-4 -mt-4 -mb-4 -mr-[10px] flex flex-col flex-1">
+                  {/* Input Form */}
+                  <div
+                    className="bg-white rounded-md m-[15px] mr-[5px]  shadow-[0_2px_8px_rgba(60,72,88,0.08)] border border-gray-200"
                   
-                  {/* Table Footer */}
-                  <div className="bg-gray-50 px-4 py-3 text-sm text-gray-600 text-right border-t">
-                    Total Entries: {tableData.length}
+
+                  >
+                    <div className="flex flex-col md:flex-row md:flex-nowrap items-end gap-3 p-6">
+                      <div className="w-full md:w-1/3">
+                        <div className="relative">
+                          <label
+                            htmlFor="name"
+                            className="form-label"
+                          >
+                            Name<span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            id="name"
+                            placeholder="Enter your name"
+                            autoComplete="off"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="w-full form-control"
+                          />
+                          <div className="text-red-500 absolute top-full left-0 text-xs mt-1">
+                            {/* Error message goes here */}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="w-full md:w-1/3">
+                        <label
+                          htmlFor="remarks"
+                          className=" form-label"
+                        >
+                          Remarks
+                        </label>
+                        <input
+                          type="text"
+                          id="remarks"
+                          placeholder="Enter your Remarks"
+                          autoComplete="off"
+                          value={remarks}
+                          onChange={(e) => setRemarks(e.target.value)}
+                          className="w-full form-control"
+                        />
+                      </div>
+
+                      <div className="w-full md:w-1/3 flex justify-start">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={handleSaveUpdate}
+                            className="btn-sm btn-primary"
+                          >
+                            Save & Update
+                          </button>
+                          <i
+                            onClick={handleRefresh}
+                            className="ri-refresh-line text-[#0d6efd] font-semibold text-[18px] cursor-pointer"
+                          ></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Table Display */}
+                  <div className="ml-5  overflow-hidden rounded-t-lg h-[calc(100vh-277px)] border border-[#ebeff3] ">
+                    <div className="h-full overflow-y-auto  ">
+                      <table className="w-full text-sm ">
+                        <thead className="sticky-table-header ">
+                          <tr>
+                            <th className="th-cell  w-[5%] text-left">
+                              <input type="checkbox" className="mr-3" />
+                            </th>
+                            <th className="th-cell w-[10%] text-left">
+                              <span>S.No</span>
+                            </th>
+                            <th className="th-cell w-[45%]  text-left">
+                              <div className="flex items-center justify-between relative">
+                                <span className="font-semibold">Name</span>
+                                <i
+                                  className="ri-arrow-down-s-fill text-[12px] dropdown-icon-hover"
+                                  id="sortDropdownBtn"
+                                ></i>
+                              </div>
+                            </th>
+                            <th className="th-cell w-[25%]  text-left">
+                              Remarks
+                            </th>
+                            <th className="th-cell w-[15%]  text-left">
+                              <div className="flex items-center justify-between relative">
+                                <span>Status</span>
+                                <i
+                                  className="ri-arrow-down-s-fill text-[12px] dropdown-icon-hover"
+                                  id="statusDropdownBtn"
+                                ></i>
+                              </div>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#ebeff3]">
+                          {tableData.map((row) => (
+                            <tr key={row.id} className="tr-hover group">
+                              <td className="td-cell w-[5%] ">
+                                <input type="checkbox" className="mr-3" />
+                              </td>
+                              <td className="td-cell w-[5%]">
+                                <span className="float-left">{row.sNo}</span>
+                              <span className="float-right">
+                                   <i className="ri-pencil-fill edit-icon opacity-0 group-hover:opacity-100"
+                                />
+                              </span>
+                              </td>
+                              <td className="td-cell w-[45%] ">
+                                <div className="flex items-center justify-between">
+                                  <span>{row.name}</span>
+                                </div>
+                              </td>
+                              <td className="td-cell w-[25%] ">
+                                <div className="flex items-center justify-between">
+                                  <span>{row.remarks}</span>
+                                </div>
+                              </td>
+                              <td className="td-cell w-[15%] ">
+                                <div className="flex items-center">
+                                  <label className="relative inline-flex items-center mt-1 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      className="sr-only peer"
+                                      checked={row.status}
+                                      onChange={() =>
+                                        handleToggleStatus(row.id)
+                                      }
+                                    />
+                                    <div className="w-7.5 h-4 bg-white rounded-full border border-gray-300 peer-checked:bg-[#009333] transition-colors"></div>
+                                    <div className="absolute left-0.5 top-0.2 w-2.5 h-2.5 bg-[#bfbfbf] rounded-full shadow transition-transform peer-checked:translate-x-4 peer-checked:bg-white"></div>
+                                  </label>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#ebeff3] border-t border-[#ebeff3] w-[98%] ml-5  rounded-b-lg">
+                    <div className="px-3 py-2 text-right text-[14px] text-[#212529]">
+                      Total Entries: 21
+                    </div>
                   </div>
                 </div>
               </div>

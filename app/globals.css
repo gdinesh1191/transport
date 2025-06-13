@@ -161,9 +161,7 @@ input[type="checkbox"] {
     @apply text-[12px] text-[#475867] text-left bg-white sticky top-0 z-10 shadow-[0_1px_0_0_#ebeff3];
   }
 
-  .sticky-table-header {
-    @apply text-[12px] text-[#475867] text-left bg-white sticky top-0 z-10 shadow-[0_1px_0_0_#ebeff3];
-  }
+
 
   .th-cell {
     @apply border-r border-[#ebeff3] p-[0.3rem];

@@ -13,9 +13,9 @@ interface DatePickerProps {
   setDate: (date: Date | undefined) => void;
   className?: string;
   placeholder?: string;
-  name?: string; // Add name prop for form submission
-  required?: boolean; // Add required prop
-  'data-validate'?: string; // Add data-validate prop for validation rules
+  name?: string; 
+  required?: boolean;
+  'data-validate'?: string;
 }
 
 const DatePicker: React.FC<DatePickerProps> = ({ 
@@ -34,14 +34,12 @@ const DatePicker: React.FC<DatePickerProps> = ({
     setOpen(false); 
   };
 
-  // Format date for form submission (ISO string or empty string)
   const getFormattedValue = () => {
     return date ? date.toISOString() : '';
   };
 
   return (
     <div className="relative">
-      {/* Hidden input for form submission and validation */}
       {name && (
         <input
           type="hidden"
@@ -55,7 +53,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
-            type="button" // Prevent form submission when clicking the button
+            type="button"
             variant="outline"
             className={cn(
               "w-[280px] justify-start text-left font-normal", 
@@ -64,7 +62,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {date ? format(date, "PPP") : <span>{placeholder || "Pick a date"}</span>}
+            {date ? format(date, "dd/MM/yyyy") : <span>{placeholder || "Pick a date"}</span>}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0">

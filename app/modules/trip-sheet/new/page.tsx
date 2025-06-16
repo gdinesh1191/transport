@@ -248,7 +248,7 @@ const handleCreateTrip = () => {
                       <Input
                         name="fromPlace"
                         placeholder="Enter place from"
-                        className="form-control numbers-decimal"
+                        className="form-control alphabet_only"
                         data-validate="required"
                       />
                     </FormField>
@@ -256,7 +256,7 @@ const handleCreateTrip = () => {
                       <Input
                         name="toPlace"
                         placeholder="Enter Place to"
-                        className="form-control numbers-decimal"
+                        className="form-control alphabet_only"
                         data-validate="required"
                       />
                     </FormField>

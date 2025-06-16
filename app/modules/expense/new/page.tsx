@@ -114,7 +114,7 @@ const NewExpense = () => {
                 <div className="space-y-4">
                   <FormField label="Date" required>
  
-                    <DatePicker date={selectedDate} setDate={setSelectedDate} placeholder="Select date" className="w-full"  name="expenseDate"/>
+                    <DatePicker date={selectedDate} disableFuture  setDate={setSelectedDate} placeholder="Select date" className="w-full"  name="expenseDate"/>
  
                   </FormField>
 

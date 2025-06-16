@@ -1,8 +1,13 @@
 "use client";
 
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, FormEvent, useRef } from "react";
 import Layout from "../../../components/Layout";
 
+import { validateForm } from "@/app/utils/formValidations";
+import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
+import useInputValidation from "@/app/utils/inputValidations";
+import DatePicker from "@/app/utils/commonDatepicker";
+import { Input, RadioGroup } from "@/app/utils/form-controls";
 
  
 interface BankDetails {
@@ -54,9 +59,7 @@ const FormField: React.FC<FormFieldProps> = ({ label, required = false, children
   </div>
 );
 
-const Input: React.FC<InputProps> = ({ name, placeholder, type = "text", className = "", ...props }) => (
-  <input type={type} name={name} placeholder={placeholder} className={`form-control ${className}`} {...props} />
-);
+
 
 
 
@@ -64,7 +67,29 @@ export default function NewEmployee() {
   const [activeTab, setActiveTab] = useState<string>("Bank_details");
   const [showModal, setShowModal] = useState<boolean>(true);
   const [employeeType, setEmployeeType] = useState<string>("");
-   const [fileName, setFileName] = useState('No file chosen');
+  const [fileName, setFileName] = useState("No file chosen");
+  const formRef = useRef<HTMLFormElement>(null);
+  useInputValidation();
+  const [dob, setDob] = useState<Date | undefined>();
+  const [licenseExpiryDate, handleLicenseExpiryChange] = useState<
+    Date | undefined
+  >();
+
+ 
+
+const stateOptions = [
+  { value: "Tamil Nadu", label: "Tamil Nadu" },
+  { value: "Karnataka", label: "Karnataka" },
+  { value: "Kerala", label: "Kerala" },
+  { value: "Andhra Pradesh", label: "Andhra Pradesh" },
+  { value: "Telangana", label: "Telangana" },
+  { value: "Maharashtra", label: "Maharashtra" },
+  { value: "Gujarat", label: "Gujarat" },
+  { value: "Rajasthan", label: "Rajasthan" },
+  { value: "Punjab", label: "Punjab" },
+  { value: "Uttar Pradesh", label: "Uttar Pradesh" },
+];
+
 
   const [bankForm, setBankForm] = useState<Omit<BankDetails, "id">>({
     bankName: "", accountNumber: "", accountName: "", ifscCode: "", branchName: "",
@@ -150,10 +175,14 @@ export default function NewEmployee() {
     { id: "Proof_details", label: "Proof Details" },
     ...(employeeType === "Driver" ? [{ id: "Driver_details", label: "Driver Details" }] : []),
   ];
-
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Submission logic here
+    if (formRef.current && validateForm(formRef.current)) {
+      const formData = new FormData(formRef.current);
+      const formValues = Object.fromEntries(formData.entries());
+      console.log("Form submitted successfully", formValues);
+    }
   };
 
   const renderTabContent = () => {
@@ -212,10 +241,43 @@ export default function NewEmployee() {
         return (
           <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
             <div>
-              <FormField label="License Number" required><Input name="licenseNumber" className="form-control" value={driverDetailsForm.licenseNumber} onChange={handleDriverChange} placeholder="Enter License Number" data-validate="required" /></FormField>
-              <FormField label="License Expiry Date" required><Input type="date" className="form-control" name="licenseExpiry" value={driverDetailsForm.licenseExpiry} onChange={handleDriverChange} data-validate="required" /></FormField>
-              <FormField label="Truck Number" required><Input name="truckNumber" className="form-control" value={driverDetailsForm.truckNumber} onChange={handleDriverChange} placeholder="Enter Truck Number" /></FormField>
-              <FormField label="License Issued By" required><Input name="licenseIssuedBy" value={driverDetailsForm.licenseIssuedBy} onChange={handleDriverChange} placeholder="Enter License Issued By" /></FormField>
+               <FormField label="License Number" required>
+                <Input
+                  name="licenseNumber"
+                  className="form-control"
+                  value={driverDetailsForm.licenseNumber}
+                  onChange={handleDriverChange}
+                  placeholder="Enter License Number"
+                  data-validate="required"
+                />
+              </FormField>
+              <FormField label="License Expiry Date" required>
+                <DatePicker
+                  date={licenseExpiryDate}
+                  setDate={handleLicenseExpiryChange}
+                  name="licenseExpiry"
+                  data-validate="required"
+                />
+              </FormField>
+              <FormField label="Truck Number" required>
+                <Input
+                  name="truckNumber"
+                  className="form-control"
+                  value={driverDetailsForm.truckNumber}
+                  onChange={handleDriverChange}
+                  placeholder="Enter Truck Number"
+                  data-validate="required"
+                />
+              </FormField>
+              <FormField label="License Issued By" required>
+                <Input
+                  name="licenseIssuedBy"
+                  value={driverDetailsForm.licenseIssuedBy}
+                  onChange={handleDriverChange}
+                  placeholder="Enter License Issued By"
+                  data-validate="required"
+                />
+              </FormField>
             </div>
             <div></div>
           </div>
@@ -226,8 +288,28 @@ export default function NewEmployee() {
           <div>
             <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
               <div className="space-y-4">
-                <FormField label="Aadhaar Number" required><Input name="aadhaarNumber" value={proofDetailsForm.aadhaarNumber} onChange={handleProofChange} placeholder="Enter Aadhaar Number" className="form-control w-full numeric-only" maxLength={12} data-validate="required" /></FormField>
-                <FormField label="PAN Number" required><Input name="panNumber" value={proofDetailsForm.panNumber} onChange={handleProofChange} placeholder="Enter PAN Number" className="form-control w-full alphanumeric" maxLength={10} data-validate="required" /></FormField>
+                   <FormField label="Aadhaar Number" required>
+                  <Input
+                    name="aadhaarNumber"
+                    value={proofDetailsForm.aadhaarNumber}
+                    onChange={handleProofChange}
+                    placeholder="Enter Aadhaar Number"
+                    className=" only_number"
+                    maxLength={12}
+                    data-validate="required"
+                  />
+                </FormField>
+                <FormField label="PAN Number" required>
+                  <Input
+                    name="panNumber"
+                    value={proofDetailsForm.panNumber}
+                    onChange={handleProofChange}
+                    placeholder="Enter PAN Number"
+                    className=" alphanumeric"
+                    maxLength={10}
+                    data-validate="required"
+                  />
+                </FormField>
               </div>
             </div>
             <div></div>
@@ -241,7 +323,7 @@ export default function NewEmployee() {
       <div className="min-h-screen">
         <main id="main-content" className="flex-1">
           <div className="flex-1 overflow-y-auto h-[calc(100vh-103px)]">
-            <form onSubmit={handleSubmit}>
+            <form ref={formRef} onSubmit={handleSubmit} autoComplete="off">
               <div className="border-b border-gray-300">
                 <div className="grid grid-cols-1 lg:grid-cols-2 px-4 py-2">
                   <FormField label="Name" required>
@@ -252,7 +334,12 @@ export default function NewEmployee() {
                           <option value="Mrs.">Mrs.</option>
                           <option value="Ms.">Ms.</option>
                         </select>
-                        <Input name="employeeName" placeholder="Enter Name" className="form-control lg: w-300 capitalize alphabet-only " data-validate="required" />
+                           <Input
+                          name="employeeName"
+                          placeholder="Enter Name"
+                          className="form-control lg: w-300 capitalize alphabet-only "
+                          data-validate="required"
+                        />
                       </div>
                     </div>
                   </FormField>
@@ -261,7 +348,15 @@ export default function NewEmployee() {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-6 px-4 py-6">
                 <div className="space-y-4 lg:border-r lg:border-gray-300 lg:pr-4">
-                  <FormField label="DOB" required><Input name="dob" type="date" className="form-control w-full" data-validate="required" /></FormField>
+                    <FormField label="DOB" required>
+                    <DatePicker
+                      date={dob}
+                      setDate={setDob}
+                      name="dob"
+                      className=" w-full"
+                      data-validate="required"
+                    />
+                  </FormField>
                   <FormField label="Gender" required>
                     <select name="gender" className="form-control " data-validate="required">
                       <option value="">Select Gender</option>
@@ -270,25 +365,73 @@ export default function NewEmployee() {
                       <option value="other">Other</option>
                     </select>
                   </FormField>
-                  <FormField label="Blood Group" required><Input name="bloodGroup" placeholder="Enter Blood Group" className="form-control w-full" data-validate="required" /></FormField>
-                  <FormField label="Phone Number" required><Input name="phone" placeholder="Enter Phone Number" className="form-control w-full numeric-only" data-validate="required" /></FormField>
-                  <FormField label="Whatsapp Number" required><Input name="whatsapp" placeholder="Enter Phone Number" className="form-control w-full numeric-only" data-validate="required" /></FormField>
-                  <FormField label="Family Number"><Input name="familyNumber" placeholder="Enter Phone Number" className="form-control w-full numeric-only" /></FormField>
+                   <FormField label="Blood Group" required>
+                    <Input
+                      name="bloodGroup"
+                      placeholder="Enter Blood Group"
+                      className="form-control w-full"
+                      data-validate="required"
+                    />
+                  </FormField>
+                  <FormField label="Phone Number" required>
+                    <Input
+                      name="phone"
+                      placeholder="Enter Phone Number"
+                      className="form-control w-full only_number"
+                      data-validate="required"
+                    />
+                  </FormField>
+                  <FormField label="Whatsapp Number" required>
+                    <Input
+                      name="whatsapp"
+                      placeholder="Enter Phone Number"
+                      className="form-control w-full only_number"
+                      data-validate="required"
+                    />
+                  </FormField>
+                  <FormField label="Family Number">
+                    <Input
+                      name="familyNumber"
+                      placeholder="Enter Phone Number"
+                      className="form-control w-full only_number"
+                    />
+                  </FormField>
                 </div>
 
                 <div className="space-y-4">
-                  <FormField label="Address Line 1"><Input name="addressLine1" placeholder="Enter Address Line 1" className="form-control w-full capitalize" /></FormField>
-                  <FormField label=""><Input name="addressLine2" placeholder="Enter Address Line 2" className="form-control w-full capitalize" /></FormField>
+                   <FormField label="Address Line 1">
+                    <Input
+                      name="addressLine1"
+                      placeholder="Enter Address Line 1"
+                      className="form-control w-full capitalize"
+                    />
+                  </FormField>
+                  <FormField label="">
+                    <Input
+                      name="addressLine2"
+                      placeholder="Enter Address Line 2"
+                      className="form-control w-full capitalize"
+                    />
+                  </FormField>
                  
                   <FormField label="Picture Path" required>
                     <div className="w-full flex-grow flex flex-col">
                       <div className="flex items-center justify-start gap-3">
                         <div className="border border-gray-200 rounded-sm px-3 py-1 cursor-pointer">
-                          <label htmlFor="picturepathInput" className="flex items-center gap-1 text-[#009333] text-sm cursor-pointer">
-                            <i className="ri-upload-2-line text-md"></i>Upload File
+                            <label
+                            htmlFor="picturepathInput"
+                            className="flex items-center gap-1 text-[#009333] text-sm cursor-pointer"
+                          >
+                            <i className="ri-upload-2-line text-md"></i>Upload
+                            File
                           </label>
                         </div>
-                        <span id="fileName" className="text-gray-600 text-sm truncate">{fileName}</span>
+                         <span
+                          id="fileName"
+                          className="text-gray-600 text-sm truncate"
+                        >
+                          {fileName}
+                        </span>
                       </div>
                       <input
                         type="file"
@@ -304,13 +447,21 @@ export default function NewEmployee() {
                   <FormField label="Remarks"><Input name="remarks" placeholder="Enter Remarks" className="form-control w-full capitalize" /></FormField>
                   <div>
                     <FormField label="State" required>
-                      <select name="state" className="form-control w-full" data-validate="required">
-                        <option value="">Select State</option>
-                        <option value="Tamil Nadu">Tamil Nadu</option>
-                        <option value="Karnataka">Karnataka</option>
-                      </select>
+                      <SearchableSelect
+    name="state"
+    placeholder="Select State"
+    options={stateOptions}
+    searchable
+    data-validate="required"
+    className="w-full"
+  />
                     </FormField>
-                    <FormField label="Pincode"><Input name="pincode" placeholder="Enter Pincode" className="w-full numeric-only" /></FormField>
+                    <FormField label="Pincode">
+                      <Input
+                        name="pincode"
+                        placeholder="Enter Pincode"
+                        className="w-full only_number"
+                      />  </FormField>
                   </div>
                 </div>
               </div>
@@ -319,7 +470,17 @@ export default function NewEmployee() {
               <div className="mx-2 mt-5">
                 <ul className="flex whitespace-nowrap w-full border-b border-gray-300 mr-3">
                   {tabs.map((tab) => (
-                    <li key={tab.id} className={`mr-6 pb-2 cursor-pointer hover:text-[#009333] ${activeTab === tab.id ? "text-[#009333] border-b-2 border-[#009333]" : ""}`} onClick={() => setActiveTab(tab.id)}>{tab.label}</li>
+                    <li
+                      key={tab.id}
+                      className={`mr-6 pb-2 cursor-pointer hover:text-[#009333] ${
+                        activeTab === tab.id
+                          ? "text-[#009333] border-b-2 border-[#009333]"
+                          : ""
+                      }`}
+                      onClick={() => setActiveTab(tab.id)}
+                    >
+                      {tab.label}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -331,8 +492,16 @@ export default function NewEmployee() {
         </main>
 
         <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-          <button type="submit" onClick={handleSubmit as any} className="btn-sm btn-primary">Save</button>
-          <button type="button" className="btn-sm btn-secondary">Cancel</button>
+         <button
+            type="submit"
+            onClick={handleSubmit as any}
+            className="btn-sm btn-primary"
+          >
+            Save
+          </button>
+          <button type="button" className="btn-sm btn-secondary">
+            Cancel
+          </button>
         </footer>
       </div>
 

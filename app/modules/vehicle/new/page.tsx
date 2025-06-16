@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useEffect, useRef, useState  } from "react";
 import Layout from "../../../components/Layout";
 import useInputValidation from "@/app/utils/inputValidations";
 import ToastContainer, { showToast } from "@/app/utils/toaster";
@@ -7,6 +7,8 @@ import { Input, RadioGroup } from "@/app/utils/form-controls";
 import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
 import { validateForm, FormErrors } from "@/app/utils/formValidations";
 import DatePicker from "@/app/utils/commonDatepicker";
+import { useSearchParams } from "next/navigation";
+
 
 import { apiCall } from "@/app/utils/api";
 
@@ -18,32 +20,34 @@ interface FormFieldProps {
   error?: string; // Add an error prop to FormField
   htmlFor?: string; // Add htmlFor for label association
 }
-
-const FormField = ({
+ const FormField = ({
   label,
   required = false,
   children,
   className = "",
   error,
-  htmlFor, // Destructure htmlFor prop
+  htmlFor,
 }: FormFieldProps) => (
   <div
-    className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}
+    className={`mb-[10px] flex flex-col md:flex-row md:items-start gap-2 md:gap-4 ${className}`}
   >
-    <label className="form-label w-50" htmlFor={htmlFor}>
-      {" "}
-      {/* Use htmlFor here */}
+    <label
+      className="form-label w-50 mt-2" // Add top padding to align with input
+      htmlFor={htmlFor}
+    >
       {label}
       {required && <span className="form-required text-red-500">*</span>}
     </label>
+
     <div className="flex flex-col w-3/4">
       {children}
-      {error && ( // Conditionally render error message
+      {error && (
         <p className="error-message text-red-500 text-xs mt-1">{error}</p>
       )}
     </div>
   </div>
 );
+
 
 export default function NewVehicle() {
   const insuranceOptions: Option[] = [
@@ -61,7 +65,7 @@ export default function NewVehicle() {
     { value: "financeCompany", label: "Finance Company" },
     { value: "others", label: "Others" },
   ];
-  const vehicleTypeOptions: Option[] = [
+  const classOfTruckOptions: Option[] = [
     { value: "pickup", label: "Pickup" },
     { value: "lorry", label: "Lorry" },
   ];
@@ -84,7 +88,7 @@ export default function NewVehicle() {
     { id: "vehicle_purchase_details", label: "Vehicle Purchase Details" },
   ];
 
-  const [registerationDate, setregisterationDate] = useState<
+  const [registrationDate, setregistrationDate] = useState<
     Date | undefined
   >();
   const [insuranceExpiry, setInsuranceExpiry] = useState<Date | undefined>();
@@ -119,7 +123,7 @@ export default function NewVehicle() {
             data: {
               ...formValues,
               // Explicitly add date values from state, as FormData doesn't pick them from DatePicker
-              registerationDate: registerationDate?.toISOString(),
+              registrationDate: registrationDate?.toISOString(),
               insuranceExpiry: insuranceExpiry?.toISOString(),
               permitExpiryDate: permitExpiryDate?.toISOString(),
               npExpiryDate: npExpiryDate?.toISOString(),
@@ -185,7 +189,33 @@ export default function NewVehicle() {
       }
     }
   };
-
+  const searchParams = useSearchParams();
+  const edit_id = searchParams.get("id"); // returns string or null
+  useEffect(() => {
+    const fetchVehicle = async () => {
+      if (!edit_id) return;
+  
+      const payload = {
+        token: "getVehicle",
+        data: { id: Number(edit_id) },
+      };
+  
+      try {
+        const response = await apiCall(payload);
+        if (response.status === 200) {
+          const vehicleData = response.data;
+          console.log("Fetched vehicle data:", vehicleData);
+        } else {
+          showToast.error("Failed to fetch vehicle data");
+        }
+      } catch (err) {
+        console.error("API error:", err);
+        showToast.error("Something went wrong");
+      }
+    };
+  
+    fetchVehicle();
+  }, [edit_id]);
   return (
     <Layout pageTitle="Vehicle Registration">
       <div className="flex-1">
@@ -221,7 +251,7 @@ export default function NewVehicle() {
                       id="truckType" // Added ID for htmlFor (you might need to adjust SearchableSelect to pass this to its hidden input)
                       name="truckType"
                       placeholder="Select truck type"
-                      options={vehicleTypeOptions}
+                      options={classOfTruckOptions}
                       searchable
                       data-validate="required"
                     />
@@ -316,16 +346,16 @@ export default function NewVehicle() {
                       </FormField>
                       <FormField
                         label="Registration Date"
-                        error={formErrors.registerationDate}
-                        htmlFor="registerationDate"
+                        error={formErrors.registrationDate}
+                        htmlFor="registrationDate"
                       >
                         {/* Ensure DatePicker correctly links to a hidden input with this name/ID for validation */}
                         <DatePicker
-                          id="registerationDate" // Added ID for htmlFor
-                          name="registerationDate" // Prop to pass the name down
-                          date={registerationDate}
+                          id="registrationDate" 
+                          name="registrationDate" // Prop to pass the name down
+                          date={registrationDate}
                           disableFuture
-                          setDate={setregisterationDate}
+                          setDate={setregistrationDate}
                           placeholder="Select date"
                           className="w-full" required={true}
                           data-validate="required" // Added data-validate
@@ -350,12 +380,12 @@ export default function NewVehicle() {
                       <FormField
                         label="Ownership Type"
                         required
-                        error={formErrors.ownershipType}
-                        htmlFor="ownershipType"
+                        error={formErrors.ownerShipType}
+                        htmlFor="ownerShipType"
                       >
                         <RadioGroup
-                          id="ownershipType"
-                          name="ownershipType"
+                          id="ownerShipType"
+                          name="ownerShipType"
                           options={[
                             { value: "Owned", label: "Owned" },
                             { value: "Leased", label: "Leased" },
@@ -378,12 +408,12 @@ export default function NewVehicle() {
                       <FormField
                         label="Class of Truck"
                         required
-                        error={formErrors.vehicleType}
-                        htmlFor="vehicleType"
+                        error={formErrors.classOfTruck}
+                        htmlFor="classOfTruck"
                       >
                         <SearchableSelect
-                          id="vehicleType" // Added ID for htmlFor
-                          name="vehicleType"
+                          id="classOfTruck" // Added ID for htmlFor
+                          name="classOfTruck"
                           options={vehicleOptions}
                           searchable
                           placeholder="Choose a vehicle"
@@ -450,7 +480,7 @@ export default function NewVehicle() {
                         htmlFor="engineNumber"
                       >
                         <Input
-                          id="engineNumber" // Added ID for htmlFor
+                          id="engineNumber" 
                           name="engineNumber"
                           className="alphanumeric all_uppercase"
                           placeholder="Enter Engine Number"
@@ -464,7 +494,7 @@ export default function NewVehicle() {
                         htmlFor="vehicleWeight"
                       >
                         <Input
-                          id="vehicleWeight" // Added ID for htmlFor
+                          id="vehicleWeight"  
                           name="vehicleWeight"
                           className="number_with_decimal"
                           type="text"
@@ -484,6 +514,21 @@ export default function NewVehicle() {
                           className="number_with_decimal"
                           type="text"
                           placeholder="Enter Unladen Weight"
+                          data-validate="required"
+                        />
+                      </FormField>
+                      <FormField
+                        label="Load Capacity"
+                        required
+                        error={formErrors.loadWeightCapacity}
+                        htmlFor="loadWeightCapacity"
+                      >
+                        <Input
+                          id="loadWeightCapacity" // Added ID for htmlFor
+                          name="loadWeightCapacity"
+                          className="number_with_decimal"
+                          type="text"
+                          placeholder="Enter Load Weight Capacity"
                           data-validate="required"
                         />
                       </FormField>

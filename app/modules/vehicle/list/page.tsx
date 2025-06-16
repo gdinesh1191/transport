@@ -41,6 +41,8 @@ const VehicleList = () => {
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
 
+  const [deletedIds, setDeletedIds] = useState<number[]>([]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
@@ -106,7 +108,7 @@ const VehicleList = () => {
           setVehicles([]);
         }
         setNoData(true);
-        setHasMore(false)
+        setHasMore(false);
         setIsFetchingMore(false);
       }
       setLoading(false);
@@ -200,9 +202,8 @@ const VehicleList = () => {
       "Are you sure?",
       "You won't be able to revert this!",
       async () => {
+        alertRef.current?.hideAlert();
         try {
-          setLoading(true);
-          setError(null);
           const payload = {
             token: "deleteVehicles",
             data: {
@@ -211,43 +212,41 @@ const VehicleList = () => {
           };
           const response = await apiCall(payload);
           if (response && response.status === 200) {
-            alertRef.current?.showAlert(
-              "success",
-              "Deleted!",
-              "Your file has been deleted.",
-              () => {
-                alertRef.current?.hideAlert();
-                setSelectedIds([]);
+           
+                setDeletedIds(selectedIds);
+                setTimeout(() => {
+                  setDeletedIds([]);
+                  setSelectedIds([]);
+                  setVehicles((prev) =>
+                    prev.filter((v) => !selectedIds.includes(v.id))
+                  );
+                  showToast.success("Vehicle Deleted successfully!");
+                }, 500); // animation duration
                 // fetchVehicles();
-                setVehicles(prev => prev.filter(v => !selectedIds.includes(v.id)));
-                showToast.success("Vehicle Deleted successfully!"); 
-              }
-            );
-          } 
-            else {
+              
+            
+          } else {
             alertRef.current?.showAlert(
               "error",
               "Oops!",
               "Something went wrong. Try again.",
               () => {
-                 alertRef.current?.hideAlert();
+                alertRef.current?.hideAlert();
                 showToast.error("Error in deleting !");
-               }
+              }
             );
           }
-            
-          
         } catch (err) {
-           alertRef.current?.showAlert(
+          alertRef.current?.showAlert(
             "error",
             "Error!",
             "Failed to delete file.",
-            () => {alertRef.current?.hideAlert();
+            () => {
+              alertRef.current?.hideAlert();
               setError("An error occurred while deleting vehicles.");
             }
           );
-          
-        } 
+        }
       },
       () => {
         alertRef.current?.showAlert(
@@ -577,11 +576,10 @@ const VehicleList = () => {
                           <tr
                             key={vehicle.id}
                             ref={isLastRow ? lastRowRef : null}
-                            className={`tr-hover group ${
-                              selectedIds.includes(vehicle.id)
-                                ? "bg-[#e5f2fd] hover:bg-[#f5f7f9]"
-                                : ""
-                            }`}
+                            className={`tr-hover group transition-all duration-500 ease-in-out transform
+                              ${selectedIds.includes(vehicle.id) ? "bg-[#e5f2fd] hover:bg-[#f5f7f9]" : ""}
+                              ${deletedIds.includes(vehicle.id) ? "opacity-0 scale-95" : ""}
+                            `}
                           >
                             <td className="td-cell">
                               <input

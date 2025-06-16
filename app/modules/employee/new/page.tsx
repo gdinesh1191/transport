@@ -9,7 +9,6 @@ import useInputValidation from "@/app/utils/inputValidations";
 import DatePicker from "@/app/utils/commonDatepicker";
 import { Input, RadioGroup } from "@/app/utils/form-controls";
 
- 
 interface BankDetails {
   id: number;
   bankName: string;
@@ -49,8 +48,15 @@ interface RadioGroupProps {
 }
 
 // Form field components for reusability
-const FormField: React.FC<FormFieldProps> = ({ label, required = false, children, className = "" }) => (
-  <div className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4  ${className}`}>
+const FormField: React.FC<FormFieldProps> = ({
+  label,
+  required = false,
+  children,
+  className = "",
+}) => (
+  <div
+    className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4  ${className}`}
+  >
     <label className="form-label w-1/2">
       {label}
       {required && <span className="form-required text-red-500">*</span>}
@@ -58,10 +64,6 @@ const FormField: React.FC<FormFieldProps> = ({ label, required = false, children
     <div className="flex flex-col w-3/4">{children}</div>
   </div>
 );
-
-
-
-
 
 export default function NewEmployee() {
   const [activeTab, setActiveTab] = useState<string>("Bank_details");
@@ -75,40 +77,51 @@ export default function NewEmployee() {
     Date | undefined
   >();
 
- 
-
-const stateOptions = [
-  { value: "Tamil Nadu", label: "Tamil Nadu" },
-  { value: "Karnataka", label: "Karnataka" },
-  { value: "Kerala", label: "Kerala" },
-  { value: "Andhra Pradesh", label: "Andhra Pradesh" },
-  { value: "Telangana", label: "Telangana" },
-  { value: "Maharashtra", label: "Maharashtra" },
-  { value: "Gujarat", label: "Gujarat" },
-  { value: "Rajasthan", label: "Rajasthan" },
-  { value: "Punjab", label: "Punjab" },
-  { value: "Uttar Pradesh", label: "Uttar Pradesh" },
-];
-
+  const stateOptions = [
+    { value: "Tamil Nadu", label: "Tamil Nadu" },
+    { value: "Karnataka", label: "Karnataka" },
+    { value: "Kerala", label: "Kerala" },
+    { value: "Andhra Pradesh", label: "Andhra Pradesh" },
+    { value: "Telangana", label: "Telangana" },
+    { value: "Maharashtra", label: "Maharashtra" },
+    { value: "Gujarat", label: "Gujarat" },
+    { value: "Rajasthan", label: "Rajasthan" },
+    { value: "Punjab", label: "Punjab" },
+    { value: "Uttar Pradesh", label: "Uttar Pradesh" },
+  ];
 
   const [bankForm, setBankForm] = useState<Omit<BankDetails, "id">>({
-    bankName: "", accountNumber: "", accountName: "", ifscCode: "", branchName: "",
+    bankName: "",
+    accountNumber: "",
+    accountName: "",
+    ifscCode: "",
+    branchName: "",
   });
 
   const [proofDetailsForm, setProofDetailsForm] = useState({
-    aadhaarNumber: "", panNumber: "",
+    aadhaarNumber: "",
+    panNumber: "",
   });
 
   const [driverDetailsForm, setDriverDetailsForm] = useState({
-    licenseNumber: "", licenseExpiry: "", truckNumber: "", licenseIssuedBy: "",
+    licenseNumber: "",
+    licenseExpiry: "",
+    truckNumber: "",
+    licenseIssuedBy: "",
   });
 
   const handleProofChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setProofDetailsForm({ ...proofDetailsForm, [e.target.name]: e.target.value });
+    setProofDetailsForm({
+      ...proofDetailsForm,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleDriverChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setDriverDetailsForm({ ...driverDetailsForm, [e.target.name]: e.target.value });
+    setDriverDetailsForm({
+      ...driverDetailsForm,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const [bankList, setBankList] = useState<BankDetails[]>([]);
@@ -127,18 +140,30 @@ const stateOptions = [
   };
 
   const handleAddBank = () => {
-    const { bankName, accountNumber, accountName, ifscCode, branchName } = bankForm;
+    const { bankName, accountNumber, accountName, ifscCode, branchName } =
+      bankForm;
 
     if (bankName && accountNumber && accountName && ifscCode && branchName) {
       const newBank: BankDetails = {
-        id: bankIdCounter, bankName, accountNumber, accountName, ifscCode, branchName,
+        id: bankIdCounter,
+        bankName,
+        accountNumber,
+        accountName,
+        ifscCode,
+        branchName,
       };
 
       setBankList((prev) => [...prev, newBank]);
       setBankIdCounter((prev) => prev + 1);
 
       // Clear form
-      setBankForm({ bankName: "", accountNumber: "", accountName: "", ifscCode: "", branchName: "" });
+      setBankForm({
+        bankName: "",
+        accountNumber: "",
+        accountName: "",
+        ifscCode: "",
+        branchName: "",
+      });
     } else {
       setBankError('Please fill all bank details before clicking "Add Bank".');
     }
@@ -153,11 +178,11 @@ const stateOptions = [
     }
   };
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setFileName(e.target.files[0].name);
     } else {
-      setFileName('No file chosen');
+      setFileName("No file chosen");
     }
   };
 
@@ -173,9 +198,11 @@ const stateOptions = [
   const tabs = [
     { id: "Bank_details", label: "Bank Details" },
     { id: "Proof_details", label: "Proof Details" },
-    ...(employeeType === "Driver" ? [{ id: "Driver_details", label: "Driver Details" }] : []),
+    ...(employeeType === "Driver"
+      ? [{ id: "Driver_details", label: "Driver Details" }]
+      : []),
   ];
- const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Submission logic here
     if (formRef.current && validateForm(formRef.current)) {
@@ -192,13 +219,74 @@ const stateOptions = [
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
             <div className="lg:border-r lg:border-gray-300 lg:pr-4">
               <div>
-                <FormField label="Account Name" required><Input type="text" name="accountName" value={bankForm.accountName} onChange={handleBankChange} placeholder="Enter Account Name" className="capitalize " data-validate="required" /></FormField>
-                <FormField label="Account Number" required><Input name="accountNumber" type="text" value={bankForm.accountNumber} onChange={handleBankChange} className="only_number" placeholder="Enter Account Number" data-validate="required" /></FormField>
-                <FormField label="IFSC Code" required><Input name="ifscCode" type="text" value={bankForm.ifscCode} onChange={handleBankChange} placeholder="Enter IFSC Code" data-validate="required" className="alphanumeric" /></FormField>
-                <FormField label="Bank Name" required><Input name="bankName" type="text" value={bankForm.bankName} onChange={handleBankChange} placeholder="Enter Bank Name" className="capitalize" data-validate="required" /></FormField>
-                <FormField label="Branch Name" required><Input name="branchName" type="text" value={bankForm.branchName} onChange={handleBankChange} placeholder="Enter Branch Name" className="capitalize" data-validate="required" /></FormField>
-                {bankError && (<div className="text-red-500 text-sm mt-2 text-end">{bankError}</div>)}
-                <FormField label=""><input type="button" value="Add Bank" onClick={handleAddBank} className="btn-sm btn-primary" /></FormField>
+                <FormField label="Account Name" required>
+                  <Input
+                    type="text"
+                    name="accountName"
+                    value={bankForm.accountName}
+                    onChange={handleBankChange}
+                    placeholder="Enter Account Name"
+                    className="alphabet_only capitalize"
+                    data-validate="required"
+                  />
+                </FormField>
+                <FormField label="Account Number" required>
+                  <Input
+                    name="accountNumber"
+                    type="text"
+                    value={bankForm.accountNumber}
+                    onChange={handleBankChange}
+                    className="only_number"
+                    placeholder="Enter Account Number"
+                    data-validate="required"
+                  />
+                </FormField>
+                <FormField label="IFSC Code" required>
+                  <Input
+                    name="ifscCode"
+                    type="text"
+                    value={bankForm.ifscCode}
+                    onChange={handleBankChange}
+                    placeholder="Enter IFSC Code"
+                    data-validate="required"
+                    className="alphanumeric"
+                  />
+                </FormField>
+                <FormField label="Bank Name" required>
+                  <Input
+                    name="bankName"
+                    type="text"
+                    value={bankForm.bankName}
+                    onChange={handleBankChange}
+                    placeholder="Enter Bank Name"
+                   className="alphabet_only capitalize"
+                    data-validate="required"
+                  />
+                </FormField>
+                <FormField label="Branch Name" required>
+                  <Input
+                    name="branchName"
+                    type="text"
+                    value={bankForm.branchName}
+                    onChange={handleBankChange}
+                    placeholder="Enter Branch Name"
+                   className="alphabet_only capitalize"
+                    data-validate="required"
+                  />
+                </FormField>
+                {bankError && (
+                  <div className="text-red-500 text-sm mt-2 text-end">
+                    {bankError}
+                  </div>
+                )}
+                <FormField label="">
+                  <button
+                    type="button"
+                    onClick={handleAddBank}
+                    className="btn-sm btn-primary">
+                    Add Bank
+                  </button>
+                </FormField>
               </div>
             </div>
 
@@ -225,8 +313,20 @@ const stateOptions = [
                       <td className="px-3 py-2">{bank.bankName}</td>
                       <td className="px-3 py-2">{bank.branchName}</td>
                       <td className="px-3 py-2 text-center">
-                        <button type="button" onClick={() => handleEditBank(bank.id)} className="text-blue-500 ">Edit</button>
-                        <button type="button" onClick={() => handleDeleteBank(bank.id)} className="text-red-500  ml-2">Delete</button>
+                        <button
+                          type="button"
+                          onClick={() => handleEditBank(bank.id)}
+                          className="text-blue-500 "
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteBank(bank.id)}
+                          className="text-red-500  ml-2"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -241,10 +341,10 @@ const stateOptions = [
         return (
           <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
             <div>
-               <FormField label="License Number" required>
+              <FormField label="License Number" required>
                 <Input
                   name="licenseNumber"
-                  className="form-control"
+                  className="form-control alphanumeric all_uppercase"
                   value={driverDetailsForm.licenseNumber}
                   onChange={handleDriverChange}
                   placeholder="Enter License Number"
@@ -262,16 +362,17 @@ const stateOptions = [
               <FormField label="Truck Number" required>
                 <Input
                   name="truckNumber"
-                  className="form-control"
+                  className="form-control alphanumeric all_uppercase"
                   value={driverDetailsForm.truckNumber}
                   onChange={handleDriverChange}
-                  placeholder="Enter Truck Number"
+                  placeholder="Enter Truck Number "
                   data-validate="required"
                 />
               </FormField>
               <FormField label="License Issued By" required>
                 <Input
                   name="licenseIssuedBy"
+                  className="form-control alphabet_only capitalize"
                   value={driverDetailsForm.licenseIssuedBy}
                   onChange={handleDriverChange}
                   placeholder="Enter License Issued By"
@@ -288,7 +389,7 @@ const stateOptions = [
           <div>
             <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
               <div className="space-y-4">
-                   <FormField label="Aadhaar Number" required>
+                <FormField label="Aadhaar Number" required>
                   <Input
                     name="aadhaarNumber"
                     value={proofDetailsForm.aadhaarNumber}
@@ -334,11 +435,12 @@ const stateOptions = [
                           <option value="Mrs.">Mrs.</option>
                           <option value="Ms.">Ms.</option>
                         </select>
-                           <Input
+                        <Input
                           name="employeeName"
                           placeholder="Enter Name"
-                          className="form-control lg: w-300 capitalize alphabet-only "
+                          className="form-control lg: w-300 alphabet_only capitalize"
                           data-validate="required"
+
                         />
                       </div>
                     </div>
@@ -348,7 +450,7 @@ const stateOptions = [
 
               <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-6 px-4 py-6">
                 <div className="space-y-4 lg:border-r lg:border-gray-300 lg:pr-4">
-                    <FormField label="DOB" required>
+                  <FormField label="DOB" required>
                     <DatePicker
                       date={dob}
                       setDate={setDob}
@@ -358,18 +460,22 @@ const stateOptions = [
                     />
                   </FormField>
                   <FormField label="Gender" required>
-                    <select name="gender" className="form-control " data-validate="required">
+                    <select
+                      name="gender"
+                      className="form-control "
+                      data-validate="required"
+                    >
                       <option value="">Select Gender</option>
                       <option value="male">Male</option>
                       <option value="female">Female</option>
                       <option value="other">Other</option>
                     </select>
                   </FormField>
-                   <FormField label="Blood Group" required>
+                  <FormField label="Blood Group" required>
                     <Input
                       name="bloodGroup"
                       placeholder="Enter Blood Group"
-                      className="form-control w-full"
+                      className="form-control w-full all_uppercase "
                       data-validate="required"
                     />
                   </FormField>
@@ -399,26 +505,26 @@ const stateOptions = [
                 </div>
 
                 <div className="space-y-4">
-                   <FormField label="Address Line 1">
+                  <FormField label="Address Line 1">
                     <Input
                       name="addressLine1"
                       placeholder="Enter Address Line 1"
-                      className="form-control w-full capitalize"
+                      className="form-control w-full  capitalize "
                     />
                   </FormField>
                   <FormField label="">
                     <Input
                       name="addressLine2"
                       placeholder="Enter Address Line 2"
-                      className="form-control w-full capitalize"
+                      className="form-control w-full  capitalize"
                     />
                   </FormField>
-                 
+
                   <FormField label="Picture Path" required>
                     <div className="w-full flex-grow flex flex-col">
                       <div className="flex items-center justify-start gap-3">
                         <div className="border border-gray-200 rounded-sm px-3 py-1 cursor-pointer">
-                            <label
+                          <label
                             htmlFor="picturepathInput"
                             className="flex items-center gap-1 text-[#009333] text-sm cursor-pointer"
                           >
@@ -426,14 +532,14 @@ const stateOptions = [
                             File
                           </label>
                         </div>
-                         <span
+                        <span
                           id="fileName"
                           className="text-gray-600 text-sm truncate"
                         >
                           {fileName}
                         </span>
                       </div>
-                      <input
+                      <Input
                         type="file"
                         id="picturepathInput"
                         name="picturepath"
@@ -444,24 +550,31 @@ const stateOptions = [
                       />
                     </div>
                   </FormField>
-                  <FormField label="Remarks"><Input name="remarks" placeholder="Enter Remarks" className="form-control w-full capitalize" /></FormField>
+                  <FormField label="Remarks">
+                    <Input
+                      name="remarks"
+                      placeholder="Enter Remarks"
+                      className="form-control w-full alphabetnumeric capitalize"
+                    />
+                  </FormField>
                   <div>
                     <FormField label="State" required>
                       <SearchableSelect
-    name="state"
-    placeholder="Select State"
-    options={stateOptions}
-    searchable
-    data-validate="required"
-    className="w-full"
-  />
+                        name="state"
+                        placeholder="Select State"
+                        options={stateOptions}
+                        searchable
+                        data-validate="required"
+                        className="w-full"
+                      />
                     </FormField>
                     <FormField label="Pincode">
                       <Input
                         name="pincode"
                         placeholder="Enter Pincode"
                         className="w-full only_number"
-                      />  </FormField>
+                      />{" "}
+                    </FormField>
                   </div>
                 </div>
               </div>
@@ -492,7 +605,7 @@ const stateOptions = [
         </main>
 
         <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-         <button
+          <button
             type="submit"
             onClick={handleSubmit as any}
             className="btn-sm btn-primary"
@@ -511,12 +624,34 @@ const stateOptions = [
             <div className="text-center p-4">
               <div className="flex justify-center items-center mb-5 gap-2">
                 <i className="ri-user-line text-green-600 text-3xl"></i>
-                <h2 className="text-[#000000] text-2xl">Select Employee Type</h2>
+                <h2 className="text-[#000000] text-2xl">
+                  Select Employee Type
+                </h2>
               </div>
-              <p className="text-md text-gray-600 mb-7">Choose the employee type that best describes your business</p>
+              <p className="text-md text-gray-600 mb-7">
+                Choose the employee type that best describes your business
+              </p>
               <div className="flex gap-4 justify-center">
-                <button type="button" onClick={() => { setEmployeeType("staff"); setShowModal(false); }} className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white text-gray-800 px-4 py-2 rounded-md w-full">Staff</button>
-                <button type="button" onClick={() => { setEmployeeType("Driver"); setShowModal(false); }} className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white  text-gray-800 px-4 py-2 rounded-md w-full">Driver</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmployeeType("staff");
+                    setShowModal(false);
+                  }}
+                  className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white text-gray-800 px-4 py-2 rounded-md w-full"
+                >
+                  Staff
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmployeeType("Driver");
+                    setShowModal(false);
+                  }}
+                  className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white  text-gray-800 px-4 py-2 rounded-md w-full"
+                >
+                  Driver
+                </button>
               </div>
             </div>
           </div>

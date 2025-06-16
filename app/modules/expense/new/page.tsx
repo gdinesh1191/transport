@@ -7,6 +7,7 @@ import SearchableSelect from "@/app/utils/searchableSelect";
 import DatePicker from "@/app/utils/commonDatepicker";
 import { Input, RadioGroup } from "@/app/utils/form-controls";
 import useInputValidation from "@/app/utils/inputValidations";
+
  
 import { apiCall } from "@/app/utils/api";
 const FormField = ({
@@ -63,30 +64,42 @@ const NewExpense = () => {
   ];
  
   
-    const handleSubmit = async (e: React.FormEvent) => {
-       e.preventDefault();
-       if (formRef.current && validateForm(formRef.current)) {
-         const formData = new FormData(formRef.current);
-         const formValues = Object.fromEntries(formData.entries());
-         console.log("Form submitted successfully", formValues);
-         try {
-           const payload = {
-             token: "putTripsheetExpense",
-             data: {
-               formValues,
-             },
-           };
-           const response=await apiCall(payload)
-           if(response.status===200){
-             console.log(response);
-             
-           }
-         } catch (error) {
-           console.log(error);
-         }
-       }
-    
-     };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formRef.current && validateForm(formRef.current)) {
+      const formData = new FormData(formRef.current);
+      const formValues = Object.fromEntries(formData.entries());
+  
+      try {
+        // Parse and format fields to match expected API structure
+        const payload = {
+          token: "putTripsheetExpense",
+          requestData: {
+            id: 2, // Static ID or fetch it dynamically as needed
+            tripSheetId: 1, // Hardcoded for now; replace with actual dynamic value
+            expenseCategory: formValues.category,
+            amount: parseFloat(formValues.amount as string),
+            remarks: formValues.description || "",
+            fileAttachments: formValues.attachment instanceof File ? formValues.attachment.name : "",
+            expenseDate: selectedDate
+              ? selectedDate.toLocaleDateString("en-GB") // Format: DD/MM/YYYY
+              : "",
+            expenseTime: new Date().toLocaleTimeString("en-GB", {
+              hour12: false,
+            }), // Format: HH:mm:ss
+          },
+        };
+  
+        const response = await apiCall(payload);
+        if (response.status === 200) {
+          console.log("Success:", response);
+        }
+      } catch (error) {
+        console.error("Error while submitting:", error);
+      }
+    }
+  };
+  
  
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFileName(e.target.files?.[0]?.name || "No file chosen");
@@ -121,7 +134,7 @@ const NewExpense = () => {
                       { value: "Net Banking", label: "Net Banking" }
                     ]} required />
                   </FormField>
-                  <FormField label="Attachments" required>
+                  <FormField label="Attachments"  >
                     <div className="w-full flex-grow flex flex-col">
                       <div className="flex items-center justify-start gap-3">
                         <div className="border border-gray-200 rounded-sm px-3 py-1 cursor-pointer">
@@ -131,12 +144,13 @@ const NewExpense = () => {
                         </div>
                         <span id="fileName" className="text-gray-600 text-sm truncate">{fileName}</span>
                       </div>
-                      <input type="file" id="attachmentInput" name="attachment" className="hidden" data-validate="required" onChange={handleFileUpload} required />
+                      <input type="file" id="attachmentInput" name="attachment" className="hidden" onChange={handleFileUpload}   />
                     </div>
                   </FormField>
                   <FormField label="">
-                    <Input name="expenseId" type="hidden"   className="number_with_decimal" data-validate="required" />
-                  </FormField>
+                    <Input name="id" type="hidden" value="0"  className="number_with_decimal" data-validate="required" />
+                    <Input name="tripSheetId" type="hidden" value="1"  className="number_with_decimal" data-validate="required" />
+                    </FormField>
                 </div>
               </div>
             </form>

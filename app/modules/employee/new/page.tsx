@@ -2,13 +2,12 @@
 
 import { useState, ChangeEvent, FormEvent, useRef } from "react";
 import Layout from "../../../components/Layout";
-
 import { validateForm } from "@/app/utils/formValidations";
 import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
 import useInputValidation from "@/app/utils/inputValidations";
 import DatePicker from "@/app/utils/commonDatepicker";
 import { Input, RadioGroup } from "@/app/utils/form-controls";
-
+ 
 interface BankDetails {
   id: number;
   bankName: string;
@@ -77,6 +76,7 @@ export default function NewEmployee() {
     Date | undefined
   >();
 
+ 
   const stateOptions = [
     { value: "Tamil Nadu", label: "Tamil Nadu" },
     { value: "Karnataka", label: "Karnataka" },
@@ -89,6 +89,7 @@ export default function NewEmployee() {
     { value: "Punjab", label: "Punjab" },
     { value: "Uttar Pradesh", label: "Uttar Pradesh" },
   ];
+ 
 
   const [bankForm, setBankForm] = useState<Omit<BankDetails, "id">>({
     bankName: "",
@@ -202,9 +203,11 @@ export default function NewEmployee() {
       ? [{ id: "Driver_details", label: "Driver Details" }]
       : []),
   ];
+ 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Submission logic here
+ 
     if (formRef.current && validateForm(formRef.current)) {
       const formData = new FormData(formRef.current);
       const formValues = Object.fromEntries(formData.entries());
@@ -226,7 +229,9 @@ export default function NewEmployee() {
                     value={bankForm.accountName}
                     onChange={handleBankChange}
                     placeholder="Enter Account Name"
+ 
                     className="alphabet_only capitalize"
+ 
                     data-validate="required"
                   />
                 </FormField>
@@ -259,7 +264,9 @@ export default function NewEmployee() {
                     value={bankForm.bankName}
                     onChange={handleBankChange}
                     placeholder="Enter Bank Name"
+ 
                    className="alphabet_only capitalize"
+ 
                     data-validate="required"
                   />
                 </FormField>
@@ -270,7 +277,9 @@ export default function NewEmployee() {
                     value={bankForm.branchName}
                     onChange={handleBankChange}
                     placeholder="Enter Branch Name"
+ 
                    className="alphabet_only capitalize"
+ 
                     data-validate="required"
                   />
                 </FormField>
@@ -280,12 +289,14 @@ export default function NewEmployee() {
                   </div>
                 )}
                 <FormField label="">
+ 
                   <button
                     type="button"
                     onClick={handleAddBank}
                     className="btn-sm btn-primary">
                     Add Bank
                   </button>
+ 
                 </FormField>
               </div>
             </div>
@@ -344,7 +355,9 @@ export default function NewEmployee() {
               <FormField label="License Number" required>
                 <Input
                   name="licenseNumber"
+ 
                   className="form-control alphanumeric all_uppercase"
+ 
                   value={driverDetailsForm.licenseNumber}
                   onChange={handleDriverChange}
                   placeholder="Enter License Number"
@@ -362,17 +375,21 @@ export default function NewEmployee() {
               <FormField label="Truck Number" required>
                 <Input
                   name="truckNumber"
+ 
                   className="form-control alphanumeric all_uppercase"
                   value={driverDetailsForm.truckNumber}
                   onChange={handleDriverChange}
                   placeholder="Enter Truck Number "
+ 
                   data-validate="required"
                 />
               </FormField>
               <FormField label="License Issued By" required>
                 <Input
                   name="licenseIssuedBy"
+ 
                   className="form-control alphabet_only capitalize"
+ 
                   value={driverDetailsForm.licenseIssuedBy}
                   onChange={handleDriverChange}
                   placeholder="Enter License Issued By"
@@ -438,9 +455,11 @@ export default function NewEmployee() {
                         <Input
                           name="employeeName"
                           placeholder="Enter Name"
+ 
                           className="form-control lg: w-300 alphabet_only capitalize"
                           data-validate="required"
 
+ 
                         />
                       </div>
                     </div>
@@ -460,7 +479,9 @@ export default function NewEmployee() {
                     />
                   </FormField>
                   <FormField label="Gender" required>
+ 
                     <select
+ 
                       name="gender"
                       className="form-control "
                       data-validate="required"
@@ -475,7 +496,9 @@ export default function NewEmployee() {
                     <Input
                       name="bloodGroup"
                       placeholder="Enter Blood Group"
+ 
                       className="form-control w-full all_uppercase "
+ 
                       data-validate="required"
                     />
                   </FormField>
@@ -509,14 +532,18 @@ export default function NewEmployee() {
                     <Input
                       name="addressLine1"
                       placeholder="Enter Address Line 1"
+ 
                       className="form-control w-full  capitalize "
+ 
                     />
                   </FormField>
                   <FormField label="">
                     <Input
                       name="addressLine2"
                       placeholder="Enter Address Line 2"
+ 
                       className="form-control w-full  capitalize"
+ 
                     />
                   </FormField>
 
@@ -554,11 +581,14 @@ export default function NewEmployee() {
                     <Input
                       name="remarks"
                       placeholder="Enter Remarks"
+ 
                       className="form-control w-full alphabetnumeric capitalize"
+ 
                     />
                   </FormField>
                   <div>
                     <FormField label="State" required>
+ 
                       <SearchableSelect
                         name="state"
                         placeholder="Select State"
@@ -567,13 +597,16 @@ export default function NewEmployee() {
                         data-validate="required"
                         className="w-full"
                       />
+ 
                     </FormField>
                     <FormField label="Pincode">
                       <Input
                         name="pincode"
                         placeholder="Enter Pincode"
                         className="w-full only_number"
+ 
                       />{" "}
+ 
                     </FormField>
                   </div>
                 </div>

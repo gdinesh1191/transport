@@ -2,10 +2,11 @@
 
 import { useState, ChangeEvent, FormEvent, useRef } from "react";
 import Layout from "../../../components/Layout";
-import { validateForm } from "@/app/utils/formValidations";
+
 import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
 import useInputValidation from "@/app/utils/inputValidations";
 import DatePicker from "@/app/utils/commonDatepicker";
+import { validateForm, FormErrors } from "@/app/utils/formValidations";
 import { Input, RadioGroup } from "@/app/utils/form-controls";
 
 interface BankDetails {
@@ -22,6 +23,8 @@ interface FormFieldProps {
   required?: boolean;
   children: React.ReactNode;
   className?: string;
+  error?: string; // Add an error prop to FormField
+  htmlFor?: string;
 }
 
 interface InputProps {
@@ -46,21 +49,29 @@ interface RadioGroupProps {
   required?: boolean;
 }
 
-// Form field components for reusability
-const FormField: React.FC<FormFieldProps> = ({
+const FormField = ({
   label,
   required = false,
   children,
   className = "",
-}) => (
+  error,
+  htmlFor, // Destructure htmlFor prop
+}: FormFieldProps) => (
   <div
-    className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4  ${className}`}
+    className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}
   >
-    <label className="form-label w-1/2">
+    <label className="form-label w-50" htmlFor={htmlFor}>
+      {" "}
+      {/* Use htmlFor here */}
       {label}
       {required && <span className="form-required text-red-500">*</span>}
     </label>
-    <div className="flex flex-col w-3/4">{children}</div>
+    <div className="flex flex-col w-3/4">
+      {children}
+      {error && ( // Conditionally render error message
+        <p className="error-message text-red-500 text-xs mt-1">{error}</p>
+      )}
+    </div>
   </div>
 );
 
@@ -69,14 +80,15 @@ export default function NewEmployee() {
   const [showModal, setShowModal] = useState<boolean>(true);
   const [employeeType, setEmployeeType] = useState<string>("");
   const [fileName, setFileName] = useState("No file chosen");
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const formRef = useRef<HTMLFormElement>(null);
   useInputValidation();
   const [dob, setDob] = useState<Date | undefined>();
   const [licenseExpiryDate, handleLicenseExpiryChange] = useState<
     Date | undefined
   >();
- const [phone, setPhone] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [familyNumber, setFamilyNumber] = useState("");
 
   const stateOptions = [
@@ -125,7 +137,6 @@ export default function NewEmployee() {
       [e.target.name]: e.target.value,
     });
   };
-  
 
   const handleNumberChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -236,10 +247,58 @@ export default function NewEmployee() {
     e.preventDefault();
     // Submission logic here
 
-    if (formRef.current && validateForm(formRef.current)) {
-      const formData = new FormData(formRef.current);
-      const formValues = Object.fromEntries(formData.entries());
-      console.log("Form submitted successfully", formValues);
+    if (formRef.current) {
+      const validationResults = validateForm(formRef.current); // Get all errors
+      setFormErrors(validationResults); // Update error state
+
+      const isFormValid = Object.keys(validationResults).length === 0;
+
+      if (isFormValid) {
+        const formData = new FormData(formRef.current);
+        const formValues = Object.fromEntries(formData.entries());
+        console.log("Form submitted successfully", formValues);
+
+
+
+
+          let firstErrorTabId: string | null = null;
+        for (const tab of tabs) {
+          // Check if any field within this tab has an error
+          const tabContentDiv = formRef.current.querySelector(
+            `#${tab.id}_tab_content`
+          );
+          if (tabContentDiv) {
+            const fieldsInTab =
+              tabContentDiv.querySelectorAll<HTMLElement>("[name]");
+            for (const field of fieldsInTab) {
+              if (
+                field.getAttribute("name") &&
+                validationResults[field.getAttribute("name")!]
+              ) {
+                firstErrorTabId = tab.id;
+                break;
+              }
+            }
+          }
+          if (firstErrorTabId) break;
+        }
+
+        if (firstErrorTabId && firstErrorTabId !== activeTab) {
+          setActiveTab(firstErrorTabId); // Switch to the tab with the first error
+          // Optional: Scroll to the first error field in that tab
+          setTimeout(() => {
+            // Find the *first* error message element within the *entire form* after the tab has switched
+            const firstErrorFieldElement =
+              formRef.current?.querySelector(`.error-message`);
+            if (firstErrorFieldElement) {
+              firstErrorFieldElement.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+            }
+          }, 100); // Give React time to render the new tab content
+        }
+      }
     }
   };
 
@@ -378,7 +437,9 @@ export default function NewEmployee() {
         return (
           <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
             <div>
-              <FormField label="License Number" required>
+              <FormField label="License Number" required
+                              error={formErrors.licenseNumber} 
+                                                            htmlFor="licenseNumber">
                 <Input
                   name="licenseNumber"
                   className="form-control alphanumeric all_uppercase"
@@ -389,7 +450,8 @@ export default function NewEmployee() {
                   data-validate="required"
                 />
               </FormField>
-              <FormField label="License Expiry Date" required>
+              <FormField label="License Expiry Date" required
+                error={formErrors.licenseExpiry} htmlFor="licenseExpiry">
                 <DatePicker
                   date={licenseExpiryDate}
                   disablePast
@@ -399,7 +461,8 @@ export default function NewEmployee() {
                 />
               </FormField>
 
-              <FormField label="License Issued By" required>
+              <FormField label="License Issued By" required
+                              error={formErrors.licenseIssuedBy} htmlFor="licenseIssuedBy">
                 <Input
                   name="licenseIssuedBy"
                   className="form-control alphabet_only capitalize"
@@ -420,7 +483,8 @@ export default function NewEmployee() {
           <div>
             <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
               <div className="space-y-4">
-                <FormField label="Aadhaar Number" required>
+                <FormField label="Aadhaar Number" required
+                                  error={formErrors.aadhaarNumber} htmlFor="aadhaarNumber">
                   <Input
                     name="aadhaarNumber"
                     value={proofDetailsForm.aadhaarNumber}
@@ -431,7 +495,8 @@ export default function NewEmployee() {
                     data-validate="required"
                   />
                 </FormField>
-                <FormField label="PAN Number" required>
+                <FormField label="PAN Number" required 
+                                                  error={formErrors.panNumber} htmlFor="panNumber">
                   <Input
                     name="panNumber"
                     value={proofDetailsForm.panNumber}
@@ -458,7 +523,12 @@ export default function NewEmployee() {
             <form ref={formRef} onSubmit={handleSubmit} autoComplete="off">
               <div className="border-b border-gray-300">
                 <div className="grid grid-cols-1 lg:grid-cols-2 px-4 py-2">
-                  <FormField label="Name" required>
+                  <FormField
+                    label="Name"
+                    required
+                    error={formErrors.employeeName}
+                    htmlFor="employeeName"
+                  >
                     <div>
                       <div className="flex gap-2">
                         <select name="salutation" className="form-control w-30">
@@ -467,10 +537,10 @@ export default function NewEmployee() {
                           <option value="Ms.">Ms.</option>
                         </select>
                         <Input
+                          data-validate="required"
                           name="employeeName"
                           placeholder="Enter Name"
                           className="form-control lg: w-300 alphabet_only capitalize"
-                          data-validate="required"
                         />
                       </div>
                     </div>
@@ -490,7 +560,12 @@ export default function NewEmployee() {
                       data-validate="required"
                     />
                   </FormField>
-                  <FormField label="Gender" required>
+                  <FormField
+                    label="Gender"
+                    required
+                    error={formErrors.gender}
+                    htmlFor="gender"
+                  >
                     <select
                       name="gender"
                       className="form-control "
@@ -502,7 +577,12 @@ export default function NewEmployee() {
                       <option value="other">Other</option>
                     </select>
                   </FormField>
-                  <FormField label="Blood Group" required>
+                  <FormField
+                    label="Blood Group"
+                    required
+                    error={formErrors.bloodGroup}
+                    htmlFor="bloodGroup"
+                  >
                     <Input
                       name="bloodGroup"
                       placeholder="Enter Blood Group"
@@ -510,26 +590,40 @@ export default function NewEmployee() {
                       data-validate="required"
                     />
                   </FormField>
-                  <FormField label="Phone Number" required>
+                  <FormField
+                    label="Phone Number"
+                    required
+                    error={formErrors.phoneNumber}
+                    htmlFor="phoneNumber"
+                  >
                     <Input
-                      name="phone"
+                      name="phoneNumber"
                       placeholder="Enter Phone Number"
                       className="form-control w-full only_number"
                       data-validate="required"
                       maxLength={10}
-                      value={phone}
-                      onChange={(e:any) => handleNumberChange(e, setPhone)}
+                      value={phoneNumber}
+                      onChange={(e: any) =>
+                        handleNumberChange(e, setPhoneNumber)
+                      }
                     />
                   </FormField>
-                  <FormField label="Whatsapp Number" required>
+                  <FormField
+                    label="Whatsapp Number"
+                    required
+                    error={formErrors.whatsappNumber}
+                    htmlFor="whatsappNumber"
+                  >
                     <Input
-                      name="whatsapp"
+                      name="whatsappNumber"
                       placeholder="Enter Phone Number"
                       className="form-control w-full only_number"
                       data-validate="required"
                       maxLength={10}
-                      value={whatsapp}
-                      onChange={(e: any) => handleNumberChange(e, setWhatsapp)}
+                      value={whatsappNumber}
+                      onChange={(e: any) =>
+                        handleNumberChange(e, setWhatsappNumber)
+                      }
                     />
                   </FormField>
                   <FormField label="Family Number">
@@ -586,7 +680,6 @@ export default function NewEmployee() {
                         id="picturepathInput"
                         name="picturepath"
                         className="hidden"
-                        data-validate="required"
                         onChange={handleFileUpload}
                         required
                       />
@@ -600,14 +693,19 @@ export default function NewEmployee() {
                     />
                   </FormField>
                   <div>
-                    <FormField label="State" required>
+                    <FormField
+                      label="State"
+                      required
+                      error={formErrors.state}
+                      htmlFor="state"
+                    >
                       <SearchableSelect
                         name="state"
                         placeholder="Select State"
                         options={stateOptions}
                         searchable
-                        data-validate="required"
                         className="w-full"
+                        data-validate="required"
                       />
                     </FormField>
                     <FormField label="Pincode">
@@ -655,7 +753,11 @@ export default function NewEmployee() {
           >
             Save
           </button>
-          <button type="button" className="btn-sm btn-secondary">
+          <button
+            type="button"
+            className="btn-sm btn-secondary"
+            onClick={() => setFormErrors({})}
+          >
             Cancel
           </button>
         </footer>

@@ -5,7 +5,9 @@ import Layout from "../../../components/Layout";
 import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
 import DatePicker from "@/app/utils/commonDatepicker";
 import { validateForm } from "@/app/utils/formValidations";
-import useInputValidation from "@/app/utils/inputValidations";
+import useInputValidation from "@/app/utils/inputValidations"; 
+import { Input } from "@/app/utils/form-controls";
+ 
 // Form field components for reusability
 const FormField = ({
   label,
@@ -29,27 +31,7 @@ const FormField = ({
   </div>
 );
 
-const Input = ({
-  name,
-  placeholder,
-  type = "text",
-  className = "",
-  ...props
-}: {
-  name: string;
-  placeholder?: string;
-  type?: string;
-  className?: string;
-  [key: string]: any;
-}) => (
-  <input
-    type={type}
-    name={name}
-    placeholder={placeholder}
-    className={`form-control ${className}`}
-    {...props}
-  />
-);
+ 
 
 export default function NewTrip() {
   const [tripDate, setTripDate] = useState("");
@@ -180,37 +162,37 @@ const handleCreateTrip = () => {
     <tr>
       <td className="p-2 text-center w-[3%]">{index}</td>
       <td className="p-2 w-[30%]">
-        <input
-          type="text"
-          className="w-full form-control"
+        <Input
+          type="text" name="itemName"
+          className="w-full  "
           placeholder="Enter Item Name"
         />
       </td>
       <td className="p-2 w-[15%]">
-        <input
-          type="text"
-          className="w-full form-control"
+        <Input
+          type="text" name="remarks"
+          className="w-full  "
           placeholder="Enter Remarks"
         />
       </td>
       <td className="p-2 w-[15%]">
-        <input
-          type="text"
-          className="w-full form-control"
+        <Input
+          type="text" name="quantity"
+          className="w-full  "
           placeholder="Enter Quantity"
         />
       </td>
       <td className="p-2 w-[15%]">
-        <input
-          type="text"
-          className="w-full form-control"
+        <Input
+          type="text" name="rent"
+          className="w-full  "
           placeholder="Enter Rent"
         />
       </td>
       <td className="p-2 w-[15%]">
-        <input
-          type="text"
-          className="w-full text-right form-control total"
+        <Input
+          type="text" name="total"
+          className="w-full text-right   total"
           placeholder="Auto-calculated Total"
           readOnly
         />
@@ -248,7 +230,7 @@ const handleCreateTrip = () => {
                       <Input
                         name="fromPlace"
                         placeholder="Enter place from"
-                        className="form-control numbers-decimal"
+                        className="numbers-decimal"
                         data-validate="required"
                       />
                     </FormField>
@@ -256,7 +238,7 @@ const handleCreateTrip = () => {
                       <Input
                         name="toPlace"
                         placeholder="Enter Place to"
-                        className="form-control numbers-decimal"
+                        className="numbers-decimal"
                         data-validate="required"
                       />
                     </FormField>
@@ -299,10 +281,10 @@ const handleCreateTrip = () => {
                     <div className="flex items-center justify-between gap-2">
                       <span>Sub Total</span>
                       <div className="flex items-center gap-2">
-                        <input
-                          type="text"
+                        <Input
+                          type="text" name="subtotal"
                           placeholder="Auto-calculated subtotal"
-                          className="w-full text-right form-control subtotal"
+                          className="w-full text-right subtotal"
                           value={"0.00"}
                           readOnly
                         />
@@ -311,10 +293,10 @@ const handleCreateTrip = () => {
                     <div className="flex items-center justify-between gap-2">
                       <span>Other Charges</span>
                       <div className="flex items-center gap-2">
-                        <input
-                          type="text"
+                        <Input
+                          type="text" name="otherCharges"
                           placeholder="Enter Other Charges"
-                          className="w-full text-right form-control other charges"
+                          className="w-full text-right other charges"
                         />
                       </div>
                     </div>

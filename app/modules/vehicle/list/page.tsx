@@ -12,7 +12,7 @@ type TabKey = "all" | "new" | "existing";
 const tabs: TabKey[] = ["all", "new", "existing"];
 interface Vehicle {
   id: number;
-  registrationNumber: string;
+  registrationNumber: string; 
   owner: string;
   modelYear: string;
   chasisNumber: string;

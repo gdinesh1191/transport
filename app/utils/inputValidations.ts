@@ -7,6 +7,7 @@ const useInputValidation = () => {
   useEffect(() => {
     const handleInput = (e: Event) => {
       const target = e.target as HTMLInputElement;
+      
       let value = target.value;
 
       if (target.classList.contains('only_number')) {

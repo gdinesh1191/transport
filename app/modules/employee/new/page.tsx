@@ -7,7 +7,7 @@ import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
 import useInputValidation from "@/app/utils/inputValidations";
 import DatePicker from "@/app/utils/commonDatepicker";
 import { Input, RadioGroup } from "@/app/utils/form-controls";
- 
+
 interface BankDetails {
   id: number;
   bankName: string;
@@ -75,8 +75,10 @@ export default function NewEmployee() {
   const [licenseExpiryDate, handleLicenseExpiryChange] = useState<
     Date | undefined
   >();
+ const [phone, setPhone] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [familyNumber, setFamilyNumber] = useState("");
 
- 
   const stateOptions = [
     { value: "Tamil Nadu", label: "Tamil Nadu" },
     { value: "Karnataka", label: "Karnataka" },
@@ -89,7 +91,6 @@ export default function NewEmployee() {
     { value: "Punjab", label: "Punjab" },
     { value: "Uttar Pradesh", label: "Uttar Pradesh" },
   ];
- 
 
   const [bankForm, setBankForm] = useState<Omit<BankDetails, "id">>({
     bankName: "",
@@ -123,6 +124,19 @@ export default function NewEmployee() {
       ...driverDetailsForm,
       [e.target.name]: e.target.value,
     });
+  };
+  
+
+  const handleNumberChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (value: string) => void
+  ) => {
+    let value = e.target.value.replace(/[^\d]/g, "");
+
+    // Ensure first digit is between 6–9 if it's the first digit
+    if (value.length === 1 && !/^[6-9]$/.test(value)) return;
+
+    setter(value);
   };
 
   const [bankList, setBankList] = useState<BankDetails[]>([]);
@@ -165,6 +179,8 @@ export default function NewEmployee() {
         ifscCode: "",
         branchName: "",
       });
+
+      setBankError("");
     } else {
       setBankError('Please fill all bank details before clicking "Add Bank".');
     }
@@ -180,8 +196,20 @@ export default function NewEmployee() {
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFileName(e.target.files[0].name);
+    const fileInput = e.target;
+
+    if (fileInput.files && fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+
+      // Example size validation (optional)
+      if (file.size > 2 * 1024 * 1024) {
+        alert("File size should not exceed 2MB.");
+        fileInput.value = ""; // ✅ This is allowed
+        setFileName("No file chosen");
+        return;
+      }
+
+      setFileName(file.name); // ✅ Update UI
     } else {
       setFileName("No file chosen");
     }
@@ -203,11 +231,11 @@ export default function NewEmployee() {
       ? [{ id: "Driver_details", label: "Driver Details" }]
       : []),
   ];
- 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Submission logic here
- 
+
     if (formRef.current && validateForm(formRef.current)) {
       const formData = new FormData(formRef.current);
       const formValues = Object.fromEntries(formData.entries());
@@ -229,12 +257,11 @@ export default function NewEmployee() {
                     value={bankForm.accountName}
                     onChange={handleBankChange}
                     placeholder="Enter Account Name"
- 
                     className="alphabet_only capitalize"
- 
-                    data-validate="required"
+                    maxLength={50}
                   />
                 </FormField>
+
                 <FormField label="Account Number" required>
                   <Input
                     name="accountNumber"
@@ -243,9 +270,10 @@ export default function NewEmployee() {
                     onChange={handleBankChange}
                     className="only_number"
                     placeholder="Enter Account Number"
-                    data-validate="required"
+                    maxLength={18}
                   />
                 </FormField>
+
                 <FormField label="IFSC Code" required>
                   <Input
                     name="ifscCode"
@@ -253,10 +281,11 @@ export default function NewEmployee() {
                     value={bankForm.ifscCode}
                     onChange={handleBankChange}
                     placeholder="Enter IFSC Code"
-                    data-validate="required"
-                    className="alphanumeric"
+                    className="alphanumeric all_uppercase"
+                    maxLength={11}
                   />
                 </FormField>
+
                 <FormField label="Bank Name" required>
                   <Input
                     name="bankName"
@@ -264,12 +293,11 @@ export default function NewEmployee() {
                     value={bankForm.bankName}
                     onChange={handleBankChange}
                     placeholder="Enter Bank Name"
- 
-                   className="alphabet_only capitalize"
- 
-                    data-validate="required"
+                    className="alphabet_only capitalize"
+                    maxLength={50}
                   />
                 </FormField>
+
                 <FormField label="Branch Name" required>
                   <Input
                     name="branchName"
@@ -277,26 +305,24 @@ export default function NewEmployee() {
                     value={bankForm.branchName}
                     onChange={handleBankChange}
                     placeholder="Enter Branch Name"
- 
-                   className="alphabet_only capitalize"
- 
-                    data-validate="required"
+                    className="alphabet_only capitalize"
+                    maxLength={50}
                   />
                 </FormField>
+
                 {bankError && (
                   <div className="text-red-500 text-sm mt-2 text-end">
                     {bankError}
                   </div>
                 )}
                 <FormField label="">
- 
                   <button
                     type="button"
                     onClick={handleAddBank}
-                    className="btn-sm btn-primary">
+                    className="btn-sm btn-primary"
+                  >
                     Add Bank
                   </button>
- 
                 </FormField>
               </div>
             </div>
@@ -327,16 +353,16 @@ export default function NewEmployee() {
                         <button
                           type="button"
                           onClick={() => handleEditBank(bank.id)}
-                          className="text-blue-500 "
+                          className="text-blue-500 hover:text-blue-700"
                         >
-                          Edit
+                          <i className="ri-pencil-line text-lg cursor-pointer"></i>
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteBank(bank.id)}
-                          className="text-red-500  ml-2"
+                          className="text-red-500 hover:text-red-700 ml-2"
                         >
-                          Delete
+                          <i className="ri-delete-bin-line text-lg cursor-pointer"></i>
                         </button>
                       </td>
                     </tr>
@@ -355,45 +381,33 @@ export default function NewEmployee() {
               <FormField label="License Number" required>
                 <Input
                   name="licenseNumber"
- 
                   className="form-control alphanumeric all_uppercase"
- 
                   value={driverDetailsForm.licenseNumber}
                   onChange={handleDriverChange}
                   placeholder="Enter License Number"
+                  maxLength={20}
                   data-validate="required"
                 />
               </FormField>
               <FormField label="License Expiry Date" required>
                 <DatePicker
                   date={licenseExpiryDate}
+                  disablePast
                   setDate={handleLicenseExpiryChange}
                   name="licenseExpiry"
                   data-validate="required"
                 />
               </FormField>
-              <FormField label="Truck Number" required>
-                <Input
-                  name="truckNumber"
- 
-                  className="form-control alphanumeric all_uppercase"
-                  value={driverDetailsForm.truckNumber}
-                  onChange={handleDriverChange}
-                  placeholder="Enter Truck Number "
- 
-                  data-validate="required"
-                />
-              </FormField>
+
               <FormField label="License Issued By" required>
                 <Input
                   name="licenseIssuedBy"
- 
                   className="form-control alphabet_only capitalize"
- 
                   value={driverDetailsForm.licenseIssuedBy}
                   onChange={handleDriverChange}
                   placeholder="Enter License Issued By"
                   data-validate="required"
+                  maxLength={50}
                 />
               </FormField>
             </div>
@@ -412,7 +426,7 @@ export default function NewEmployee() {
                     value={proofDetailsForm.aadhaarNumber}
                     onChange={handleProofChange}
                     placeholder="Enter Aadhaar Number"
-                    className=" only_number"
+                    className="only_number"
                     maxLength={12}
                     data-validate="required"
                   />
@@ -423,7 +437,7 @@ export default function NewEmployee() {
                     value={proofDetailsForm.panNumber}
                     onChange={handleProofChange}
                     placeholder="Enter PAN Number"
-                    className=" alphanumeric"
+                    className="alphanumeric all_uppercase"
                     maxLength={10}
                     data-validate="required"
                   />
@@ -455,11 +469,8 @@ export default function NewEmployee() {
                         <Input
                           name="employeeName"
                           placeholder="Enter Name"
- 
                           className="form-control lg: w-300 alphabet_only capitalize"
                           data-validate="required"
-
- 
                         />
                       </div>
                     </div>
@@ -472,6 +483,7 @@ export default function NewEmployee() {
                   <FormField label="DOB" required>
                     <DatePicker
                       date={dob}
+                      disableFuture
                       setDate={setDob}
                       name="dob"
                       className=" w-full"
@@ -479,9 +491,7 @@ export default function NewEmployee() {
                     />
                   </FormField>
                   <FormField label="Gender" required>
- 
                     <select
- 
                       name="gender"
                       className="form-control "
                       data-validate="required"
@@ -496,9 +506,7 @@ export default function NewEmployee() {
                     <Input
                       name="bloodGroup"
                       placeholder="Enter Blood Group"
- 
-                      className="form-control w-full all_uppercase "
- 
+                      className="form-control w-full all_uppercase"
                       data-validate="required"
                     />
                   </FormField>
@@ -508,6 +516,9 @@ export default function NewEmployee() {
                       placeholder="Enter Phone Number"
                       className="form-control w-full only_number"
                       data-validate="required"
+                      maxLength={10}
+                      value={phone}
+                      onChange={(e:any) => handleNumberChange(e, setPhone)}
                     />
                   </FormField>
                   <FormField label="Whatsapp Number" required>
@@ -516,6 +527,9 @@ export default function NewEmployee() {
                       placeholder="Enter Phone Number"
                       className="form-control w-full only_number"
                       data-validate="required"
+                      maxLength={10}
+                      value={whatsapp}
+                      onChange={(e: any) => handleNumberChange(e, setWhatsapp)}
                     />
                   </FormField>
                   <FormField label="Family Number">
@@ -523,6 +537,11 @@ export default function NewEmployee() {
                       name="familyNumber"
                       placeholder="Enter Phone Number"
                       className="form-control w-full only_number"
+                      maxLength={10}
+                      value={familyNumber}
+                      onChange={(e: any) =>
+                        handleNumberChange(e, setFamilyNumber)
+                      }
                     />
                   </FormField>
                 </div>
@@ -532,18 +551,14 @@ export default function NewEmployee() {
                     <Input
                       name="addressLine1"
                       placeholder="Enter Address Line 1"
- 
                       className="form-control w-full  capitalize "
- 
                     />
                   </FormField>
                   <FormField label="">
                     <Input
                       name="addressLine2"
                       placeholder="Enter Address Line 2"
- 
                       className="form-control w-full  capitalize"
- 
                     />
                   </FormField>
 
@@ -581,14 +596,11 @@ export default function NewEmployee() {
                     <Input
                       name="remarks"
                       placeholder="Enter Remarks"
- 
                       className="form-control w-full alphabetnumeric capitalize"
- 
                     />
                   </FormField>
                   <div>
                     <FormField label="State" required>
- 
                       <SearchableSelect
                         name="state"
                         placeholder="Select State"
@@ -597,16 +609,14 @@ export default function NewEmployee() {
                         data-validate="required"
                         className="w-full"
                       />
- 
                     </FormField>
                     <FormField label="Pincode">
                       <Input
                         name="pincode"
                         placeholder="Enter Pincode"
                         className="w-full only_number"
- 
-                      />{" "}
- 
+                        maxLength={6}
+                      />
                     </FormField>
                   </div>
                 </div>

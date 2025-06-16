@@ -7,7 +7,7 @@ import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
 import useInputValidation from "@/app/utils/inputValidations";
 import DatePicker from "@/app/utils/commonDatepicker";
 import { Input, RadioGroup } from "@/app/utils/form-controls";
-
+ 
 interface BankDetails {
   id: number;
   bankName: string;
@@ -77,19 +77,19 @@ export default function NewEmployee() {
   >();
 
  
-
-const stateOptions = [
-  { value: "Tamil Nadu", label: "Tamil Nadu" },
-  { value: "Karnataka", label: "Karnataka" },
-  { value: "Kerala", label: "Kerala" },
-  { value: "Andhra Pradesh", label: "Andhra Pradesh" },
-  { value: "Telangana", label: "Telangana" },
-  { value: "Maharashtra", label: "Maharashtra" },
-  { value: "Gujarat", label: "Gujarat" },
-  { value: "Rajasthan", label: "Rajasthan" },
-  { value: "Punjab", label: "Punjab" },
-  { value: "Uttar Pradesh", label: "Uttar Pradesh" },
-];
+  const stateOptions = [
+    { value: "Tamil Nadu", label: "Tamil Nadu" },
+    { value: "Karnataka", label: "Karnataka" },
+    { value: "Kerala", label: "Kerala" },
+    { value: "Andhra Pradesh", label: "Andhra Pradesh" },
+    { value: "Telangana", label: "Telangana" },
+    { value: "Maharashtra", label: "Maharashtra" },
+    { value: "Gujarat", label: "Gujarat" },
+    { value: "Rajasthan", label: "Rajasthan" },
+    { value: "Punjab", label: "Punjab" },
+    { value: "Uttar Pradesh", label: "Uttar Pradesh" },
+  ];
+ 
 
   const [bankForm, setBankForm] = useState<Omit<BankDetails, "id">>({
     bankName: "",
@@ -203,9 +203,11 @@ const stateOptions = [
       ? [{ id: "Driver_details", label: "Driver Details" }]
       : []),
   ];
-
+ 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Submission logic here
+ 
     if (formRef.current && validateForm(formRef.current)) {
       const formData = new FormData(formRef.current);
       const formValues = Object.fromEntries(formData.entries());
@@ -227,7 +229,9 @@ const stateOptions = [
                     value={bankForm.accountName}
                     onChange={handleBankChange}
                     placeholder="Enter Account Name"
-                    className="alphabet-only"
+ 
+                    className="alphabet_only capitalize"
+ 
                     data-validate="required"
                   />
                 </FormField>
@@ -260,7 +264,9 @@ const stateOptions = [
                     value={bankForm.bankName}
                     onChange={handleBankChange}
                     placeholder="Enter Bank Name"
-                    className="capitalize"
+ 
+                   className="alphabet_only capitalize"
+ 
                     data-validate="required"
                   />
                 </FormField>
@@ -271,7 +277,9 @@ const stateOptions = [
                     value={bankForm.branchName}
                     onChange={handleBankChange}
                     placeholder="Enter Branch Name"
-                    className="capitalize"
+ 
+                   className="alphabet_only capitalize"
+ 
                     data-validate="required"
                   />
                 </FormField>
@@ -281,12 +289,14 @@ const stateOptions = [
                   </div>
                 )}
                 <FormField label="">
-                  <input
+ 
+                  <button
                     type="button"
-                    value="Add Bank"
                     onClick={handleAddBank}
-                    className="btn-sm btn-primary"
-                  />
+                    className="btn-sm btn-primary">
+                    Add Bank
+                  </button>
+ 
                 </FormField>
               </div>
             </div>
@@ -345,7 +355,9 @@ const stateOptions = [
               <FormField label="License Number" required>
                 <Input
                   name="licenseNumber"
-                  className="form-control"
+ 
+                  className="form-control alphanumeric all_uppercase"
+ 
                   value={driverDetailsForm.licenseNumber}
                   onChange={handleDriverChange}
                   placeholder="Enter License Number"
@@ -363,16 +375,21 @@ const stateOptions = [
               <FormField label="Truck Number" required>
                 <Input
                   name="truckNumber"
-                  className="form-control"
+ 
+                  className="form-control alphanumeric all_uppercase"
                   value={driverDetailsForm.truckNumber}
                   onChange={handleDriverChange}
-                  placeholder="Enter Truck Number"
+                  placeholder="Enter Truck Number "
+ 
                   data-validate="required"
                 />
               </FormField>
               <FormField label="License Issued By" required>
                 <Input
                   name="licenseIssuedBy"
+ 
+                  className="form-control alphabet_only capitalize"
+ 
                   value={driverDetailsForm.licenseIssuedBy}
                   onChange={handleDriverChange}
                   placeholder="Enter License Issued By"
@@ -438,8 +455,11 @@ const stateOptions = [
                         <Input
                           name="employeeName"
                           placeholder="Enter Name"
-                          className="form-control lg: w-300 capitalize alphabet-only "
+ 
+                          className="form-control lg: w-300 alphabet_only capitalize"
                           data-validate="required"
+
+ 
                         />
                       </div>
                     </div>
@@ -459,7 +479,9 @@ const stateOptions = [
                     />
                   </FormField>
                   <FormField label="Gender" required>
-                 <select
+ 
+                    <select
+ 
                       name="gender"
                       className="form-control "
                       data-validate="required"
@@ -474,7 +496,9 @@ const stateOptions = [
                     <Input
                       name="bloodGroup"
                       placeholder="Enter Blood Group"
-                      className="form-control w-full"
+ 
+                      className="form-control w-full all_uppercase "
+ 
                       data-validate="required"
                     />
                   </FormField>
@@ -508,14 +532,18 @@ const stateOptions = [
                     <Input
                       name="addressLine1"
                       placeholder="Enter Address Line 1"
-                      className="form-control w-full capitalize"
+ 
+                      className="form-control w-full  capitalize "
+ 
                     />
                   </FormField>
                   <FormField label="">
                     <Input
                       name="addressLine2"
                       placeholder="Enter Address Line 2"
-                      className="form-control w-full capitalize"
+ 
+                      className="form-control w-full  capitalize"
+ 
                     />
                   </FormField>
 
@@ -538,7 +566,7 @@ const stateOptions = [
                           {fileName}
                         </span>
                       </div>
-                      <input
+                      <Input
                         type="file"
                         id="picturepathInput"
                         name="picturepath"
@@ -553,26 +581,32 @@ const stateOptions = [
                     <Input
                       name="remarks"
                       placeholder="Enter Remarks"
-                      className="form-control w-full capitalize"
+ 
+                      className="form-control w-full alphabetnumeric capitalize"
+ 
                     />
                   </FormField>
                   <div>
                     <FormField label="State" required>
-                     <SearchableSelect
-    name="state"
-    placeholder="Select State"
-    options={stateOptions}
-    searchable
-    data-validate="required"
-    className="w-full"
-  />
+ 
+                      <SearchableSelect
+                        name="state"
+                        placeholder="Select State"
+                        options={stateOptions}
+                        searchable
+                        data-validate="required"
+                        className="w-full"
+                      />
+ 
                     </FormField>
                     <FormField label="Pincode">
                       <Input
                         name="pincode"
                         placeholder="Enter Pincode"
                         className="w-full only_number"
-                      />
+ 
+                      />{" "}
+ 
                     </FormField>
                   </div>
                 </div>

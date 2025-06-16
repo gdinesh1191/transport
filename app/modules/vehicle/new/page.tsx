@@ -1,36 +1,45 @@
-"use client";
-import { useRef, useState } from "react";
+ "use client";
+import { useRef, useState, useEffect, useMemo } from "react";
 import Layout from "../../../components/Layout";
 import useInputValidation from "@/app/utils/inputValidations";
 import ToastContainer, { showToast } from "@/app/utils/toaster";
 import { Input, RadioGroup } from "@/app/utils/form-controls";
-
 import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
-import { validateForm } from "@/app/utils/formValidations";
+import { validateForm, FormErrors } from "@/app/utils/formValidations";
 import DatePicker from "@/app/utils/commonDatepicker";
- 
+
 import { apiCall } from "@/app/utils/api";
- 
+
+interface FormFieldProps {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+  className?: string;
+  error?: string; // Add an error prop to FormField
+  htmlFor?: string; // Add htmlFor for label association
+}
 
 const FormField = ({
   label,
   required = false,
   children,
   className = "",
-}: {
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-  className?: string;
-}) => (
+  error,
+  htmlFor, // Destructure htmlFor prop
+}: FormFieldProps) => (
   <div
     className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}
   >
-    <label className="form-label w-50">
+    <label className="form-label w-50" htmlFor={htmlFor}> {/* Use htmlFor here */}
       {label}
       {required && <span className="form-required text-red-500">*</span>}
     </label>
-    <div className="flex flex-col w-3/4">{children}</div>
+    <div className="flex flex-col w-3/4">
+      {children}
+      {error && ( // Conditionally render error message
+        <p className="error-message text-red-500 text-xs mt-1">{error}</p>
+      )}
+    </div>
   </div>
 );
 
@@ -38,17 +47,6 @@ export default function NewVehicle() {
   const insuranceOptions: Option[] = [
     { value: "icici", label: "ICICI Lombard" },
     { value: "hdfc", label: "HDFC Ergo" },
-    { value: "newindia", label: "New India Assurance" },
-    { value: "icici", label: "ICICI Lombard" },
-    { value: "hdfc", label: "HDFC Ergo" },
-    { value: "newindia", label: "New India Assurance" },
-    { value: "icici", label: "ICICI Lombard" },
-    { value: "hdfc", label: "HDFC Ergo" },
-    { value: "newindia", label: "New India Assurance" },
-    { value: "icici", label: "ICICI Lombard" },
-    { value: "hdfc", label: "HDFC Ergo" },
-    { value: "newindia", label: "New India Assurance" },
-    { value: "others", label: "Others" },
   ];
   const vehicleOptions: Option[] = [
     { value: "Light", label: "Light" },
@@ -67,7 +65,11 @@ export default function NewVehicle() {
   ];
 
   const [activeTab, setActiveTab] = useState("owner_information");
-  useInputValidation();
+  const [formErrors, setFormErrors] = useState<FormErrors>({}); // State to hold all form errors
+
+  // You might want to remove or adapt useInputValidation if it's adding/removing classes directly.
+  // For this solution, the error display is purely driven by the formErrors state.
+  useInputValidation(); // Keep for now, but be aware of potential conflicts if it directly manipulates DOM error displays.
 
   const handleErrorToast = () =>
     showToast.error("Failed to save vehicle information.");
@@ -80,424 +82,94 @@ export default function NewVehicle() {
     { id: "vehicle_purchase_details", label: "Vehicle Purchase Details" },
   ];
 
- 
-  const [registerationDate, setregisterationDate] = useState<
-    Date | undefined
-  >();
+  const [registerationDate, setregisterationDate] = useState<Date | undefined>();
   const [insuranceExpiry, setInsuranceExpiry] = useState<Date | undefined>();
   const [permitExpiryDate, setPermitExpiryDate] = useState<Date | undefined>();
   const [npExpiryDate, setNpExpiryDate] = useState<Date | undefined>();
-  const [quarterlyTaxExpiry, setQuarterlyTaxExpiry] = useState<
- 
-    Date | undefined
-  >();
+  const [quarterlyTaxExpiry, setQuarterlyTaxExpiry] = useState<Date | undefined>();
   const [truckInvoiceDate, setTruckInvoiceDate] = useState<Date | undefined>();
   const [fcExpiry, setFcexpiryDate] = useState<Date | undefined>();
   const [loanStartDate, setLoanStartDate] = useState<Date | undefined>();
 
   const formRef = useRef<HTMLFormElement>(null);
- 
- 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formRef.current && validateForm(formRef.current)) {
-      const formData = new FormData(formRef.current);
-      const formValues = Object.fromEntries(formData.entries());
-      console.log("Form submitted successfully", formValues);
-      try {
-        const payload = {
-          token: "putVehicle",
-          data: {
-            formValues,
-          },
-        };
-        const response=await apiCall(payload)
-        if(response.status===200){
-          console.log(response);
-          
+
+    if (formRef.current) {
+      const validationResults = validateForm(formRef.current); // Get all errors
+      setFormErrors(validationResults); // Update error state
+
+      const isFormValid = Object.keys(validationResults).length === 0;
+
+      if (isFormValid) {
+        const formData = new FormData(formRef.current);
+        const formValues = Object.fromEntries(formData.entries());
+        console.log("Form submitted successfully", formValues);
+
+        try {
+          const payload = {
+            token: "putVehicle",
+            data: {
+              ...formValues,
+              // Explicitly add date values from state, as FormData doesn't pick them from DatePicker
+              registerationDate: registerationDate?.toISOString(),
+              insuranceExpiry: insuranceExpiry?.toISOString(),
+              permitExpiryDate: permitExpiryDate?.toISOString(),
+              npExpiryDate: npExpiryDate?.toISOString(),
+              quarterlyTaxExpiry: quarterlyTaxExpiry?.toISOString(),
+              truckInvoiceDate: truckInvoiceDate?.toISOString(),
+              fcExpiry: fcExpiry?.toISOString(),
+              loanStartDate: loanStartDate?.toISOString(),
+            },
+          };
+          const response = await apiCall(payload);
+          if (response.status === 200) {
+            console.log(response);
+            showToast.success("Vehicle information saved successfully!");
+            setFormErrors({}); // Clear errors on successful submission
+          } else {
+            handleErrorToast();
+          }
+        } catch (error) {
+          console.error("API call error:", error);
+          handleErrorToast();
         }
-      } catch (error) {
-        console.log(error);
+      } else {
+        showToast.error("Please correct the errors in the form.");
+
+        // Find the first tab with an error and switch to it
+        let firstErrorTabId: string | null = null;
+        for (const tab of tabs) {
+          // Check if any field within this tab has an error
+          const tabContentDiv = formRef.current.querySelector(`#${tab.id}_tab_content`);
+          if (tabContentDiv) {
+            const fieldsInTab = tabContentDiv.querySelectorAll<HTMLElement>('[name]');
+            for (const field of fieldsInTab) {
+              if (field.getAttribute('name') && validationResults[field.getAttribute('name')!]) {
+                firstErrorTabId = tab.id;
+                break;
+              }
+            }
+          }
+          if (firstErrorTabId) break;
+        }
+
+        if (firstErrorTabId && firstErrorTabId !== activeTab) {
+          setActiveTab(firstErrorTabId); // Switch to the tab with the first error
+          // Optional: Scroll to the first error field in that tab
+          setTimeout(() => {
+            // Find the *first* error message element within the *entire form* after the tab has switched
+            const firstErrorFieldElement = formRef.current?.querySelector(`.error-message`);
+            if (firstErrorFieldElement) {
+                firstErrorFieldElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 100); // Give React time to render the new tab content
+        }
       }
     }
- 
   };
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case "owner_information":
-        return (
-          <div className="p-2">
-            <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
-              <div>
-                <FormField label="Owner" required>
-                  <RadioGroup
- 
-                    name="owner"
- 
-                    options={[
-                      { value: "New", label: "New" },
-                      { value: "Existing", label: "Existing" },
-                    ]}
-                  />
-                </FormField>
-                <FormField label="Address" required>
-                  <Input
- 
-                    name="address"
- 
-                    placeholder="Enter Address"
-                    className="capitalize"
-                    data-validate="required"
-                  />
-                </FormField>
-                <FormField label="Registration Date" required>
-                  <DatePicker
- 
-                    date={registerationDate}
- 
-                    setDate={setregisterationDate}
-                    placeholder="Select date"
-                    className="w-full"
-                  />
-                </FormField>
-              </div>
-              <div>
-                <FormField label="Owners Name" required>
-                  <Input
-                    name="ownerName"
-                    placeholder="Enter Owners Name"
-                    className="capitalize alphabet-only"
-                    data-validate="required"
-                  />
-                </FormField>
-                <FormField label="Ownership Type" required>
-                  <RadioGroup
- 
-                    name="ownershipType"
- 
-                    options={[
-                      { value: "Owned", label: "Owned" },
-                      { value: "Leased", label: "Leased" },
-                    ]}
-                    required
-                  />
-                </FormField>
-              </div>
-            </div>
-          </div>
-        );
-      case "vehicle_details":
-        return (
-          <div className="p-2">
-            <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
-              <div>
-                <FormField label="Class of Truck" required>
- 
-                <SearchableSelect
-        name="vehicleType"
-        options={vehicleOptions}
-        // value={vehicleType}
-        // onChange={handleSelectChange}
-        // onAddNew={handleAddNew}
-        // onRefresh={handleRefresh}
-        required
-        searchable
-        placeholder="Choose a vehicle"
-        data-validate="required"
-        // error={error}
-        className="w-full"
-      />
-
- 
-                </FormField>
-                <FormField label="Model Number" required>
-                  <Input
-                    name="modelNumber"
-                    className="alphanumeric all_uppercase"
-                    placeholder="Enter Model Number"
-                    data-validate="required"
-                  />
-                </FormField>
-                <FormField label="Model Year" required>
-                  <select
-                    name="modelYear"
-                    className="form-control border border-gray-300 rounded px-3 py-2"
-                    required
-                  >
-                    <option value="">Select Year</option>
-                    {Array.from({ length: 30 }, (_, i) => {
-                      const year = new Date().getFullYear() - i;
-                      return (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </FormField>
-                <FormField label="Chassis Number" required>
-                  <Input
- 
-                    name="chasisNumber"
- 
-                    className="alphanumeric all_uppercase"
-                    placeholder="Enter Chassis Number"
-                    data-validate="required"
-                  />
-                </FormField>
-              </div>
-              <div>
-                <FormField label="Engine Number" required>
-                  <Input
-                    name="engineNumber"
-                    className="alphanumeric all_uppercase"
-                    placeholder="Enter Engine Number"
-                    data-validate="required"
-                  />
-                </FormField>
-                <FormField label="Vehicle Weight (in Kgs)" required>
-                  <Input
-                    name="vehicleWeight"
-                    className="number_with_decimal"
-                    type="text"
-                    placeholder="Enter Weight"
-                    data-validate="required"
-                  />
-                </FormField>
-                <FormField label="Unladen Weight (in Kgs)" required>
-                  <Input
-                    name="unladenWeight"
-                    className="number_with_decimal"
-                    type="text"
-                    placeholder="Enter Unladen Weight"
-                    data-validate="required"
-                  />
-                </FormField>
-              </div>
-            </div>
-          </div>
-        );
-      case "vehicle_expiry_details":
-        return (
-          <div className="p-2">
-            <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
-              <div>
-                <FormField label="F.C. Expiry Date" required>
-                  <DatePicker
- 
-                    date={fcExpiry}
- 
-                    setDate={setFcexpiryDate}
-                    placeholder="Select date"
-                    className="w-full"
-                  />
-                </FormField>
-                <FormField label="Insurance Company" required>
-                  <SearchableSelect
-                    name="insuranceCompany"
-                    placeholder="Select Insurance Company"
-                    searchable
-                    required
-                    options={insuranceOptions}
-                  />
-                </FormField>
-                <FormField label="Insurance Expiry" required>
-                  <DatePicker
-                    date={insuranceExpiry}
-                    setDate={setInsuranceExpiry}
-                    placeholder="Insurance Expiry Date"
-                    className="w-full"
-                  />
-                </FormField>
-                <FormField label="Permit Expiry Date" required>
-                  <DatePicker
-                    date={permitExpiryDate}
-                    setDate={setPermitExpiryDate}
-                    placeholder="Permit Expiry Date"
-                    className="w-full"
-                  />
-                </FormField>
-              </div>
-              <div>
-                <FormField label="N.P. Expiry Date" required>
-                  <DatePicker
-                    date={npExpiryDate}
-                    setDate={setNpExpiryDate}
-                    placeholder="NP Expiry Date"
-                    className="w-full"
-                  />
-                </FormField>
-                <FormField label="Quarterly Tax Expiry" required>
-                  <DatePicker
- 
-                    date={quarterlyTaxExpiry}
- 
-                    setDate={setQuarterlyTaxExpiry}
-                    placeholder="Quarterly Tax Expiry"
-                    className="w-full"
-                  />
-                </FormField>
-                <FormField label="Loan Status" required>
-                  <RadioGroup
-                    name="loanStatus"
-                    options={[
-                      { value: "Closed", label: "Closed" },
-                      { value: "Open", label: "Open" },
-                    ]}
-                    required
-                  />
-                </FormField>
-              </div>
-            </div>
-          </div>
-        );
-      case "load_availed_details":
-        return (
-          <div className="p-2">
-            <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
-              <div>
-                <FormField label="Loan Provider" required>
-                  <SearchableSelect
-                    name="loanProvider"
-                    placeholder="Select Loan Provider"
-                    options={bankOptions}
-                    searchable
-                    required
-                  />
-                </FormField>
-                <FormField label="Loan Start Date" required>
-                  <DatePicker
-                    date={loanStartDate}
-                    setDate={setLoanStartDate}
-                    placeholder="Loan Start Date"
-                    className="w-full"
-                    data-validate="required"
-                  />
-                </FormField>
-              </div>
-              <div>
-                <FormField label="Loan Amount" required>
-                  <Input
-                    name="loanAmount"
-                    type="text"
-                    className="number_with_decimal"
-                    placeholder="Enter Loan Amount"
-                    data-validate="required"
-                    min="0"
-                    step="0.01"
-                  />
-                </FormField>
-                <FormField label="Loan Tenure" required>
-                  <Input
-                    name="loanTenure"
-                    type="text"
-                    className="whole_number"
-                    placeholder="Enter Loan Tenure (months/years)"
-                    data-validate="required"
-                    min="0"
-                  />
-                </FormField>
-                <FormField label="Loan Interest" required>
-                  <Input
-                    name="loanInterest"
-                    className="number_with_decimal"
-                    type="text"
-                    placeholder="Enter Loan Interest (%)"
-                    data-validate="required"
-                    min="0"
-                    step="0.01"
-                  />
-                </FormField>
-              </div>
-            </div>
-          </div>
-        );
-      case "vehicle_purchase_details":
-        return (
-          <div className="p-2">
-            <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
-              <div>
-                <FormField label="Truck Invoice No." required>
-                  <Input
- 
-                    name="truckInvoiceNumber"
- 
-                    className="alphanumeric all_uppercase"
-                    placeholder="Enter Truck Invoice Number"
-                    data-validate="required"
-                  />
-                </FormField>
-                <FormField label="Truck Invoice Date" required>
-                  <DatePicker
-                    date={truckInvoiceDate}
-                    setDate={setTruckInvoiceDate}
-                    placeholder="Truck Invoice Date"
-                    className="w-full"
-                  />
-                </FormField>
-                <FormField label="Endorsement Status" required>
-                  <RadioGroup
-                    name="endorsementStatus"
-                    options={[
-                      { value: "Endorsed", label: "Endorsed" },
-                      { value: "Not Endorsed", label: "Not Endorsed" },
-                    ]}
-                    required
-                  />
-                </FormField>
-                <FormField label="Endorsed With">
-                  <Input
-                    name="endorsedWith"
-                    className="alphanumeric capitalize"
-                    placeholder="Enter Truck Endorsed With"
-                  />
-                </FormField>
-              </div>
-              <div>
-                <FormField label="Truck Status" required>
-                  <RadioGroup
-                    name="truckStatus"
-                    options={[
-                      { value: "Running", label: "Running" },
-                      { value: "Sold", label: "Sold" },
-                    ]}
-                    required
-                  />
-                </FormField>
-                <FormField label="Duty Driver Name" required>
-                  <Input
-                    name="dutyDriverName"
-                    className="alphabet_only capitalize"
-                    placeholder="Enter Duty Driver Name"
-                    data-validate="required"
-                  />
-                </FormField>
-                <FormField label="Dealer Name" required>
-                  <Input
-                    name="dealerName"
-                    className="alphabet_only capitalize"
-                    placeholder="Enter Dealer Name"
-                    data-validate="required"
-                  />
-                </FormField>
-              </div>
-            </div>
-          </div>
-        );
-      default:
-        return (
-          <div className="p-2">
-            <div className="text-center py-8">
-              <p className="text-gray-500">
-                {tabs.find((tab) => tab.id === activeTab)?.label} content will
-                be added here
-              </p>
-            </div>
-          </div>
-        );
-    }
-  };
 
   return (
     <Layout pageTitle="Vehicle Registration">
@@ -510,42 +182,40 @@ export default function NewVehicle() {
             <form ref={formRef} onSubmit={handleSubmit} autoComplete="off">
               <div className="grid grid-cols-2 lg:grid-cols-2 gap-6 mb-5">
                 <div className="space-y-4">
-                  <FormField label="Truck Registration Number" required>
+                  <FormField label="Truck Registration Number" required error={formErrors.registrationNumber} htmlFor="registrationNumber">
                     <Input
- 
+                      id="registrationNumber" // Added ID for htmlFor
                       name="registrationNumber"
- 
                       placeholder="Enter registration number"
                       className="alphanumeric no_space all_uppercase"
                       data-validate="required"
                     />
                   </FormField>
-                  <FormField label="Truck Type" required>
+                  <FormField label="Truck Type" required error={formErrors.truckType} htmlFor="truckType">
                     <SearchableSelect
+                      id="truckType" // Added ID for htmlFor (you might need to adjust SearchableSelect to pass this to its hidden input)
                       name="truckType"
                       placeholder="Select truck type"
                       options={vehicleTypeOptions}
                       searchable
-                      required
+                      data-validate="required"
                     />
                   </FormField>
-                  <FormField label="Makers Name" required>
+                  <FormField label="Makers Name" required error={formErrors.makerName} htmlFor="makerName">
                     <Input
- 
+                      id="makerName" // Added ID for htmlFor
                       name="makerName"
- 
                       placeholder="Enter makers name"
                       className="capitalize alphanumeric"
                       data-validate="required"
                     />
                   </FormField>
-                  <FormField label="Nature of Goods Weight" required>
+                  <FormField label="Nature of Goods Weight" required error={formErrors.natureOfGoodsWeight} htmlFor="natureOfGoodsWeight">
                     <Input
- 
+                      id="natureOfGoodsWeight" // Added ID for htmlFor
                       name="natureOfGoodsWeight"
- 
                       placeholder="Enter weight"
-                      className="only_number"
+                      className="number_with_decimal"
                       data-validate="required"
                     />
                   </FormField>
@@ -557,11 +227,10 @@ export default function NewVehicle() {
                     {tabs.map((tab) => (
                       <li
                         key={tab.id}
-                        className={`mr-6 pb-2 cursor-pointer hover:text-[#009333] ${
-                          activeTab === tab.id
+                        className={`mr-6 pb-2 cursor-pointer hover:text-[#009333] ${activeTab === tab.id
                             ? "text-[#009333] border-b-2 border-[#009333]"
                             : ""
-                        }`}
+                          }`}
                         onClick={() => setActiveTab(tab.id)}
                       >
                         {tab.label}
@@ -570,7 +239,396 @@ export default function NewVehicle() {
                   </ul>
                 </div>
               </div>
-              <div className="mt-3">{renderTabContent()}</div>
+              <div className="mt-3">
+                {/* Render all tab contents, but hide inactive ones using CSS */}
+                <div
+                  id="owner_information_tab_content"
+                  className={`p-2 ${activeTab === "owner_information" ? "block" : "hidden"}`}
+                >
+                  <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
+                    <div>
+                      <FormField label="Owner" error={formErrors.owner} htmlFor="owner">
+                        <RadioGroup
+                          id="owner" // Added ID for htmlFor, assuming RadioGroup uses a hidden input or accessible element
+                          name="owner"
+                          options={[
+                            { value: "New", label: "New" },
+                            { value: "Existing", label: "Existing" },
+                          ]}
+                          // data-validate="required" // Add data-validate if "Owner" is required
+                        />
+                      </FormField>
+                      <FormField label="Address" required error={formErrors.address} htmlFor="address">
+                        <Input
+                          id="address" // Added ID for htmlFor
+                          name="address"
+                          placeholder="Enter Address"
+                          className="capitalize"
+                          data-validate="required"
+                        />
+                      </FormField>
+                      <FormField label="Registration Date" error={formErrors.registerationDate} htmlFor="registerationDate">
+                        {/* Ensure DatePicker correctly links to a hidden input with this name/ID for validation */}
+                        <DatePicker
+                          id="registerationDate" // Added ID for htmlFor
+                          name="registerationDate" // Prop to pass the name down
+                          date={registerationDate}
+                          disableFuture
+                          setDate={setregisterationDate}
+                          placeholder="Select date"
+                          className="w-full"
+                          data-validate="required" // Added data-validate
+                        />
+                      </FormField>
+                    </div>
+                    <div>
+                      <FormField label="Owners Name" required error={formErrors.ownerName} htmlFor="ownerName">
+                        <Input
+                          id="ownerName" // Added ID for htmlFor
+                          name="ownerName"
+                          placeholder="Enter Owners Name"
+                          className="alphabet_only capitalize"
+                          data-validate="required"
+                        />
+                      </FormField>
+                      <FormField label="Ownership Type" required error={formErrors.ownershipType} htmlFor="ownershipType">
+                        <RadioGroup
+                          id="ownershipType"  
+                          name="ownershipType"
+                          options={[
+                            { value: "Owned", label: "Owned" },
+                            { value: "Leased", label: "Leased" },
+                          ]}
+                          data-validate="required"
+                        />
+                      </FormField>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  id="vehicle_details_tab_content"
+                  className={`p-2 ${activeTab === "vehicle_details" ? "block" : "hidden"}`}
+                >
+                  <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
+                    <div>
+                      <FormField label="Class of Truck" required error={formErrors.vehicleType} htmlFor="vehicleType">
+                        <SearchableSelect
+                          id="vehicleType" // Added ID for htmlFor
+                          name="vehicleType"
+                          options={vehicleOptions}
+                          searchable
+                          placeholder="Choose a vehicle"
+                          data-validate="required"
+                        />
+                      </FormField>
+                      <FormField label="Model Number" required error={formErrors.modelNumber} htmlFor="modelNumber">
+                        <Input
+                          id="modelNumber" // Added ID for htmlFor
+                          name="modelNumber"
+                          className="alphanumeric all_uppercase"
+                          placeholder="Enter Model Number"
+                          data-validate="required"
+                        />
+                      </FormField>
+                      <FormField label="Model Year" required error={formErrors.modelYear} htmlFor="modelYear">
+                        <select
+                          id="modelYear" // Added ID for htmlFor
+                          name="modelYear"
+                          className="form-control border border-gray-300 rounded px-3 py-2"
+                          data-validate="required"
+                        >
+                          <option value="">Select Year</option>
+                          {Array.from({ length: 30 }, (_, i) => {
+                            const year = new Date().getFullYear() - i;
+                            return (
+                              <option key={year} value={year}>
+                                {year}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </FormField>
+                      <FormField label="Chassis Number" required error={formErrors.chasisNumber} htmlFor="chasisNumber">
+                        <Input
+                          id="chasisNumber" // Added ID for htmlFor
+                          name="chasisNumber"
+                          className="alphanumeric all_uppercase"
+                          placeholder="Enter Chassis Number"
+                          data-validate="required"
+                        />
+                      </FormField>
+                    </div>
+                    <div>
+                      <FormField label="Engine Number" required error={formErrors.engineNumber} htmlFor="engineNumber">
+                        <Input
+                          id="engineNumber" // Added ID for htmlFor
+                          name="engineNumber"
+                          className="alphanumeric all_uppercase"
+                          placeholder="Enter Engine Number"
+                          data-validate="required"
+                        />
+                      </FormField>
+                      <FormField label="Vehicle Weight (in Kgs)" required error={formErrors.vehicleWeight} htmlFor="vehicleWeight">
+                        <Input
+                          id="vehicleWeight" // Added ID for htmlFor
+                          name="vehicleWeight"
+                          className="number_with_decimal"
+                          type="text"
+                          placeholder="Enter Weight"
+                          data-validate="required"
+                        />
+                      </FormField>
+                      <FormField label="Unladen Weight (in Kgs)" required error={formErrors.unladenWeight} htmlFor="unladenWeight">
+                        <Input
+                          id="unladenWeight" // Added ID for htmlFor
+                          name="unladenWeight"
+                          className="number_with_decimal"
+                          type="text"
+                          placeholder="Enter Unladen Weight"
+                          data-validate="required"
+                        />
+                      </FormField>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  id="vehicle_expiry_details_tab_content"
+                  className={`p-2 ${activeTab === "vehicle_expiry_details" ? "block" : "hidden"}`}
+                >
+                  <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
+                    <div>
+                      <FormField label="F.C. Expiry Date" required error={formErrors.fcExpiry} htmlFor="fcExpiry">
+                        <DatePicker
+                          id="fcExpiry" // Added ID for htmlFor
+                          name="fcExpiry" // Prop to pass the name down
+                          date={fcExpiry}
+                          setDate={setFcexpiryDate}
+                          placeholder="Select date"
+                          className="w-full"
+                          data-validate="required"
+                        />
+                      </FormField>
+                      <FormField label="Insurance Company" required error={formErrors.insuranceCompany} htmlFor="insuranceCompany">
+                        <SearchableSelect
+                          id="insuranceCompany" // Added ID for htmlFor
+                          name="insuranceCompany"
+                          placeholder="Select Insurance Company"
+                          searchable
+                          data-validate="required"
+                          options={insuranceOptions}
+                        />
+                      </FormField>
+                      <FormField label="Insurance Expiry" required error={formErrors.insuranceExpiry} htmlFor="insuranceExpiry">
+                        <DatePicker
+                          id="insuranceExpiry" // Added ID for htmlFor
+                          name="insuranceExpiry" // Prop to pass the name down
+                          date={insuranceExpiry}
+                          setDate={setInsuranceExpiry}
+                          placeholder="Insurance Expiry Date"
+                          className="w-full"
+                          data-validate="required"
+                        />
+                      </FormField>
+                      <FormField label="Permit Expiry Date" required error={formErrors.permitExpiryDate} htmlFor="permitExpiryDate">
+                        <DatePicker
+                          id="permitExpiryDate" // Added ID for htmlFor
+                          name="permitExpiryDate" // Prop to pass the name down
+                          date={permitExpiryDate}
+                          setDate={setPermitExpiryDate}
+                          placeholder="Permit Expiry Date"
+                          className="w-full"
+                          data-validate="required"
+                        />
+                      </FormField>
+                    </div>
+                    <div>
+                      <FormField label="N.P. Expiry Date" required error={formErrors.npExpiryDate} htmlFor="npExpiryDate">
+                        <DatePicker
+                          id="npExpiryDate" // Added ID for htmlFor
+                          name="npExpiryDate" // Prop to pass the name down
+                          date={npExpiryDate}
+                          setDate={setNpExpiryDate}
+                          placeholder="NP Expiry Date"
+                          className="w-full"
+                          data-validate="required"
+                        />
+                      </FormField>
+                      <FormField label="Quarterly Tax Expiry" required error={formErrors.quarterlyTaxExpiry} htmlFor="quarterlyTaxExpiry">
+                        <DatePicker
+                          id="quarterlyTaxExpiry" // Added ID for htmlFor
+                          name="quarterlyTaxExpiry" // Prop to pass the name down
+                          date={quarterlyTaxExpiry}
+                          setDate={setQuarterlyTaxExpiry}
+                          placeholder="Quarterly Tax Expiry"
+                          className="w-full"
+                          data-validate="required"
+                        />
+                      </FormField>
+                      <FormField label="Loan Status" required error={formErrors.loanStatus} htmlFor="loanStatus">
+                        <RadioGroup
+                          id="loanStatus" // Added ID for htmlFor
+                          name="loanStatus"
+                          options={[
+                            { value: "Closed", label: "Closed" },
+                            { value: "Open", label: "Open" },
+                          ]}
+                          data-validate="required"
+                        />
+                      </FormField>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  id="load_availed_details_tab_content"
+                  className={`p-2 ${activeTab === "load_availed_details" ? "block" : "hidden"}`}
+                >
+                  <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
+                    <div>
+                      <FormField label="Loan Provider" required error={formErrors.loanProvider} htmlFor="loanProvider">
+                        <SearchableSelect
+                          id="loanProvider" // Added ID for htmlFor
+                          name="loanProvider"
+                          placeholder="Select Loan Provider"
+                          options={bankOptions}
+                          searchable
+                          data-validate="required"
+                        />
+                      </FormField>
+                      <FormField label="Loan Start Date" required error={formErrors.loanStartDate} htmlFor="loanStartDate">
+                        <DatePicker
+                          id="loanStartDate" // Added ID for htmlFor
+                          name="loanStartDate" // Prop to pass the name down
+                          date={loanStartDate}
+                          setDate={setLoanStartDate}
+                          placeholder="Loan Start Date"
+                          className="w-full"
+                          data-validate="required"
+                        />
+                      </FormField>
+                    </div>
+                    <div>
+                      <FormField label="Loan Amount" required error={formErrors.loanAmount} htmlFor="loanAmount">
+                        <Input
+                          id="loanAmount" // Added ID for htmlFor
+                          name="loanAmount"
+                          type="text"
+                          className="number_with_decimal"
+                          placeholder="Enter Loan Amount"
+                          data-validate="required"
+                          min="0"
+                          step="0.01"
+                        />
+                      </FormField>
+                      <FormField label="Loan Tenure" required error={formErrors.loanTenure} htmlFor="loanTenure">
+                        <Input
+                          id="loanTenure" // Added ID for htmlFor
+                          name="loanTenure"
+                          type="text"
+                          className="whole_number"
+                          placeholder="Enter Loan Tenure (months/years)"
+                          data-validate="required"
+                          min="0"
+                        />
+                      </FormField>
+                      <FormField label="Loan Interest" required error={formErrors.loanInterest} htmlFor="loanInterest">
+                        <Input
+                          id="loanInterest" // Added ID for htmlFor
+                          name="loanInterest"
+                          className="number_with_decimal"
+                          type="text"
+                          placeholder="Enter Loan Interest (%)"
+                          data-validate="required"
+                          min="0"
+                          step="0.01"
+                        />
+                      </FormField>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  id="vehicle_purchase_details_tab_content"
+                  className={`p-2 ${activeTab === "vehicle_purchase_details" ? "block" : "hidden"}`}
+                >
+                  <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
+                    <div>
+                      <FormField label="Truck Invoice No." required error={formErrors.truckInvoiceNumber} htmlFor="truckInvoiceNumber">
+                        <Input
+                          id="truckInvoiceNumber" // Added ID for htmlFor
+                          name="truckInvoiceNumber"
+                          className="alphanumeric all_uppercase"
+                          placeholder="Enter Truck Invoice Number"
+                          data-validate="required"
+                        />
+                      </FormField>
+                      <FormField label="Truck Invoice Date" required error={formErrors.truckInvoiceDate} htmlFor="truckInvoiceDate">
+                        <DatePicker
+                          id="truckInvoiceDate" // Added ID for htmlFor
+                          name="truckInvoiceDate" // Prop to pass the name down
+                          date={truckInvoiceDate}
+                          setDate={setTruckInvoiceDate}
+                          placeholder="Truck Invoice Date"
+                          className="w-full"
+                          data-validate="required"
+                        />
+                      </FormField>
+                      <FormField label="Endorsement Status" required error={formErrors.endorsementStatus} htmlFor="endorsementStatus">
+                        <RadioGroup
+                          id="endorsementStatus" // Added ID for htmlFor
+                          name="endorsementStatus"
+                          options={[
+                            { value: "Endorsed", label: "Endorsed" },
+                            { value: "Not Endorsed", label: "Not Endorsed" },
+                          ]}
+                          data-validate="required"
+                        />
+                      </FormField>
+                      <FormField label="Endorsed With" error={formErrors.endorsedWith} htmlFor="endorsedWith">
+                        <Input
+                          id="endorsedWith" // Added ID for htmlFor
+                          name="endorsedWith"
+                          className="alphanumeric capitalize"
+                          placeholder="Enter Truck Endorsed With"
+                        />
+                      </FormField>
+                    </div>
+                    <div>
+                      <FormField label="Truck Status" required error={formErrors.truckStatus} htmlFor="truckStatus">
+                        <RadioGroup
+                          id="truckStatus" // Added ID for htmlFor
+                          name="truckStatus"
+                          options={[
+                            { value: "Running", label: "Running" },
+                            { value: "Sold", label: "Sold" },
+                          ]}
+                          data-validate="required"
+                        />
+                      </FormField>
+                      <FormField label="Duty Driver Name" required error={formErrors.dutyDriverName} htmlFor="dutyDriverName">
+                        <Input
+                          id="dutyDriverName" // Added ID for htmlFor
+                          name="dutyDriverName"
+                          className="alphabet_only capitalize"
+                          placeholder="Enter Duty Driver Name"
+                          data-validate="required"
+                        />
+                      </FormField>
+                      <FormField label="Dealer Name" required error={formErrors.dealerName} htmlFor="dealerName">
+                        <Input
+                          id="dealerName" // Added ID for htmlFor
+                          name="dealerName"
+                          className="alphabet_only capitalize"
+                          placeholder="Enter Dealer Name"
+                          data-validate="required"
+                        />
+                      </FormField>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </form>
           </div>
         </main>
@@ -578,7 +636,7 @@ export default function NewVehicle() {
           <button onClick={handleSubmit} className="btn-sm btn-primary">
             Save
           </button>
-          <button className="btn-secondary btn-sm" onClick={handleErrorToast}>
+          <button className="btn-secondary btn-sm" onClick={() => setFormErrors({})}>
             Cancel
           </button>
         </footer>

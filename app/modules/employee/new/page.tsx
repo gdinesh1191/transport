@@ -2,10 +2,11 @@
 
 import { useState, ChangeEvent, FormEvent, useRef } from "react";
 import Layout from "../../../components/Layout";
-import { validateForm } from "@/app/utils/formValidations";
+
 import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
 import useInputValidation from "@/app/utils/inputValidations";
 import DatePicker from "@/app/utils/commonDatepicker";
+import { validateForm, FormErrors } from "@/app/utils/formValidations";
 import { Input, RadioGroup } from "@/app/utils/form-controls";
 
 interface BankDetails {
@@ -22,6 +23,8 @@ interface FormFieldProps {
   required?: boolean;
   children: React.ReactNode;
   className?: string;
+  error?: string; // Add an error prop to FormField
+  htmlFor?: string;
 }
 
 interface InputProps {
@@ -46,21 +49,29 @@ interface RadioGroupProps {
   required?: boolean;
 }
 
-// Form field components for reusability
-const FormField: React.FC<FormFieldProps> = ({
+const FormField = ({
   label,
   required = false,
   children,
   className = "",
-}) => (
+  error,
+  htmlFor, // Destructure htmlFor prop
+}: FormFieldProps) => (
   <div
-    className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4  ${className}`}
+    className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}
   >
-    <label className="form-label w-1/2">
+    <label className="form-label w-50" htmlFor={htmlFor}>
+      {" "}
+      {/* Use htmlFor here */}
       {label}
       {required && <span className="form-required text-red-500">*</span>}
     </label>
-    <div className="flex flex-col w-3/4">{children}</div>
+    <div className="flex flex-col w-3/4">
+      {children}
+      {error && ( // Conditionally render error message
+        <p className="error-message text-red-500 text-xs mt-1">{error}</p>
+      )}
+    </div>
   </div>
 );
 
@@ -69,27 +80,29 @@ export default function NewEmployee() {
   const [showModal, setShowModal] = useState<boolean>(true);
   const [employeeType, setEmployeeType] = useState<string>("");
   const [fileName, setFileName] = useState("No file chosen");
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const formRef = useRef<HTMLFormElement>(null);
   useInputValidation();
   const [dob, setDob] = useState<Date | undefined>();
   const [licenseExpiryDate, handleLicenseExpiryChange] = useState<
     Date | undefined
   >();
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [familyNumber, setFamilyNumber] = useState("");
 
- 
-
-const stateOptions = [
-  { value: "Tamil Nadu", label: "Tamil Nadu" },
-  { value: "Karnataka", label: "Karnataka" },
-  { value: "Kerala", label: "Kerala" },
-  { value: "Andhra Pradesh", label: "Andhra Pradesh" },
-  { value: "Telangana", label: "Telangana" },
-  { value: "Maharashtra", label: "Maharashtra" },
-  { value: "Gujarat", label: "Gujarat" },
-  { value: "Rajasthan", label: "Rajasthan" },
-  { value: "Punjab", label: "Punjab" },
-  { value: "Uttar Pradesh", label: "Uttar Pradesh" },
-];
+  const stateOptions = [
+    { value: "Tamil Nadu", label: "Tamil Nadu" },
+    { value: "Karnataka", label: "Karnataka" },
+    { value: "Kerala", label: "Kerala" },
+    { value: "Andhra Pradesh", label: "Andhra Pradesh" },
+    { value: "Telangana", label: "Telangana" },
+    { value: "Maharashtra", label: "Maharashtra" },
+    { value: "Gujarat", label: "Gujarat" },
+    { value: "Rajasthan", label: "Rajasthan" },
+    { value: "Punjab", label: "Punjab" },
+    { value: "Uttar Pradesh", label: "Uttar Pradesh" },
+  ];
 
   const [bankForm, setBankForm] = useState<Omit<BankDetails, "id">>({
     bankName: "",
@@ -123,6 +136,18 @@ const stateOptions = [
       ...driverDetailsForm,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleNumberChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (value: string) => void
+  ) => {
+    let value = e.target.value.replace(/[^\d]/g, "");
+
+    // Ensure first digit is between 6–9 if it's the first digit
+    if (value.length === 1 && !/^[6-9]$/.test(value)) return;
+
+    setter(value);
   };
 
   const [bankList, setBankList] = useState<BankDetails[]>([]);
@@ -165,6 +190,8 @@ const stateOptions = [
         ifscCode: "",
         branchName: "",
       });
+
+      setBankError("");
     } else {
       setBankError('Please fill all bank details before clicking "Add Bank".');
     }
@@ -180,8 +207,20 @@ const stateOptions = [
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFileName(e.target.files[0].name);
+    const fileInput = e.target;
+
+    if (fileInput.files && fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+
+      // Example size validation (optional)
+      if (file.size > 2 * 1024 * 1024) {
+        alert("File size should not exceed 2MB.");
+        fileInput.value = ""; // ✅ This is allowed
+        setFileName("No file chosen");
+        return;
+      }
+
+      setFileName(file.name); // ✅ Update UI
     } else {
       setFileName("No file chosen");
     }
@@ -206,10 +245,60 @@ const stateOptions = [
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formRef.current && validateForm(formRef.current)) {
-      const formData = new FormData(formRef.current);
-      const formValues = Object.fromEntries(formData.entries());
-      console.log("Form submitted successfully", formValues);
+    // Submission logic here
+
+    if (formRef.current) {
+      const validationResults = validateForm(formRef.current); // Get all errors
+      setFormErrors(validationResults); // Update error state
+
+      const isFormValid = Object.keys(validationResults).length === 0;
+
+      if (isFormValid) {
+        const formData = new FormData(formRef.current);
+        const formValues = Object.fromEntries(formData.entries());
+        console.log("Form submitted successfully", formValues);
+
+
+
+
+          let firstErrorTabId: string | null = null;
+        for (const tab of tabs) {
+          // Check if any field within this tab has an error
+          const tabContentDiv = formRef.current.querySelector(
+            `#${tab.id}_tab_content`
+          );
+          if (tabContentDiv) {
+            const fieldsInTab =
+              tabContentDiv.querySelectorAll<HTMLElement>("[name]");
+            for (const field of fieldsInTab) {
+              if (
+                field.getAttribute("name") &&
+                validationResults[field.getAttribute("name")!]
+              ) {
+                firstErrorTabId = tab.id;
+                break;
+              }
+            }
+          }
+          if (firstErrorTabId) break;
+        }
+
+        if (firstErrorTabId && firstErrorTabId !== activeTab) {
+          setActiveTab(firstErrorTabId); // Switch to the tab with the first error
+          // Optional: Scroll to the first error field in that tab
+          setTimeout(() => {
+            // Find the *first* error message element within the *entire form* after the tab has switched
+            const firstErrorFieldElement =
+              formRef.current?.querySelector(`.error-message`);
+            if (firstErrorFieldElement) {
+              firstErrorFieldElement.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+            }
+          }, 100); // Give React time to render the new tab content
+        }
+      }
     }
   };
 
@@ -227,10 +316,11 @@ const stateOptions = [
                     value={bankForm.accountName}
                     onChange={handleBankChange}
                     placeholder="Enter Account Name"
-                    className="alphabet-only"
-                    data-validate="required"
+                    className="alphabet_only capitalize"
+                    maxLength={50}
                   />
                 </FormField>
+
                 <FormField label="Account Number" required>
                   <Input
                     name="accountNumber"
@@ -239,9 +329,10 @@ const stateOptions = [
                     onChange={handleBankChange}
                     className="only_number"
                     placeholder="Enter Account Number"
-                    data-validate="required"
+                    maxLength={18}
                   />
                 </FormField>
+
                 <FormField label="IFSC Code" required>
                   <Input
                     name="ifscCode"
@@ -249,10 +340,11 @@ const stateOptions = [
                     value={bankForm.ifscCode}
                     onChange={handleBankChange}
                     placeholder="Enter IFSC Code"
-                    data-validate="required"
-                    className="alphanumeric"
+                    className="alphanumeric all_uppercase"
+                    maxLength={11}
                   />
                 </FormField>
+
                 <FormField label="Bank Name" required>
                   <Input
                     name="bankName"
@@ -260,10 +352,11 @@ const stateOptions = [
                     value={bankForm.bankName}
                     onChange={handleBankChange}
                     placeholder="Enter Bank Name"
-                    className="capitalize"
-                    data-validate="required"
+                    className="alphabet_only capitalize"
+                    maxLength={50}
                   />
                 </FormField>
+
                 <FormField label="Branch Name" required>
                   <Input
                     name="branchName"
@@ -271,22 +364,24 @@ const stateOptions = [
                     value={bankForm.branchName}
                     onChange={handleBankChange}
                     placeholder="Enter Branch Name"
-                    className="capitalize"
-                    data-validate="required"
+                    className="alphabet_only capitalize"
+                    maxLength={50}
                   />
                 </FormField>
+
                 {bankError && (
                   <div className="text-red-500 text-sm mt-2 text-end">
                     {bankError}
                   </div>
                 )}
                 <FormField label="">
-                  <input
+                  <button
                     type="button"
-                    value="Add Bank"
                     onClick={handleAddBank}
                     className="btn-sm btn-primary"
-                  />
+                  >
+                    Add Bank
+                  </button>
                 </FormField>
               </div>
             </div>
@@ -317,16 +412,16 @@ const stateOptions = [
                         <button
                           type="button"
                           onClick={() => handleEditBank(bank.id)}
-                          className="text-blue-500 "
+                          className="text-blue-500 hover:text-blue-700"
                         >
-                          Edit
+                          <i className="ri-pencil-line text-lg cursor-pointer"></i>
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteBank(bank.id)}
-                          className="text-red-500  ml-2"
+                          className="text-red-500 hover:text-red-700 ml-2"
                         >
-                          Delete
+                          <i className="ri-delete-bin-line text-lg cursor-pointer"></i>
                         </button>
                       </td>
                     </tr>
@@ -342,41 +437,40 @@ const stateOptions = [
         return (
           <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
             <div>
-              <FormField label="License Number" required>
+              <FormField label="License Number" required
+                              error={formErrors.licenseNumber} 
+                                                            htmlFor="licenseNumber">
                 <Input
                   name="licenseNumber"
-                  className="form-control"
+                  className="form-control alphanumeric all_uppercase"
                   value={driverDetailsForm.licenseNumber}
                   onChange={handleDriverChange}
                   placeholder="Enter License Number"
+                  maxLength={20}
                   data-validate="required"
                 />
               </FormField>
-              <FormField label="License Expiry Date" required>
+              <FormField label="License Expiry Date" required
+                error={formErrors.licenseExpiry} htmlFor="licenseExpiry">
                 <DatePicker
                   date={licenseExpiryDate}
+                  disablePast
                   setDate={handleLicenseExpiryChange}
                   name="licenseExpiry"
                   data-validate="required"
                 />
               </FormField>
-              <FormField label="Truck Number" required>
-                <Input
-                  name="truckNumber"
-                  className="form-control"
-                  value={driverDetailsForm.truckNumber}
-                  onChange={handleDriverChange}
-                  placeholder="Enter Truck Number"
-                  data-validate="required"
-                />
-              </FormField>
-              <FormField label="License Issued By" required>
+
+              <FormField label="License Issued By" required
+                              error={formErrors.licenseIssuedBy} htmlFor="licenseIssuedBy">
                 <Input
                   name="licenseIssuedBy"
+                  className="form-control alphabet_only capitalize"
                   value={driverDetailsForm.licenseIssuedBy}
                   onChange={handleDriverChange}
                   placeholder="Enter License Issued By"
                   data-validate="required"
+                  maxLength={50}
                 />
               </FormField>
             </div>
@@ -389,24 +483,26 @@ const stateOptions = [
           <div>
             <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
               <div className="space-y-4">
-                <FormField label="Aadhaar Number" required>
+                <FormField label="Aadhaar Number" required
+                                  error={formErrors.aadhaarNumber} htmlFor="aadhaarNumber">
                   <Input
                     name="aadhaarNumber"
                     value={proofDetailsForm.aadhaarNumber}
                     onChange={handleProofChange}
                     placeholder="Enter Aadhaar Number"
-                    className=" only_number"
+                    className="only_number"
                     maxLength={12}
                     data-validate="required"
                   />
                 </FormField>
-                <FormField label="PAN Number" required>
+                <FormField label="PAN Number" required 
+                                                  error={formErrors.panNumber} htmlFor="panNumber">
                   <Input
                     name="panNumber"
                     value={proofDetailsForm.panNumber}
                     onChange={handleProofChange}
                     placeholder="Enter PAN Number"
-                    className=" alphanumeric"
+                    className="alphanumeric all_uppercase"
                     maxLength={10}
                     data-validate="required"
                   />
@@ -427,7 +523,12 @@ const stateOptions = [
             <form ref={formRef} onSubmit={handleSubmit} autoComplete="off">
               <div className="border-b border-gray-300">
                 <div className="grid grid-cols-1 lg:grid-cols-2 px-4 py-2">
-                  <FormField label="Name" required>
+                  <FormField
+                    label="Name"
+                    required
+                    error={formErrors.employeeName}
+                    htmlFor="employeeName"
+                  >
                     <div>
                       <div className="flex gap-2">
                         <select name="salutation" className="form-control w-30">
@@ -436,10 +537,10 @@ const stateOptions = [
                           <option value="Ms.">Ms.</option>
                         </select>
                         <Input
+                          data-validate="required"
                           name="employeeName"
                           placeholder="Enter Name"
-                          className="form-control lg: w-300 capitalize alphabet-only "
-                          data-validate="required"
+                          className="form-control lg: w-300 alphabet_only capitalize"
                         />
                       </div>
                     </div>
@@ -452,14 +553,20 @@ const stateOptions = [
                   <FormField label="DOB" required>
                     <DatePicker
                       date={dob}
+                      disableFuture
                       setDate={setDob}
                       name="dob"
                       className=" w-full"
                       data-validate="required"
                     />
                   </FormField>
-                  <FormField label="Gender" required>
-                 <select
+                  <FormField
+                    label="Gender"
+                    required
+                    error={formErrors.gender}
+                    htmlFor="gender"
+                  >
+                    <select
                       name="gender"
                       className="form-control "
                       data-validate="required"
@@ -470,28 +577,53 @@ const stateOptions = [
                       <option value="other">Other</option>
                     </select>
                   </FormField>
-                  <FormField label="Blood Group" required>
+                  <FormField
+                    label="Blood Group"
+                    required
+                    error={formErrors.bloodGroup}
+                    htmlFor="bloodGroup"
+                  >
                     <Input
                       name="bloodGroup"
                       placeholder="Enter Blood Group"
-                      className="form-control w-full"
+                      className="form-control w-full all_uppercase"
                       data-validate="required"
                     />
                   </FormField>
-                  <FormField label="Phone Number" required>
+                  <FormField
+                    label="Phone Number"
+                    required
+                    error={formErrors.phoneNumber}
+                    htmlFor="phoneNumber"
+                  >
                     <Input
-                      name="phone"
+                      name="phoneNumber"
                       placeholder="Enter Phone Number"
                       className="form-control w-full only_number"
                       data-validate="required"
+                      maxLength={10}
+                      value={phoneNumber}
+                      onChange={(e: any) =>
+                        handleNumberChange(e, setPhoneNumber)
+                      }
                     />
                   </FormField>
-                  <FormField label="Whatsapp Number" required>
+                  <FormField
+                    label="Whatsapp Number"
+                    required
+                    error={formErrors.whatsappNumber}
+                    htmlFor="whatsappNumber"
+                  >
                     <Input
-                      name="whatsapp"
+                      name="whatsappNumber"
                       placeholder="Enter Phone Number"
                       className="form-control w-full only_number"
                       data-validate="required"
+                      maxLength={10}
+                      value={whatsappNumber}
+                      onChange={(e: any) =>
+                        handleNumberChange(e, setWhatsappNumber)
+                      }
                     />
                   </FormField>
                   <FormField label="Family Number">
@@ -499,6 +631,11 @@ const stateOptions = [
                       name="familyNumber"
                       placeholder="Enter Phone Number"
                       className="form-control w-full only_number"
+                      maxLength={10}
+                      value={familyNumber}
+                      onChange={(e: any) =>
+                        handleNumberChange(e, setFamilyNumber)
+                      }
                     />
                   </FormField>
                 </div>
@@ -508,14 +645,14 @@ const stateOptions = [
                     <Input
                       name="addressLine1"
                       placeholder="Enter Address Line 1"
-                      className="form-control w-full capitalize"
+                      className="form-control w-full  capitalize "
                     />
                   </FormField>
                   <FormField label="">
                     <Input
                       name="addressLine2"
                       placeholder="Enter Address Line 2"
-                      className="form-control w-full capitalize"
+                      className="form-control w-full  capitalize"
                     />
                   </FormField>
 
@@ -538,12 +675,11 @@ const stateOptions = [
                           {fileName}
                         </span>
                       </div>
-                      <input
+                      <Input
                         type="file"
                         id="picturepathInput"
                         name="picturepath"
                         className="hidden"
-                        data-validate="required"
                         onChange={handleFileUpload}
                         required
                       />
@@ -553,25 +689,31 @@ const stateOptions = [
                     <Input
                       name="remarks"
                       placeholder="Enter Remarks"
-                      className="form-control w-full capitalize"
+                      className="form-control w-full alphabetnumeric capitalize"
                     />
                   </FormField>
                   <div>
-                    <FormField label="State" required>
-                     <SearchableSelect
-    name="state"
-    placeholder="Select State"
-    options={stateOptions}
-    searchable
-    data-validate="required"
-    className="w-full"
-  />
+                    <FormField
+                      label="State"
+                      required
+                      error={formErrors.state}
+                      htmlFor="state"
+                    >
+                      <SearchableSelect
+                        name="state"
+                        placeholder="Select State"
+                        options={stateOptions}
+                        searchable
+                        className="w-full"
+                        data-validate="required"
+                      />
                     </FormField>
                     <FormField label="Pincode">
                       <Input
                         name="pincode"
                         placeholder="Enter Pincode"
                         className="w-full only_number"
+                        maxLength={6}
                       />
                     </FormField>
                   </div>
@@ -611,7 +753,11 @@ const stateOptions = [
           >
             Save
           </button>
-          <button type="button" className="btn-sm btn-secondary">
+          <button
+            type="button"
+            className="btn-sm btn-secondary"
+            onClick={() => setFormErrors({})}
+          >
             Cancel
           </button>
         </footer>

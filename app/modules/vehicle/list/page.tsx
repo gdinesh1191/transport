@@ -1,17 +1,18 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Layout from "../../../components/Layout";
 import { useRouter } from "next/navigation";
 import { apiCall } from "../../../utils/api";
 import ToastContainer, { showToast } from "@/app/utils/toaster";
 import { useLoading } from "@/app/utils/pageLoader";
-
+import { useDebounce } from "@/app/utils/useDebounce";
+import FilterSidebar from "@/app/utils/filterSIdebar";
 
 type TabKey = "all" | "new" | "existing";
 const tabs: TabKey[] = ["all", "new", "existing"];
 interface Vehicle {
   id: number;
-  registrationNumber: string;
+  registrationNumber: string; 
   owner: string;
   modelYear: string;
   chasisNumber: string;
@@ -23,6 +24,10 @@ interface Vehicle {
 const VehicleList = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [vehicleNo, setVehicleNo] = useState("");
+  const [ownerName, setOwnerName] = useState("");
+  const [chassisNo, setChassisNo] = useState("");
+
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [selectAll, setSelectAll] = useState(false);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -30,50 +35,100 @@ const VehicleList = () => {
   const [error, setError] = useState<string | null>(null);
   const [noData, setNoData] = useState(false);
   const router = useRouter();
-  const fetchVehicles = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      setNoData(false);
-      const payload = {
-        token: "getVehicle",
-        data: {
-          columns: [
-            "id",
-            "registrationNumber",
-            "owner",
-            "ownerName",
-            "modelYear",
-            "chasisNumber",
-            "truckStatus",
-            "truckType",
-            "npExpiryDate",
-          ],
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+const fetchVehicles = async (pageToLoad = 0, searchQuery = "") => {
+  try {
+    if (pageToLoad === 0) setLoading(true);
+    else setIsFetchingMore(true);
+
+    setError(null);
+    setNoData(false);
+
+    const payload = {
+      token: "getVehicle",
+      data: {
+        columns: [
+          "id",
+          "registrationNumber",
+          "owner",
+          "ownerName",
+          "modelYear",
+          "chasisNumber",
+          "truckStatus",
+          "truckType",
+          "npExpiryDate",
+        ],
+        page: pageToLoad,
+        pageCount: 25,
+        conditions: {
+          searchQuery:searchQuery
         },
-      };
-      const response = await apiCall(payload);
-      if (
-        response &&
-        response.data &&
-        Array.isArray(response.data) &&
-        response.data.length > 0
-      ) {
-        setVehicles(response.data);
+        filters: {
+            vehicleNo: vehicleNo,
+            ownerName:ownerName,
+            chassisNo:chassisNo
+          },
+      },
+    };
+
+    const response = await apiCall(payload);
+    const fetchedData = response?.data ?? [];
+
+    if (Array.isArray(fetchedData) && fetchedData.length > 0) {
+      if (pageToLoad === 0) {
+        setVehicles(fetchedData);
       } else {
+        setVehicles((prev) => [...prev, ...fetchedData]);
+      }
+      setHasMore(fetchedData.length === 25);
+    } else {
+      if (pageToLoad === 0) {
         setNoData(true);
         setVehicles([]);
       }
-    } catch (err) {
-      console.error("Error fetching vehicles:", err);
-      setError("Failed to fetch vehicles");
-      setVehicles([]);
-    } finally {
-      setLoading(false);
+      setHasMore(false);
     }
-  };
+  } catch (err) {
+    // console.error("Error fetching vehicles:", err);
+    setError("Failed to fetch vehicles");
+    setVehicles([]);
+  } finally {
+    setLoading(false);
+    setIsFetchingMore(false);
+  }
+};
+
+
+  const observer = useRef<IntersectionObserver | null>(null);
+
+  const lastRowRef = useCallback(
+    (node: HTMLTableRowElement) => {
+      if (loading || isFetchingMore || !hasMore) return;
+
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          const nextPage = page + 1;
+          setPage(nextPage);
+          fetchVehicles(nextPage);
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    [loading, isFetchingMore, hasMore, page]
+  );
+
   useEffect(() => {
-    fetchVehicles();
-  }, []);
+    setPage(0);
+    fetchVehicles(0, debouncedSearchTerm);
+  }, [debouncedSearchTerm]);
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked;
     setSelectAll(checked);
@@ -159,6 +214,19 @@ const VehicleList = () => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  const handleApply = async () => {
+   fetchVehicles();
+    console.log("Applied Filters: ", { vehicleNo, ownerName, chassisNo });
+    setIsSidebarOpen(false);
+  };
+
+  const handleReset = () => {
+    setVehicleNo("");
+    setOwnerName("");
+    setChassisNo("");
+  };
+
   return (
     <Layout pageTitle="Vehicle List">
       <main className="flex-1">
@@ -171,7 +239,7 @@ const VehicleList = () => {
           )}
           {/* Error State */}
           {error && !loading && (
-            <div className="flex items-center justify-center h-64 flex-col">
+            <div className="flex items-center justify-center h-64 flex-col ">
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mx-2 mb-2">
                 <span className="block sm:inline">{error}</span>
                 <button
@@ -184,7 +252,7 @@ const VehicleList = () => {
             </div>
           )}
           {/* No Data State */}
-          {noData && !loading && !error && (
+          {noData && !loading && error && (
             <div className="flex items-center justify-center h-64">
               <div className="text-lg text-gray-500">
                 Data are not available
@@ -336,91 +404,56 @@ const VehicleList = () => {
                     className="form-control !h-[31px]"
                     type="text"
                     placeholder="Enter Vehicle Number"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                   />
+
                   <button
                     className="btn-sm btn-visible-hover"
                     onClick={() => setIsSidebarOpen(true)}
                   >
-                    <i className="ri-sort-desc"></i>
+                    <i className="ri-sort-desc mr-1"></i>
                   </button>
                 </div>
               </div>
               {/* Offcanvas Sidebar */}
-              <div
-                className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ${
-                  isSidebarOpen
-                    ? "opacity-100"
-                    : "opacity-0 pointer-events-none"
-                }`}
+              <FilterSidebar
+                isOpen={isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
+                onApply={handleApply}
+                onReset={handleReset}
+                title="Vehicle Filters"
               >
-                {/* Backdrop */}
-                <div
-                  className="fixed inset-0 bg-[rgba(0,0,0,0.5)]"
-                  onClick={() => setIsSidebarOpen(false)}
-                ></div>
-                {/* Sidebar Content */}
-                <div
-                  className={`offcanvas-sidebar flex flex-col  ${
-                    isSidebarOpen ? "translate-x-0" : "translate-x-full"
-                  } `}
-                >
-                  {/* Header */}
-                  <div className="filter-header">
-                    <h5 className="">Add Filters</h5>
-                    <button
-                      onClick={() => setIsSidebarOpen(false)}
-                      className="cursor-pointer"
-                    >
-                      <i className="ri-close-line"></i>
-                    </button>
-                  </div>
-                  {/* Scrollable Content */}
-                  <div className="p-4 overflow-y-auto flex-1">
-                    <div className="mb-4">
-                      <label className="filter-label">Vehicle Number</label>
-                      <input
-                        type="text"
-                        placeholder="Enter vehicle number"
-                        className="form-control"
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label className="filter-label">Owner Name</label>
-                      <input
-                        type="text"
-                        placeholder="Enter owner name"
-                        className="form-control"
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label className="filter-label">Chassis Number</label>
-                      <input
-                        type="text"
-                        placeholder="Enter chassis number"
-                        className="form-control"
-                      />
-                    </div>
-                  </div>
-                  <div className="p-2 border-t border-[#dee2e6] flex justify-end gap-2">
-                    <button
-                      className="btn-sm btn-light"
-                      onClick={() => {
-                        setIsSidebarOpen(false);
-                      }}
-                    >
-                      Reset All
-                    </button>
-                    <button
-                      className="btn-sm btn-primary"
-                      onClick={() => {
-                        setIsSidebarOpen(false);
-                      }}
-                    >
-                      Apply
-                    </button>
-                  </div>
+                <div className="mb-4">
+                  <label className="block mb-1 font-medium">Vehicle No</label>
+                  <input
+                    className="form-control"
+                    value={vehicleNo}
+                    onChange={(e) => setVehicleNo(e.target.value)}
+                    placeholder="Enter Vehicle No"
+                  />
                 </div>
-              </div>
+
+                <div className="mb-4">
+                  <label className="block mb-1 font-medium">Owner Name</label>
+                  <input
+                    className="form-control"
+                    value={ownerName}
+                    onChange={(e) => setOwnerName(e.target.value)}
+                    placeholder="Enter Owner Name"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block mb-1 font-medium">Chassis No</label>
+                  <input
+                    className="form-control"
+                    value={chassisNo}
+                    onChange={(e) => setChassisNo(e.target.value)}
+                    placeholder="Enter Chassis No"
+                  />
+                </div>
+              </FilterSidebar>
               {/* Table */}
               <div className="bg-[#ebeff3]">
                 {selectedIds.length > 1 && (
@@ -492,49 +525,58 @@ const VehicleList = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredVehicles.map((vehicle, index) => (
-                          <tr
-                            key={vehicle.id}
-                            className={`tr-hover group ${
-                              selectedIds.includes(vehicle.id)
-                                ? "bg-[#e5f2fd] hover:bg-[#f5f7f9]"
-                                : ""
-                            }`}
-                          >
-                            <td className="td-cell">
-                              <input
-                                type="checkbox"
-                                className="form-check"
-                                checked={selectedIds.includes(vehicle.id)}
-                                onChange={() =>
-                                  handleCheckboxChange(vehicle.id)
-                                }
-                              />
-                            </td>
-                            <td className="td-cell">
-                              <span className="float-left">{index + 1}</span>
-                              <span className="float-right">
-                                <i
-                                  onClick={() =>
-                                    router.push(
-                                      `/modules/vehicle/new?id=${vehicle.id}`
-                                    )
+                        {filteredVehicles.map((vehicle, index) => {
+                          const isLastRow =
+                            index === filteredVehicles.length - 1;
+                          return (
+                            <tr
+                              key={vehicle.id}
+                              ref={isLastRow ? lastRowRef : null}
+                              className={`tr-hover group ${
+                                selectedIds.includes(vehicle.id)
+                                  ? "bg-[#e5f2fd] hover:bg-[#f5f7f9]"
+                                  : ""
+                              }`}
+                            >
+                              <td className="td-cell">
+                                <input
+                                  type="checkbox"
+                                  className="form-check"
+                                  checked={selectedIds.includes(vehicle.id)}
+                                  onChange={() =>
+                                    handleCheckboxChange(vehicle.id)
                                   }
-                                  className="ri-pencil-fill edit-icon opacity-0 group-hover:opacity-100"
                                 />
-                              </span>
-                            </td>
-                            <td className="td-cell">
-                              {vehicle.registrationNumber}
-                            </td>
-                            <td className="td-cell">{vehicle.owner}</td>
-                            <td className="td-cell">{vehicle.modelYear}</td>
-                            <td className="td-cell">{vehicle.chasisNumber}</td>
-                            <td className="td-cell">{vehicle.truckStatus}</td>
-                            <td className="td-cell">{vehicle.truckType}</td>
-                            <td className="last-td-cell">{vehicle.npExpiryDate}</td>
-                          </tr>
-                        ))}
+                              </td>
+                              <td className="td-cell">
+                                <span className="float-left">{index + 1}</span>
+                                <span className="float-right">
+                                  <i
+                                    onClick={() =>
+                                      router.push(
+                                        `/modules/vehicle/new?id=${vehicle.id}`
+                                      )
+                                    }
+                                    className="ri-pencil-fill edit-icon opacity-0 group-hover:opacity-100"
+                                  />
+                                </span>
+                              </td>
+                              <td className="td-cell">
+                                {vehicle.registrationNumber}
+                              </td>
+                              <td className="td-cell">{vehicle.owner}</td>
+                              <td className="td-cell">{vehicle.modelYear}</td>
+                              <td className="td-cell">
+                                {vehicle.chasisNumber}
+                              </td>
+                              <td className="td-cell">{vehicle.truckStatus}</td>
+                              <td className="td-cell">{vehicle.truckType}</td>
+                              <td className="last-td-cell">
+                                {vehicle.npExpiryDate}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

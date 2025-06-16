@@ -49,6 +49,7 @@ function validateField(element: HTMLElement, rules: ValidationRule[]): FieldVali
                 const isChecked = Array.from(radioInputs).some(radio => radio.checked);
                 if (!isChecked) {
                     isValid = false;
+                    // Improved label text retrieval for radio groups
                     const labelText = element.closest('.mb-\\[10px\\]')?.querySelector(".form-label")?.textContent?.replace('*', '').trim() || radioInputs[0]?.name || "Option";
                     errorMessage = `${labelText} is required.`;
                 }
@@ -80,30 +81,58 @@ function validateField(element: HTMLElement, rules: ValidationRule[]): FieldVali
  */
 function getFieldName(element: HTMLElement, visibleElement?: Element | null): string {
     const nameAttribute = element.getAttribute('name');
-    if (nameAttribute) return nameAttribute;
+    if (nameAttribute) return formatToTitleCase(nameAttribute); // Modified line
 
     const id = element.id;
     if (id) {
         const labelForId = document.querySelector(`label[for="${id}"]`);
-        if (labelForId) return labelForId.textContent?.replace('*', '').trim() || 'Field';
+        if (labelForId) return formatToTitleCase(labelForId.textContent?.replace('*', '').trim() || 'Field'); // Modified line
     }
 
     const formFieldParent = element.closest('.mb-\\[10px\\]');
     if (formFieldParent) {
         const labelElement = formFieldParent.querySelector('.form-label');
         if (labelElement) {
-            return labelElement.textContent?.replace('*', '').trim() || 'Field';
+            return formatToTitleCase(labelElement.textContent?.replace('*', '').trim() || 'Field'); // Modified line
         }
     }
 
     if (visibleElement) {
         const placeholder = (visibleElement as HTMLInputElement).placeholder || (visibleElement as HTMLElement).textContent?.trim();
         if (placeholder && placeholder !== "Select an option" && !placeholder.startsWith("Select")) {
-            return placeholder.replace('Enter ', '').replace('Select ', '').trim();
+            return formatToTitleCase(placeholder.replace('Enter ', '').replace('Select ', '').trim()); // Modified line
         }
     }
 
+    // For RadioGroup, if none of the above, try to get name from first child radio
+    if (element.tagName === "DIV") {
+        const radioInputs = element.querySelectorAll<HTMLInputElement>('input[type="radio"]');
+        if (radioInputs.length > 0 && radioInputs[0].name) {
+            return formatToTitleCase(radioInputs[0].name);
+        }
+    }
+
+
     return 'Field';
+}
+
+/**
+ * Helper function to convert camelCase or kebab-case to Title Case.
+ * @param inputString The string to convert.
+ * @returns The converted string in Title Case.
+ */
+function formatToTitleCase(inputString: string): string {
+    if (!inputString) return 'Field';
+
+    // Replace hyphens and underscores with spaces, then split by uppercase letters (for camelCase)
+    const words = inputString
+        .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+        .replace(/[-_]/g, ' ')      // Replace hyphens and underscores with spaces
+        .split(' ')                 // Split by spaces
+        .filter(word => word.length > 0); // Remove empty strings from split
+
+    // Capitalize the first letter of each word and join them
+    return words.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 }
 
 /**
@@ -114,18 +143,27 @@ function getFieldName(element: HTMLElement, visibleElement?: Element | null): st
 export function validateForm(formElement: HTMLFormElement): FormErrors {
     const errors: FormErrors = {};
 
-    const formFields = formElement.querySelectorAll<HTMLElement>('[data-validate]');
+    const formFields = formElement.querySelectorAll<HTMLElement>('[data-validate], input[name], select[name], textarea[name]'); // Include elements with a name attribute
 
     formFields.forEach(field => {
         const validateAttribute = field.getAttribute('data-validate');
-        const fieldName = field.getAttribute('name'); // Get the name attribute for storing errors
+        let fieldName = field.getAttribute('name'); // Get the name attribute for storing errors
 
         // Special handling for RadioGroup where data-validate is on the parent div
-        if (field.tagName === "DIV" && field.hasAttribute("data-validate") && fieldName) {
-            const rules = validateAttribute!.split(',').map(rule => rule.trim()) as ValidationRule[];
-            const result = validateField(field, rules);
-            if (!result.isValid) {
-                errors[fieldName] = result.errorMessage;
+        // and the 'name' attribute is on its *child* radio inputs.
+        if (field.tagName === "DIV" && field.hasAttribute("data-validate") && validateAttribute?.includes("required")) {
+            const radioInputs = field.querySelectorAll<HTMLInputElement>('input[type="radio"]');
+            // Find the name from one of the actual radio inputs
+            if (!fieldName && radioInputs.length > 0) {
+                fieldName = radioInputs[0].name;
+            }
+
+            if (fieldName && validateAttribute) { // Only proceed if a fieldName is found
+                const rules = validateAttribute!.split(',').map(rule => rule.trim()) as ValidationRule[];
+                const result = validateField(field, rules); // Pass the DIV itself for validation
+                if (!result.isValid) {
+                    errors[fieldName] = result.errorMessage;
+                }
             }
         }
         // Standard input/select/textarea or hidden input for SearchableSelect

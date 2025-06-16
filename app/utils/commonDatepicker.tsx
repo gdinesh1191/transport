@@ -1,9 +1,13 @@
- "use client";
+"use client";
 
 import * as React from "react";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -13,12 +17,14 @@ interface DatePickerProps {
   setDate: (date: Date | undefined) => void;
   className?: string;
   placeholder?: string;
- 
   name?: string;
   required?: boolean;
   "data-validate"?: string;
   id?: string;
- 
+  minDate?: Date; // 👈 Minimum allowed date
+  maxDate?: Date; // 👈 Maximum allowed date
+  disableFuture?: boolean; // 👈 Optional shortcut
+  disablePast?: boolean; // 👈 Optional shortcut
 }
 
 // Format date as DD/MM/YYYY
@@ -39,13 +45,22 @@ const DatePicker: React.FC<DatePickerProps> = ({
   name,
   required = false,
   "data-validate": dataValidate,
-  id
+  id,
+  minDate,
+  maxDate,
+  disableFuture,
+  disablePast
 }) => {
+
   const today = new Date();
-  const [date, setLocalDate] = React.useState<Date | undefined>(propDate ?? today);
+  const [date, setLocalDate] = React.useState<Date | undefined>(
+    propDate ?? today
+  );
   const [open, setOpen] = React.useState(false);
   const [month, setMonth] = React.useState<Date | undefined>(propDate ?? today);
-  const [inputValue, setInputValue] = React.useState(formatDate(propDate ?? today));
+  const [inputValue, setInputValue] = React.useState(
+    formatDate(propDate ?? today)
+  );
 
   // Sync prop date changes
   React.useEffect(() => {
@@ -59,7 +74,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
     const value = e.target.value;
     setInputValue(value);
 
-    const parts = value.split('/');
+    const parts = value.split("/");
     if (parts.length === 3) {
       const [day, month, year] = parts.map(Number);
       const parsedDate = new Date(year, month - 1, day);
@@ -90,10 +105,9 @@ const DatePicker: React.FC<DatePickerProps> = ({
   };
 
   return (
- 
     <div className={cn("relative", className)}>
       {/* Hidden input for form submission */}
- 
+
       {name && (
         <input
           type="hidden"
@@ -103,7 +117,6 @@ const DatePicker: React.FC<DatePickerProps> = ({
           data-validate={dataValidate}
         />
       )}
- 
 
       <div className="relative flex gap-2">
         <Input
@@ -139,11 +152,17 @@ const DatePicker: React.FC<DatePickerProps> = ({
               onMonthChange={setMonth}
               onSelect={handleCalendarSelect}
               defaultMonth={date || new Date()}
+              disabled={(dateToCheck) => {
+                if (disableFuture && dateToCheck > new Date()) return true;
+                if (disablePast && dateToCheck < new Date()) return true;
+                if (minDate && dateToCheck < minDate) return true;
+                if (maxDate && dateToCheck > maxDate) return true;
+                return false;
+              }}
             />
           </PopoverContent>
         </Popover>
       </div>
- 
     </div>
   );
 };

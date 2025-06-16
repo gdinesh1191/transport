@@ -218,8 +218,9 @@ const VehicleList = () => {
               () => {
                 alertRef.current?.hideAlert();
                 setSelectedIds([]);
-                fetchVehicles();
-                showToast.success("Vehicle Deleted successfully!"); // Also refresh after delete
+                // fetchVehicles();
+                setVehicles(prev => prev.filter(v => !selectedIds.includes(v.id)));
+                showToast.success("Vehicle Deleted successfully!"); 
               }
             );
           } 

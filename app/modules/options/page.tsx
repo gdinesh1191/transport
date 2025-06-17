@@ -73,12 +73,14 @@ const Options = () => {
   const titles: { [key: string]: string } = {
     insuranceCompany: "Insurance Company",
     loanProvider: "Loan Provider",
+    expensetype: "Expense Type",
   };
   const alertRef = useRef<SweetAlertHandler>(null);
 
   useEffect(() => {
     fetchOptions("insuranceCompany");
   }, []);
+  
 
   const handleFormTypeClick = (formType: string) => {
     setActiveForm(formType);
@@ -284,6 +286,14 @@ const Options = () => {
                   onClick={() => handleFormTypeClick("loanProvider")}
                 >
                   <i className="ri-file-text-line text-lg"></i> Loan Provider
+                </li>
+                <li
+                  className={`p-1 cursor-pointer flex items-center gap-2 ${
+                    activeForm === "expensetype" ? "text-[#009333]" : ""
+                  }`}
+                  onClick={() => handleFormTypeClick("expensetype")}
+                >
+                  <i className="ri-file-text-line text-lg"></i> Expense Type
                 </li>
               </ul>
             </aside>

@@ -107,9 +107,9 @@ export default function NewVehicle() {
           };
           const response = await apiCall(payload);
           if (response.status === 200) {
-            formRef.current.reset(); // Reset the form fields for native inputs
-            setInitialFormValues({}); // Clear initial form values for DatePickers/RadioGroups
-            setFormKey(prevKey => prevKey + 1); // Increment key to force SearchableSelect re-mount
+            formRef.current.reset();  
+            setInitialFormValues({}); 
+            setFormKey(prevKey => prevKey + 1);  
             showToast.success("Vehicle information saved successfully!");
           } else {
             handleErrorToast();

@@ -1,4 +1,3 @@
- // NewVehicle.tsx
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Layout from "../../../components/Layout";
@@ -10,7 +9,6 @@ import { validateForm, FormErrors } from "@/app/utils/formValidations";
 import DatePicker from "@/app/utils/commonDatepicker";
 import { useSearchParams } from "next/navigation";
 import { apiCall } from "@/app/utils/api";
-
 interface FormFieldProps {
   label: string;
   required?: boolean;
@@ -19,7 +17,6 @@ interface FormFieldProps {
   error?: string;  
   htmlFor?: string;  
 }
-
 const FormField = ({
   label,
   required = false,
@@ -44,7 +41,6 @@ const FormField = ({
     </div>
   </div>
 );
-
 export default function NewVehicle() {
   const insuranceOptions: Option[] = [
     { value: "icici", label: "ICICI Lombard" },
@@ -65,16 +61,13 @@ export default function NewVehicle() {
     { value: "pickup", label: "Pickup" },
     { value: "lorry", label: "Lorry" },
   ];
-
   const [activeTab, setActiveTab] = useState("owner_information");
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   // New state to force re-mounting of components for reset
   const [formKey, setFormKey] = useState(0); 
   useInputValidation();
-
   const handleErrorToast = () =>
     showToast.error("Failed to save vehicle information.");
-
   const tabs = [
     { id: "owner_information", label: "Owner Information" },
     { id: "vehicle_details", label: "Vehicle Details" },
@@ -82,32 +75,26 @@ export default function NewVehicle() {
     { id: "load_availed_details", label: "Loan Availed Details" },
     { id: "vehicle_purchase_details", label: "Vehicle Purchase Details" },
   ];
-
   const formRef = useRef<HTMLFormElement>(null);
-
   function formatDateToDMY(date: Date | undefined) {
     if (!date) return "";
-    return date.toLocaleDateString("en-GB"); // DD/MM/YYYY
+    return date.toLocaleDateString("en-GB"); 
   }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formRef.current) {
       const validationResults = validateForm(formRef.current);
       setFormErrors(validationResults);
       const isFormValid = Object.keys(validationResults).length === 0;
-
       if (isFormValid) {
         const formData = new FormData(formRef.current);
         const formValues = Object.fromEntries(formData.entries());
         console.log("Form submitted successfully", formValues);
-
         try {
           const payload = {
             token: "putVehicle",
             data: {
               ...formValues,
-              // Date fields need to be formatted back to DD/MM/YYYY for submission if your API expects that
               registrationDate: formValues.registrationDate ? formatDateToDMY(new Date(formValues.registrationDate as string)) : "",
               insuranceExpiry: formValues.insuranceExpiry ? formatDateToDMY(new Date(formValues.insuranceExpiry as string)) : "",
               permitExpiryDate: formValues.permitExpiryDate ? formatDateToDMY(new Date(formValues.permitExpiryDate as string)) : "",
@@ -169,10 +156,8 @@ export default function NewVehicle() {
       }
     }
   };
-
   const searchParams = useSearchParams();
   const edit_id = searchParams.get("id"); 
-
   function parseDMYtoJSDate(dateString: string | undefined): Date | undefined {
     if (!dateString) return undefined;
     const parts = dateString.split("/");
@@ -182,14 +167,12 @@ export default function NewVehicle() {
     }
     return undefined;
   } 
-
   const [initialFormValues, setInitialFormValues] = useState<any>({});
-
   useEffect(() => {
     const fetchVehicle = async () => {
       if (!edit_id) {
-        setInitialFormValues({}); // Clear form values if no edit_id (for new entry)
-        setFormKey(prevKey => prevKey + 1); // Reset form components for new entry
+        setInitialFormValues({});  
+        setFormKey(prevKey => prevKey + 1); 
         return;
       }
       const payload = {
@@ -212,22 +195,21 @@ export default function NewVehicle() {
             loanStartDate: parseDMYtoJSDate(vehicleData.loanStartDate),
           };
           setInitialFormValues(transformedData);
-          setFormKey(prevKey => prevKey + 1); // Reset form components to ensure data is loaded
+          setFormKey(prevKey => prevKey + 1); 
         } else {
           showToast.error("Failed to fetch vehicle data");
-          setInitialFormValues({}); // Clear if fetch fails
-          setFormKey(prevKey => prevKey + 1); // Reset form components on fetch failure
+          setInitialFormValues({});  
+          setFormKey(prevKey => prevKey + 1);  
         }
       } catch (err) {
         console.error("API error:", err);
         showToast.error("Something went wrong");
-        setInitialFormValues({}); // Clear if API error
-        setFormKey(prevKey => prevKey + 1); // Reset form components on API error
+        setInitialFormValues({}); 
+        setFormKey(prevKey => prevKey + 1); 
       }
     };
     fetchVehicle();
-  }, [edit_id]); // Re-run effect when edit_id changes
-
+  }, [edit_id]);  
   return (
     <Layout pageTitle="Vehicle Registration">
       <div className="flex-1">
@@ -236,7 +218,7 @@ export default function NewVehicle() {
             className="px-4 py-6"
             style={{ height: "calc(100vh - 103px)", overflowY: "auto" }}
           >
-            {/* The key prop on the form will force a re-mount of all its children when formKey changes */}
+             
             <form ref={formRef} onSubmit={handleSubmit} autoComplete="off" key={formKey}> 
               <div className="grid grid-cols-2 lg:grid-cols-2 gap-6 mb-5">
                 <div className="space-y-4">
@@ -244,13 +226,17 @@ export default function NewVehicle() {
                     <Input id="registrationNumber" name="registrationNumber" placeholder="Enter registration number" className="alphanumeric no_space all_uppercase" data-validate="required" defaultValue={initialFormValues.registrationNumber} />
                   </FormField>
                   <FormField label="Truck Type" required error={formErrors.truckType} htmlFor="truckType">
-                    
-                    {edit_id ? (
-                      <SearchableSelect key={`truckType-${formKey}`} id="truckType" name="truckType" placeholder="Select truck type" options={vehicleTypeOptions} searchable data-validate="required" value={initialFormValues.truckType} />
-                    ) : (
-                      <SearchableSelect key={`truckType-${formKey}`} id="truckType" name="truckType" placeholder="Select truck type" options={vehicleTypeOptions} searchable data-validate="required" defaultValue={initialFormValues.truckType} />
-                    )}
-                  </FormField>
+     
+      <SearchableSelect
+        id="truckType"
+        name="truckType"
+        placeholder="Select truck type"
+        options={vehicleTypeOptions}
+        searchable
+        data-validate="required"
+        initialValue={initialFormValues.truckType} 
+           />
+    </FormField>
                   <FormField label="Makers Name" required error={formErrors.makerName} htmlFor="makerName">
                     <Input id="makerName" name="makerName" placeholder="Enter makers name" className="capitalize alphanumeric" data-validate="required" defaultValue={initialFormValues.makerName} />
                   </FormField>
@@ -280,7 +266,13 @@ export default function NewVehicle() {
                   <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
                     <div>
                       <FormField label="Owner" error={formErrors.owner} htmlFor="owner">
-                        <RadioGroup id="owner" name="owner" options={[{ value: "New", label: "New" }, { value: "Existing", label: "Existing" }]} defaultValue={initialFormValues.owner} />
+                     
+<RadioGroup
+  id="owner"
+  name="owner"
+  options={[{ value: "New", label: "New" }, { value: "Existing", label: "Existing" }]}
+  defaultValue={initialFormValues.owner}  
+/>
                       </FormField>
                       <FormField label="Address" required error={formErrors.address} htmlFor="address">
                         <Input id="address" name="address" placeholder="Enter Address" className="capitalize" data-validate="required" defaultValue={initialFormValues.address} />
@@ -302,13 +294,20 @@ export default function NewVehicle() {
                 <div id="vehicle_details_tab_content" className={`p-2 ${activeTab === "vehicle_details" ? "block" : "hidden"}`}>
                   <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
                     <div>
-                      <FormField label="Class of Truck" required error={formErrors.vehicleType} htmlFor="vehicleType">
-                        {edit_id ? (
-                          <SearchableSelect key={`classOfTruck-${formKey}`} id="classOfTruck" name="classOfTruck" placeholder="Choose a vehicle" options={vehicleOptions} searchable data-validate="required" value={initialFormValues.classOfTruck} />
-                        ) : (
-                          <SearchableSelect key={`classOfTruck-${formKey}`} id="classOfTruck" name="classOfTruck" placeholder="Choose a vehicle" options={vehicleOptions} searchable data-validate="required" defaultValue={initialFormValues.classOfTruck} />
-                        )}
-                      </FormField>
+                      
+    <FormField label="Class of Truck" required error={formErrors.vehicleType} htmlFor="vehicleType">
+      
+      <SearchableSelect
+        id="classOfTruck"
+        name="classOfTruck"
+        placeholder="Choose a vehicle"
+        options={vehicleOptions}
+        searchable
+        data-validate="required"
+        initialValue={initialFormValues.classOfTruck}  
+      />
+    </FormField>
+
                       <FormField label="Model Number" required error={formErrors.modelNumber} htmlFor="modelNumber">
                         <Input id="modelNumber" name="modelNumber" className="alphanumeric all_uppercase" placeholder="Enter Model Number" data-validate="required" defaultValue={initialFormValues.modelNumber} />
                       </FormField>
@@ -349,12 +348,17 @@ export default function NewVehicle() {
                         <DatePicker id="fcExpiry" disablePast name="fcExpiry" required={true}  placeholder="Select date" className="w-full" data-validate="required" initialDate={initialFormValues.fcExpiry} />
                       </FormField>
                       <FormField label="Insurance Company" required error={formErrors.insuranceCompany} htmlFor="insuranceCompany">
-                        {edit_id ? (
-                          <SearchableSelect key={`insuranceCompany-${formKey}`} id="insuranceCompany" name="insuranceCompany" placeholder="Select Insurance Company" options={insuranceOptions} searchable data-validate="required" value={initialFormValues.insuranceCompany} />
-                        ) : (
-                          <SearchableSelect key={`insuranceCompany-${formKey}`} id="insuranceCompany" name="insuranceCompany" placeholder="Select Insurance Company" options={insuranceOptions} searchable data-validate="required" defaultValue={initialFormValues.insuranceCompany} />
-                        )}
-                      </FormField>
+      
+      <SearchableSelect
+        id="insuranceCompany"
+        name="insuranceCompany"
+        placeholder="Select Insurance Company"
+        options={insuranceOptions}
+        searchable
+        data-validate="required"
+        initialValue={initialFormValues.insuranceCompany}  
+      />
+    </FormField>
                       <FormField label="Insurance Expiry" required error={formErrors.insuranceExpiry} htmlFor="insuranceExpiry">
                         <DatePicker required={true} id="insuranceExpiry" name="insuranceExpiry"  disablePast placeholder="Insurance Expiry Date" className="w-full" data-validate="required" initialDate={initialFormValues.insuranceExpiry} />
                       </FormField>
@@ -378,13 +382,17 @@ export default function NewVehicle() {
                 <div id="load_availed_details_tab_content" className={`p-2 ${activeTab === "load_availed_details" ? "block" : "hidden"}`}>
                   <div className="grid grid-cols-2 lg:grid-cols-2 gap-10">
                     <div>
-                      <FormField label="Loan Provider" required error={formErrors.loanProvider} htmlFor="loanProvider">
-                        {edit_id ? (
-                          <SearchableSelect key={`loanProvider-${formKey}`} id="loanProvider" name="loanProvider" placeholder="Select Loan Provider" options={bankOptions} searchable data-validate="required" value={initialFormValues.loanProvider} />
-                        ) : (
-                          <SearchableSelect key={`loanProvider-${formKey}`} id="loanProvider" name="loanProvider" placeholder="Select Loan Provider" options={bankOptions} searchable data-validate="required" defaultValue={initialFormValues.loanProvider} />
-                        )}
-                      </FormField>
+                    <FormField label="Loan Provider" required error={formErrors.loanProvider} htmlFor="loanProvider">
+     
+      <SearchableSelect
+        id="loanProvider"
+        name="loanProvider"
+        placeholder="Select Loan Provider"
+        options={bankOptions}
+        searchable 
+        initialValue={initialFormValues.loanProvider}  
+      />
+    </FormField>
                       <FormField label="Loan Start Date" required error={formErrors.loanStartDate} htmlFor="loanStartDate">
                         <DatePicker required={true} id="loanStartDate" name="loanStartDate"   placeholder="Loan Start Date" className="w-full" data-validate="required" initialDate={initialFormValues.loanStartDate} />
                       </FormField>

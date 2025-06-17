@@ -8,7 +8,18 @@ import { useLoading } from "@/app/utils/pageLoader";
 import { useDebounce } from "@/app/utils/useDebounce";
 import FilterSidebar from "@/app/utils/filterSIdebar";
 import SweetAlert, { SweetAlertHandler } from "@/app/utils/sweetAlert";
-import { set } from "date-fns";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  setVehicles,
+  appendVehicles,
+  removeVehicle,
+  setPage,
+  setHasMore,
+  setScrollPosition,
+  setFilters,
+  setSearchTerm,
+} from "@/store/vehicle/vehicleSlice";
+import { AppDispatch, RootState } from "@/store/store";
 
 type TabKey = "all" | "new" | "existing";
 const tabs: TabKey[] = ["all", "new", "existing"];
@@ -23,32 +34,63 @@ interface Vehicle {
   npExpiryDate: string;
   truckStatus: string;
 }
+
 const VehicleList = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [vehicleNo, setVehicleNo] = useState("");
-  const [ownerName, setOwnerName] = useState("");
-  const [chassisNo, setChassisNo] = useState("");
-
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [selectAll, setSelectAll] = useState(false);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [noData, setNoData] = useState(false);
   const router = useRouter();
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
-
   const [deletedIds, setDeletedIds] = useState<number[]>([]);
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const alertRef = useRef<SweetAlertHandler>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const dispatch = useDispatch<AppDispatch>();
+  const vehicles = useSelector((state: RootState) => state.vehicle.vehicles);
+  const page = useSelector((state: RootState) => state.vehicle.page);
+  const hasMore = useSelector((state: RootState) => state.vehicle.hasMore);
+  const scrollPosition = useSelector(
+    (state: RootState) => state.vehicle.scrollPosition
+  );
+  const filters = useSelector((state: RootState) => state.vehicle.filters);
+  const searchTerm = useSelector(
+    (state: RootState) => state.vehicle.searchTerm
+  );
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const alertRef = useRef<SweetAlertHandler>(null);
+const scrollTimeout = useRef<any>(null);
 
-  const fetchVehicles = async (pageToLoad = 0, searchQuery = "") => {
+const handleScroll = useCallback(() => {
+  if (listRef.current && !loading) {
+    const currentScrollTop = listRef.current.scrollTop;
+
+    if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+
+    scrollTimeout.current = setTimeout(() => {
+      dispatch(setScrollPosition(currentScrollTop));
+    }, 200);  
+  }
+}, [dispatch, loading]);
+
+useEffect(() => {
+  const scrollContainer = listRef.current;
+  if (scrollContainer) {
+    scrollContainer.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
+    return () => {
+      scrollContainer.removeEventListener("scroll", handleScroll);
+    };
+  }
+}, [handleScroll]);
+
+
+  const fetchVehicles = async (pageToLoad = 0) => {
     try {
       if (pageToLoad === 0) setLoading(true);
       else setIsFetchingMore(true);
@@ -72,50 +114,44 @@ const VehicleList = () => {
           page: pageToLoad,
           pageCount: 25,
           conditions: {
-            searchQuery: searchQuery,
+            searchQuery: searchTerm,
           },
-          filters: {
-            vehicleNo: vehicleNo,
-            ownerName: ownerName,
-            chassisNo: chassisNo,
-          },
+          filters: filters,
         },
       };
 
       const response = await apiCall(payload);
-      // response.status = 404;
       if (response.status === 200) {
         const fetchedData = response?.data ?? [];
 
         if (Array.isArray(fetchedData) && fetchedData.length > 0) {
           if (pageToLoad === 0) {
-            setVehicles(fetchedData);
+            dispatch(setVehicles(fetchedData));
           } else {
-            setVehicles((prev) => [...prev, ...fetchedData]);
+            dispatch(appendVehicles(fetchedData));
           }
-          setHasMore(fetchedData.length === 25);
+          dispatch(setHasMore(fetchedData.length === 25));
           setIsFetchingMore(fetchedData.length === 25);
         } else {
           if (pageToLoad === 0) {
             setNoData(true);
-            setVehicles([]);
+            dispatch(setVehicles([]));
           }
-          setHasMore(false);
+          dispatch(setHasMore(false));
           setIsFetchingMore(false);
         }
       } else {
-        if (searchQuery) {
-          setVehicles([]);
+        if (searchTerm || isFiltersApplied()) {
+          dispatch(setVehicles([]));
         }
         setNoData(true);
-        setHasMore(false);
+        dispatch(setHasMore(false));
         setIsFetchingMore(false);
       }
       setLoading(false);
     } catch (err) {
       console.error("Error fetching vehicles:", err);
-      // setError("Failed to fetch vehicles");
-      setVehicles([]);
+      dispatch(setVehicles([]));
     } finally {
       setLoading(false);
       setIsFetchingMore(false);
@@ -131,11 +167,9 @@ const VehicleList = () => {
       if (observer.current) observer.current.disconnect();
 
       observer.current = new IntersectionObserver((entries) => {
-        console.log("reached");
-
         if (entries[0].isIntersecting) {
           const nextPage = page + 1;
-          setPage(nextPage);
+          dispatch(setPage(nextPage));
           fetchVehicles(nextPage);
         }
       });
@@ -145,10 +179,34 @@ const VehicleList = () => {
     [loading, isFetchingMore, hasMore, page]
   );
 
+  // Restore scroll position after data loads
+  const restoreScrollPosition = useCallback(() => {
+    if (listRef.current) {
+      // Use requestAnimationFrame for better timing
+      requestAnimationFrame(() => {
+        if (listRef.current) {
+          listRef.current.scrollTop = scrollPosition;
+          
+        }
+      });
+    }
+  }, [scrollPosition]);
+
+  // Call restore scroll position when conditions are met
   useEffect(() => {
-    setPage(0);
-    fetchVehicles(0, debouncedSearchTerm);
+    restoreScrollPosition();
+  }, [restoreScrollPosition]);
+
+  // Initial data fetch
+  useEffect(() => {
+    // Only reset scroll restoration flag when search/filter changes
+    
+    dispatch(setPage(0));
+    fetchVehicles();
   }, [debouncedSearchTerm]);
+
+
+
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked;
     setSelectAll(checked);
@@ -158,17 +216,20 @@ const VehicleList = () => {
       setSelectedIds([]);
     }
   };
+
   const handleCheckboxChange = (id: number) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
+
   const filteredVehicles =
     activeTab === "all"
       ? vehicles
       : vehicles.filter(
           (v) => (v.truckStatus || "").toLowerCase() === activeTab.toLowerCase()
         );
+
   const counts: Record<TabKey, number> = {
     all: vehicles.length,
     new: vehicles.filter((v) => (v.truckStatus || "").toLowerCase() === "new")
@@ -177,6 +238,7 @@ const VehicleList = () => {
       (v) => (v.truckStatus || "").toLowerCase() === "existing"
     ).length,
   };
+
   useEffect(() => {
     setSelectAll(
       filteredVehicles.length > 0 &&
@@ -185,6 +247,7 @@ const VehicleList = () => {
   }, [selectedIds, filteredVehicles]);
 
   const handleRefresh = () => {
+    dispatch(setScrollPosition(0)); // Reset scroll position on manual refresh
     fetchVehicles();
   };
 
@@ -212,19 +275,13 @@ const VehicleList = () => {
           };
           const response = await apiCall(payload);
           if (response && response.status === 200) {
-           
-                setDeletedIds(selectedIds);
-                setTimeout(() => {
-                  setDeletedIds([]);
-                  setSelectedIds([]);
-                  setVehicles((prev) =>
-                    prev.filter((v) => !selectedIds.includes(v.id))
-                  );
-                  showToast.success("Vehicle Deleted successfully!");
-                }, 500); // animation duration
-                // fetchVehicles();
-              
-            
+            setDeletedIds(selectedIds);
+            setTimeout(() => {
+              setDeletedIds([]);
+              setSelectedIds([]);
+              dispatch(removeVehicle(selectedIds));
+              showToast.success("Vehicle Deleted successfully!");
+            }, 500);
           } else {
             alertRef.current?.showAlert(
               "error",
@@ -258,6 +315,7 @@ const VehicleList = () => {
       }
     );
   };
+
   const { startLoading, stopLoading } = useLoading();
 
   useEffect(() => {
@@ -270,27 +328,37 @@ const VehicleList = () => {
   }, []);
 
   const handleApply = async () => {
+    dispatch(setPage(0));
     fetchVehicles();
-    console.log("Applied Filters: ", { vehicleNo, ownerName, chassisNo });
     setIsSidebarOpen(false);
   };
 
   const handleReset = () => {
-    setVehicleNo("");
-    setOwnerName("");
-    setChassisNo("");
+    dispatch(
+      setFilters({
+        registrationNumber: "",
+        ownerName: "",
+        chasisNumber: "",
+      })
+    );
+  };
+
+  const handleEdit = (vehicleId: number) => {
+    // Save current scroll position before navigating
+    if (listRef.current) {
+      dispatch(setScrollPosition(listRef.current.scrollTop));
+    }
+    router.push(`/modules/vehicle/new?id=${vehicleId}`);
+  };
+
+  const isFiltersApplied = () => {
+    return Object.values(filters).some((value) => value);
   };
 
   return (
     <Layout pageTitle="Vehicle List">
       <main className="flex-1">
         <div className="overflow-y-hidden h-[calc(100vh-83px)]">
-          {/* Loading State */}
-          {/* {loading && (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-lg">Loading vehicles...</div>
-            </div>
-          )} */}
           {/* Error State */}
           {error && !loading && (
             <div className="flex items-center justify-center h-64 flex-col ">
@@ -305,7 +373,6 @@ const VehicleList = () => {
               </div>
             </div>
           )}
-          {/* Main Content - Only show if we have data and not loading */}
 
           {/* Tabs */}
           <div className="flex justify-between items-center bg-white px-1.5 mt-[5px] ml-2 whitespace-nowrap">
@@ -374,10 +441,10 @@ const VehicleList = () => {
               </button>
             </div>
           </div>
+
           {/* View Mode / Bulk Actions / Search */}
           <div className="flex justify-between items-center px-1.5 py-1.5 bg-[#ebeff3]">
             <div className="flex items-center space-x-2 ml-2">
-              {/* First 3 buttons (shown when no checkbox is selected) */}
               {!selectedIds.length && (
                 <>
                   <button className="btn-sm btn-hover">
@@ -406,7 +473,6 @@ const VehicleList = () => {
                   </button>
                 </>
               )}
-              {/* Bulk action buttons (shown when at least 1 is selected) */}
               {selectedIds.length > 0 && (
                 <div className="bulk-actions flex items-center space-x-2">
                   <button className="btn-sm btn-hover" id="printBtn">
@@ -447,9 +513,8 @@ const VehicleList = () => {
                 type="text"
                 placeholder="Enter Vehicle Number"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => dispatch(setSearchTerm(e.target.value))}
               />
-
               <button
                 className="btn-sm btn-visible-hover"
                 onClick={() => setIsSidebarOpen(true)}
@@ -458,6 +523,7 @@ const VehicleList = () => {
               </button>
             </div>
           </div>
+
           {/* Offcanvas Sidebar */}
           <FilterSidebar
             isOpen={isSidebarOpen}
@@ -470,8 +536,15 @@ const VehicleList = () => {
               <label className="block mb-1 font-medium">Vehicle No</label>
               <input
                 className="form-control"
-                value={vehicleNo}
-                onChange={(e) => setVehicleNo(e.target.value)}
+                value={filters.registrationNumber}
+                onChange={(e) =>
+                  dispatch(
+                    setFilters({
+                      ...filters,
+                      registrationNumber: e.target.value,
+                    })
+                  )
+                }
                 placeholder="Enter Vehicle No"
               />
             </div>
@@ -480,8 +553,15 @@ const VehicleList = () => {
               <label className="block mb-1 font-medium">Owner Name</label>
               <input
                 className="form-control"
-                value={ownerName}
-                onChange={(e) => setOwnerName(e.target.value)}
+                value={filters.ownerName}
+                onChange={(e) =>
+                  dispatch(
+                    setFilters({
+                      ...filters,
+                      ownerName: e.target.value,
+                    })
+                  )
+                }
                 placeholder="Enter Owner Name"
               />
             </div>
@@ -490,22 +570,30 @@ const VehicleList = () => {
               <label className="block mb-1 font-medium">Chassis No</label>
               <input
                 className="form-control"
-                value={chassisNo}
-                onChange={(e) => setChassisNo(e.target.value)}
+                value={filters.chasisNumber}
+                onChange={(e) =>
+                  dispatch(
+                    setFilters({
+                      ...filters,
+                      chasisNumber: e.target.value,
+                    })
+                  )
+                }
                 placeholder="Enter Chassis No"
               />
             </div>
           </FilterSidebar>
+
           {/* Table */}
           <div className="bg-[#ebeff3]">
             {selectedIds.length > 1 && (
-              <div className=" fixed top-42 left-1/2 transform -translate-x-1/2 z-50  badge-selected">
+              <div className="fixed top-42 left-1/2 transform -translate-x-1/2 z-50 badge-selected">
                 {selectedIds.length} Vehicles selected
               </div>
             )}
 
             <div className="mx-2 h-[calc(100vh-167px)] overflow-hidden rounded-lg bg-white">
-              <div className="h-full overflow-y-auto">
+              <div ref={listRef} className="h-full overflow-y-auto">
                 <table className="w-full">
                   <thead className="sticky-table-header">
                     <tr>
@@ -569,6 +657,7 @@ const VehicleList = () => {
                   </thead>
                   <tbody>
                     {(!debouncedSearchTerm ||
+                      isFiltersApplied() ||
                       (!loading && debouncedSearchTerm)) &&
                       filteredVehicles.map((vehicle, index) => {
                         const isLastRow = index === filteredVehicles.length - 1;
@@ -577,8 +666,16 @@ const VehicleList = () => {
                             key={vehicle.id}
                             ref={isLastRow ? lastRowRef : null}
                             className={`tr-hover group transition-all duration-500 ease-in-out transform
-                              ${selectedIds.includes(vehicle.id) ? "bg-[#e5f2fd] hover:bg-[#f5f7f9]" : ""}
-                              ${deletedIds.includes(vehicle.id) ? "opacity-0 scale-95" : ""}
+                              ${
+                                selectedIds.includes(vehicle.id)
+                                  ? "bg-[#e5f2fd] hover:bg-[#f5f7f9]"
+                                  : ""
+                              }
+                              ${
+                                deletedIds.includes(vehicle.id)
+                                  ? "opacity-0 scale-95"
+                                  : ""
+                              }
                             `}
                           >
                             <td className="td-cell">
@@ -595,11 +692,7 @@ const VehicleList = () => {
                               <span className="float-left">{index + 1}</span>
                               <span className="float-right">
                                 <i
-                                  onClick={() =>
-                                    router.push(
-                                      `/modules/vehicle/new?id=${vehicle.id}`
-                                    )
-                                  }
+                                  onClick={() => handleEdit(vehicle.id)}
                                   className="ri-pencil-fill edit-icon opacity-0 group-hover:opacity-100"
                                 />
                               </span>
@@ -633,22 +726,16 @@ const VehicleList = () => {
                           </tr>
                         )
                       )}
-                    {/* Display message row if condition applied */}
                     {noData && (
                       <tr>
                         <td colSpan={9} className="td-cell text-center py-16">
                           <div className="flex flex-col items-center justify-center space-y-4">
-                            {/* Icon Container */}
-                            <div className="w-16 h-16  flex items-center justify-center">
+                            <div className="w-16 h-16 flex items-center justify-center">
                               <i className="ri-error-warning-line text-5xl text-gray-500"></i>
                             </div>
-
-                            {/* Main Text */}
                             <h3 className="text-xl font-semibold text-gray-900">
                               No data
                             </h3>
-
-                            {/* Subtitle Text */}
                             <p className="text-gray-500 text-sm max-w-md">
                               No users have been created yet. Click on add
                               button to create a new user
@@ -677,4 +764,5 @@ const VehicleList = () => {
     </Layout>
   );
 };
+
 export default VehicleList;

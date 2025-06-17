@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState, ChangeEvent, FormEvent, useRef, useEffect } from "react";
 import Layout from "../../../components/Layout";
 import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
 import DatePicker from "@/app/utils/commonDatepicker";
@@ -230,7 +230,11 @@ const handleCreateTrip = () => {
                       <Input
                         name="fromPlace"
                         placeholder="Enter place from"
+<<<<<<< HEAD
+                        className="form-control alphabet_only"
+=======
                         className="numbers-decimal"
+>>>>>>> b944f37d4c7ead1484b25f67152585b14d59e269
                         data-validate="required"
                       />
                     </FormField>
@@ -238,7 +242,11 @@ const handleCreateTrip = () => {
                       <Input
                         name="toPlace"
                         placeholder="Enter Place to"
+<<<<<<< HEAD
+                        className="form-control alphabet_only"
+=======
                         className="numbers-decimal"
+>>>>>>> b944f37d4c7ead1484b25f67152585b14d59e269
                         data-validate="required"
                       />
                     </FormField>

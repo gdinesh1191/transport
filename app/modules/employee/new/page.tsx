@@ -53,7 +53,7 @@ interface FormFieldProps {
   htmlFor?: string;
 }
 
-const FormField = ({
+ const FormField = ({
   label,
   required = false,
   children,
@@ -62,12 +62,16 @@ const FormField = ({
   htmlFor,
 }: FormFieldProps) => (
   <div
-    className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}
+    className={`mb-[10px] flex flex-col md:flex-row md:items-start gap-2 md:gap-4 ${className}`}
   >
-    <label className="form-label w-50" htmlFor={htmlFor}>
+    <label
+      className="form-label w-50 mt-2" // Add top padding to align with input
+      htmlFor={htmlFor}
+    >
       {label}
       {required && <span className="form-required text-red-500">*</span>}
     </label>
+
     <div className="flex flex-col w-3/4">
       {children}
       {error && (
@@ -76,7 +80,6 @@ const FormField = ({
     </div>
   </div>
 );
-
 export default function NewEmployee() {
   const [activeTab, setActiveTab] = useState<string>("Bank_details");
   const [showModal, setShowModal] = useState<boolean>(true);
@@ -222,6 +225,7 @@ export default function NewEmployee() {
       bankList: prev.bankList.filter((b) => b.id !== id),
     }));
   };
+  
 
   const handleEmployeeTypeChange = (type: string) => {
     setEmployeeType(type);
@@ -239,147 +243,131 @@ export default function NewEmployee() {
       : []),
   ];
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleErrorToast = () =>
+    showToast.error("Failed to save vehicle information."); 
 
-    if (!formRef.current) return;
+const handleSubmit = async (e: FormEvent) => {
+  e.preventDefault();
 
-    const currentErrors: FormErrors = {};
+  if (!formRef.current) return;
 
-    // --- Manual Validation for bankList (since validateForm can't see arrays) ---
-    if (formData.bankList.length === 0) {
-      currentErrors.bankList = "At least one bank account is required.";
-    }
+  const currentErrors: FormErrors = {};
 
-    // --- Prepare temporary hidden inputs for validation of all fields ---
-    // This is crucial because validateForm only inspects the DOM elements.
-    // We need to ensure all fields are "visible" to it before calling.
-    const tempInputs: HTMLInputElement[] = [];
+  // --- Manual Validation for non-visible data (like arrays) ---
+  if (formData.bankList.length === 0) {
+    currentErrors.bankList = "At least one bank account is required.";
+  }
 
-    // Helper to create and append temporary input
-    const createTempInput = (name: string, value: string, dataValidate?: string) => {
-      const input = document.createElement('input');
-      input.type = 'hidden'; // Use hidden type
-      input.name = name;
-      input.value = value;
-      if (dataValidate) {
-        input.setAttribute('data-validate', dataValidate);
-      }
-      formRef.current?.appendChild(input);
-      tempInputs.push(input);
-    };
+  // --- Temporary Hidden Inputs ---
+  const tempInputs: HTMLInputElement[] = [];
 
-    // Proof Details
-    createTempInput('aadhaarNumber', formData.proofDetails.aadhaarNumber, 'required');
-    createTempInput('panNumber', formData.proofDetails.panNumber, 'required');
+  const createTempInput = (name: string, value: string, dataValidate?: string) => {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = value;
+    if (dataValidate) input.setAttribute("data-validate", dataValidate);
+    formRef.current?.appendChild(input);
+    tempInputs.push(input);
+  };
 
-    // Driver Details (only if employeeType is Driver)
-    if (employeeType === "Driver") {
-      createTempInput('licenseNumber', formData.driverDetails.licenseNumber, 'required');
-      // For date pickers, convert Date object to string format expected by validation
-      createTempInput(
-        'licenseExpiry',
-        formData.driverDetails.licenseExpiry ? formData.driverDetails.licenseExpiry.toISOString().split('T')[0] : '',
-        'required'
-      );
-      createTempInput('licenseIssuedBy', formData.driverDetails.licenseIssuedBy, 'required');
-    }
+  const formatDate = (date?: Date) => date ? date.toISOString().split("T")[0] : "";
 
-    // General fields (if they are part of the main form to be validated by the utility)
-    // Assuming phoneNumber, whatsappNumber, familyName, dob might have data-validate attributes
-    createTempInput('phoneNumber', formData.phoneNumber); // Add 'required' if needed
-    createTempInput('whatsappNumber', formData.whatsappNumber);
-    createTempInput('familyName', formData.familyName);
-    createTempInput(
-      'dob',
-      formData.dob ? formData.dob.toISOString().split('T')[0] : ''
-    );
+  // Proof Details
+  createTempInput("aadhaarNumber", formData.proofDetails.aadhaarNumber, "required");
+  createTempInput("panNumber", formData.proofDetails.panNumber, "required");
 
+  // Driver-only Fields
+  if (employeeType === "Driver") {
+    createTempInput("licenseNumber", formData.driverDetails.licenseNumber, "required");
+    createTempInput("licenseExpiry", formatDate(formData.driverDetails.licenseExpiry), "required");
+    createTempInput("licenseIssuedBy", formData.driverDetails.licenseIssuedBy, "required");
+  }
 
-    // --- Run the external validation on the form element ---
-    // Make sure your validateForm only takes formRef.current
-    const externalValidationResults = validateForm(formRef.current);
+  // General Fields
+  createTempInput("phoneNumber", formData.phoneNumber, "required");
+  createTempInput("whatsappNumber", formData.whatsappNumber, "required");
+  createTempInput("familyName", formData.familyName, "required");
+  createTempInput("dob", formatDate(formData.dob), "required");
 
-    // Merge external validation results with our custom ones
-    Object.assign(currentErrors, externalValidationResults);
+  // --- Run validation ---
+  const validationResults = validateForm(formRef.current);
+  Object.assign(currentErrors, validationResults);
+  setFormErrors(currentErrors);
 
-    setFormErrors(currentErrors);
+  // Cleanup temporary inputs
+  tempInputs.forEach(input => formRef.current?.removeChild(input));
 
-    // --- Clean up temporary inputs ---
-    tempInputs.forEach(input => {
-      formRef.current?.removeChild(input);
+  const isFormValid = Object.keys(currentErrors).length === 0;
+
+  if (isFormValid) {
+    console.log("Form submitted successfully!", formData);
+
+    // Reset form state
+    setFormData({
+      phoneNumber: "",
+      whatsappNumber: "",
+      familyName: "",
+      dob: undefined,
+      bankDetails: {
+        bankName: "",
+        accountNumber: "",
+        accountName: "",
+        ifscCode: "",
+        branchName: "",
+      },
+      bankList: [],
+      proofDetails: {
+        aadhaarNumber: "",
+        panNumber: "",
+      },
+      driverDetails: {
+        licenseNumber: "",
+        licenseExpiry: undefined,
+        truckNumber: "",
+        licenseIssuedBy: "",
+      },
     });
 
-    const isFormValid = Object.keys(currentErrors).length === 0;
+    setBankIdCounter(1);
+    setBankInputError("");
+    setFileName("No file chosen");
+    setActiveTab(tabs[0].id);
 
-    if (isFormValid) {
-      console.log("Form submitted successfully!", formData);
-      // Here you would typically send formData to your API
+    showToast.success("Employee information saved successfully!");
+  } else {
+    handleErrorToast();
 
-      // Reset all forms on successful submission
-      setFormData({
-        phoneNumber: "",
-        whatsappNumber: "",
-        familyName: "",
-        dob: undefined,
-        bankDetails: {
-          bankName: "",
-          accountNumber: "",
-          accountName: "",
-          ifscCode: "",
-          branchName: "",
-        },
-        bankList: [],
-        proofDetails: {
-          aadhaarNumber: "",
-          panNumber: "",
-        },
-        driverDetails: {
-          licenseNumber: "",
-          licenseExpiry: undefined,
-          truckNumber: "",
-          licenseIssuedBy: "",
-        },
-      });
-      setBankIdCounter(1);
-      setBankInputError("");
-      setFileName("No file chosen");
-      setActiveTab(tabs[0].id);
-    } else {
-      showToast.error("Please correct the errors in the form.");
-     
-      let firstErrorTabId: string | null = null;
+    // Focus first tab with error
+    let firstErrorTabId: string | null = null;
 
-      if (currentErrors.bankList) {
-        firstErrorTabId = "Bank_details";
-      } else if (currentErrors.aadhaarNumber || currentErrors.panNumber) {
-        firstErrorTabId = "Proof_details";
-      } else if (
-        employeeType === "Driver" &&
-        (currentErrors.licenseNumber ||
-          currentErrors.licenseExpiry ||
-          currentErrors.licenseIssuedBy)
-      ) {
-        firstErrorTabId = "Driver_details";
-      }
-      // Add checks for other general fields if they are linked to a specific tab
-      // Example: if phoneNumber, dob etc. are on a "Personal Details" tab
-
-      if (firstErrorTabId && firstErrorTabId !== activeTab) {
-        setActiveTab(firstErrorTabId);
-        setTimeout(() => {
-          const firstErrorFieldElement =
-            formRef.current?.querySelector(`.error-message`);
-          if (firstErrorFieldElement) {
-            firstErrorFieldElement.scrollIntoView({
-              behavior: "smooth",
-              block: "center",
-            });
-          }
-        }, 100); // Small delay to allow tab content to render
-      }
+    if (currentErrors.bankList) {
+      firstErrorTabId = "Bank_details";
+    } else if (currentErrors.aadhaarNumber || currentErrors.panNumber) {
+      firstErrorTabId = "Proof_details";
+    } else if (
+      employeeType === "Driver" &&
+      (currentErrors.licenseNumber || currentErrors.licenseExpiry || currentErrors.licenseIssuedBy)
+    ) {
+      firstErrorTabId = "Driver_details";
+    } else if (
+      currentErrors.phoneNumber || currentErrors.whatsappNumber || currentErrors.familyName || currentErrors.dob
+    ) {
+      firstErrorTabId = "Personal_details"; // Replace with your actual tab ID
     }
-  };
+
+    if (firstErrorTabId && firstErrorTabId !== activeTab) {
+      setActiveTab(firstErrorTabId);
+      setTimeout(() => {
+        const firstErrorField = formRef.current?.querySelector(".error-message");
+        if (firstErrorField) {
+          firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 100);
+    }
+  }
+};
+
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -911,9 +899,11 @@ export default function NewEmployee() {
               </div>
             </div>
           </div>
-            <ToastContainer />
+           
         </div>
+        
       )}
+       <ToastContainer />
     </Layout>
   );
 }

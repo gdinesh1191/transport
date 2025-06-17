@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState  } from "react";
+import { useEffect, useRef, useState } from "react";
 import Layout from "../../../components/Layout";
 import useInputValidation from "@/app/utils/inputValidations";
 import ToastContainer, { showToast } from "@/app/utils/toaster";
@@ -9,7 +9,6 @@ import { validateForm, FormErrors } from "@/app/utils/formValidations";
 import DatePicker from "@/app/utils/commonDatepicker";
 import { useSearchParams } from "next/navigation";
 
-
 import { apiCall } from "@/app/utils/api";
 
 interface FormFieldProps {
@@ -17,10 +16,10 @@ interface FormFieldProps {
   required?: boolean;
   children: React.ReactNode;
   className?: string;
-  error?: string; // Add an error prop to FormField
-  htmlFor?: string; // Add htmlFor for label association
+  error?: string;  
+  htmlFor?: string;  
 }
- const FormField = ({
+const FormField = ({
   label,
   required = false,
   children,
@@ -48,7 +47,6 @@ interface FormFieldProps {
   </div>
 );
 
-
 export default function NewVehicle() {
   const insuranceOptions: Option[] = [
     { value: "icici", label: "ICICI Lombard" },
@@ -71,11 +69,9 @@ export default function NewVehicle() {
   ];
 
   const [activeTab, setActiveTab] = useState("owner_information");
-  const [formErrors, setFormErrors] = useState<FormErrors>({}); // State to hold all form errors
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
-  // You might want to remove or adapt useInputValidation if it's adding/removing classes directly.
-  // For this solution, the error display is purely driven by the formErrors state.
-  useInputValidation(); // Keep for now, but be aware of potential conflicts if it directly manipulates DOM error displays.
+  useInputValidation();
 
   const handleErrorToast = () =>
     showToast.error("Failed to save vehicle information.");
@@ -87,10 +83,15 @@ export default function NewVehicle() {
     { id: "load_availed_details", label: "Loan Availed Details" },
     { id: "vehicle_purchase_details", label: "Vehicle Purchase Details" },
   ];
+  
 
-  const [registrationDate, setregistrationDate] = useState<
-    Date | undefined
-  >();
+  const [loanProvider, setLoanProvider] = useState<string | undefined>(undefined);
+  const [insuranceCompany, setInsuranceCompany] = useState<string | undefined>(undefined);
+  const [classOfTruck, setClassOfTruck] = useState<string | undefined>(undefined);
+  const [truckType, setTruckType] = useState<string | undefined>(undefined);
+
+
+  const [registrationDate, setregistrationDate] = useState<Date | undefined>();
   const [insuranceExpiry, setInsuranceExpiry] = useState<Date | undefined>();
   const [permitExpiryDate, setPermitExpiryDate] = useState<Date | undefined>();
   const [npExpiryDate, setNpExpiryDate] = useState<Date | undefined>();
@@ -137,7 +138,21 @@ export default function NewVehicle() {
           if (response.status === 200) {
             console.log(response);
             showToast.success("Vehicle information saved successfully!");
-            setFormErrors({}); // Clear errors on successful submission
+            setFormErrors({});
+            formRef.current.reset(); // Reset the form fields
+
+            setregistrationDate(undefined);
+            setInsuranceExpiry(undefined);
+            setPermitExpiryDate(undefined);
+            setNpExpiryDate(undefined);
+            setQuarterlyTaxExpiry(undefined);
+            setTruckInvoiceDate(undefined);
+            setFcexpiryDate(undefined);
+            setLoanStartDate(undefined);
+            setLoanProvider(undefined);
+            setInsuranceCompany(undefined);
+            setClassOfTruck(undefined);
+            setTruckType(undefined);
           } else {
             handleErrorToast();
           }
@@ -194,12 +209,12 @@ export default function NewVehicle() {
   useEffect(() => {
     const fetchVehicle = async () => {
       if (!edit_id) return;
-  
+
       const payload = {
         token: "getVehicle",
         data: { id: Number(edit_id) },
       };
-  
+
       try {
         const response = await apiCall(payload);
         if (response.status === 200) {
@@ -213,7 +228,7 @@ export default function NewVehicle() {
         showToast.error("Something went wrong");
       }
     };
-  
+
     fetchVehicle();
   }, [edit_id]);
   return (
@@ -247,14 +262,16 @@ export default function NewVehicle() {
                     error={formErrors.truckType}
                     htmlFor="truckType"
                   >
-                    <SearchableSelect
-                      id="truckType" // Added ID for htmlFor (you might need to adjust SearchableSelect to pass this to its hidden input)
-                      name="truckType"
-                      placeholder="Select truck type"
-                      options={classOfTruckOptions}
-                      searchable
-                      data-validate="required"
-                    />
+                      <SearchableSelect
+        id="truckType"
+        name="truckType"
+        placeholder="Select truck type"
+        options={classOfTruckOptions}
+        searchable
+        data-validate="required"
+        value={truckType}
+        onChange={(opt) => setTruckType(opt?.value)}
+      />
                   </FormField>
                   <FormField
                     label="Makers Name"
@@ -277,7 +294,7 @@ export default function NewVehicle() {
                     htmlFor="natureOfGoodsWeight"
                   >
                     <Input
-                      id="natureOfGoodsWeight" // Added ID for htmlFor
+                      id="natureOfGoodsWeight"
                       name="natureOfGoodsWeight"
                       placeholder="Enter weight"
                       className="number_with_decimal"
@@ -306,7 +323,7 @@ export default function NewVehicle() {
                 </div>
               </div>
               <div className="mt-3">
-                {/* Render all tab contents, but hide inactive ones using CSS */}
+                {}
                 <div
                   id="owner_information_tab_content"
                   className={`p-2 ${
@@ -351,13 +368,14 @@ export default function NewVehicle() {
                       >
                         {/* Ensure DatePicker correctly links to a hidden input with this name/ID for validation */}
                         <DatePicker
-                          id="registrationDate" 
+                          id="registrationDate"
                           name="registrationDate" // Prop to pass the name down
                           date={registrationDate}
                           disableFuture
                           setDate={setregistrationDate}
                           placeholder="Select date"
-                          className="w-full" required={true}
+                          className="w-full"
+                          required={true}
                           data-validate="required" // Added data-validate
                         />
                       </FormField>
@@ -411,14 +429,18 @@ export default function NewVehicle() {
                         error={formErrors.classOfTruck}
                         htmlFor="classOfTruck"
                       >
-                        <SearchableSelect
-                          id="classOfTruck" // Added ID for htmlFor
-                          name="classOfTruck"
-                          options={vehicleOptions}
-                          searchable
-                          placeholder="Choose a vehicle"
-                          data-validate="required"
-                        />
+                        
+      <SearchableSelect
+        id="classOfTruck"
+        name="classOfTruck"
+        placeholder="Choose a vehicle"
+        options={vehicleOptions}
+        searchable
+        data-validate="required"
+        value={classOfTruck}
+        onChange={(opt) => setClassOfTruck(opt?.value)}
+      />
+
                       </FormField>
                       <FormField
                         label="Model Number"
@@ -480,7 +502,7 @@ export default function NewVehicle() {
                         htmlFor="engineNumber"
                       >
                         <Input
-                          id="engineNumber" 
+                          id="engineNumber"
                           name="engineNumber"
                           className="alphanumeric all_uppercase"
                           placeholder="Enter Engine Number"
@@ -494,7 +516,7 @@ export default function NewVehicle() {
                         htmlFor="vehicleWeight"
                       >
                         <Input
-                          id="vehicleWeight"  
+                          id="vehicleWeight"
                           name="vehicleWeight"
                           className="number_with_decimal"
                           type="text"
@@ -551,8 +573,10 @@ export default function NewVehicle() {
                         htmlFor="fcExpiry"
                       >
                         <DatePicker
-                          id="fcExpiry" disablePast
-                          name="fcExpiry" required={true}
+                          id="fcExpiry"
+                          disablePast
+                          name="fcExpiry"
+                          required={true}
                           date={fcExpiry}
                           setDate={setFcexpiryDate}
                           placeholder="Select date"
@@ -566,14 +590,16 @@ export default function NewVehicle() {
                         error={formErrors.insuranceCompany}
                         htmlFor="insuranceCompany"
                       >
-                        <SearchableSelect
-                          id="insuranceCompany" // Added ID for htmlFor
-                          name="insuranceCompany"
-                          placeholder="Select Insurance Company"
-                          searchable
-                          data-validate="required"
-                          options={insuranceOptions}
-                        />
+                          <SearchableSelect
+        id="insuranceCompany"
+        name="insuranceCompany"
+        placeholder="Select Insurance Company"
+        options={insuranceOptions}
+        searchable
+        data-validate="required"
+        value={insuranceCompany}
+        onChange={(opt) => setInsuranceCompany(opt?.value)}
+      />
                       </FormField>
                       <FormField
                         label="Insurance Expiry"
@@ -581,10 +607,12 @@ export default function NewVehicle() {
                         error={formErrors.insuranceExpiry}
                         htmlFor="insuranceExpiry"
                       >
-                        <DatePicker   required={true}
+                        <DatePicker
+                          required={true}
                           id="insuranceExpiry"
                           name="insuranceExpiry"
-                          date={insuranceExpiry} disablePast
+                          date={insuranceExpiry}
+                          disablePast
                           setDate={setInsuranceExpiry}
                           placeholder="Insurance Expiry Date"
                           className="w-full"
@@ -597,13 +625,15 @@ export default function NewVehicle() {
                         error={formErrors.permitExpiryDate}
                         htmlFor="permitExpiryDate"
                       >
-                        <DatePicker required={true}
+                        <DatePicker
+                          required={true}
                           id="permitExpiryDate" // Added ID for htmlFor
                           name="permitExpiryDate" // Prop to pass the name down
                           date={permitExpiryDate}
                           setDate={setPermitExpiryDate}
                           placeholder="Permit Expiry Date"
-                          className="w-full" disablePast
+                          className="w-full"
+                          disablePast
                           data-validate="required"
                         />
                       </FormField>
@@ -615,13 +645,15 @@ export default function NewVehicle() {
                         error={formErrors.npExpiryDate}
                         htmlFor="npExpiryDate"
                       >
-                        <DatePicker required={true}
+                        <DatePicker
+                          required={true}
                           id="npExpiryDate" // Added ID for htmlFor
                           name="npExpiryDate" // Prop to pass the name down
                           date={npExpiryDate}
                           setDate={setNpExpiryDate}
                           placeholder="NP Expiry Date"
-                          className="w-full" disablePast
+                          className="w-full"
+                          disablePast
                           data-validate="required"
                         />
                       </FormField>
@@ -631,13 +663,15 @@ export default function NewVehicle() {
                         error={formErrors.quarterlyTaxExpiry}
                         htmlFor="quarterlyTaxExpiry"
                       >
-                        <DatePicker required={true}
+                        <DatePicker
+                          required={true}
                           id="quarterlyTaxExpiry" // Added ID for htmlFor
                           name="quarterlyTaxExpiry" // Prop to pass the name down
                           date={quarterlyTaxExpiry}
                           setDate={setQuarterlyTaxExpiry}
                           placeholder="Quarterly Tax Expiry"
-                          className="w-full" disablePast
+                          className="w-full"
+                          disablePast
                           data-validate="required"
                         />
                       </FormField>
@@ -675,14 +709,16 @@ export default function NewVehicle() {
                         error={formErrors.loanProvider}
                         htmlFor="loanProvider"
                       >
-                        <SearchableSelect
-                          id="loanProvider" // Added ID for htmlFor
-                          name="loanProvider"
-                          placeholder="Select Loan Provider"
-                          options={bankOptions}
-                          searchable
-                          data-validate="required"
-                        />
+                         <SearchableSelect
+        id="loanProvider"
+        name="loanProvider"
+        placeholder="Select Loan Provider"
+        options={bankOptions}
+        searchable
+        data-validate="required"
+        value={loanProvider}
+        onChange={(opt) => setLoanProvider(opt?.value)}
+      />
                       </FormField>
                       <FormField
                         label="Loan Start Date"
@@ -690,7 +726,8 @@ export default function NewVehicle() {
                         error={formErrors.loanStartDate}
                         htmlFor="loanStartDate"
                       >
-                        <DatePicker required={true}
+                        <DatePicker
+                          required={true}
                           id="loanStartDate" // Added ID for htmlFor
                           name="loanStartDate" // Prop to pass the name down
                           date={loanStartDate}
@@ -786,13 +823,15 @@ export default function NewVehicle() {
                         error={formErrors.truckInvoiceDate}
                         htmlFor="truckInvoiceDate"
                       >
-                        <DatePicker required={true}
+                        <DatePicker
+                          required={true}
                           id="truckInvoiceDate" // Added ID for htmlFor
                           name="truckInvoiceDate" // Prop to pass the name down
                           date={truckInvoiceDate}
                           setDate={setTruckInvoiceDate}
                           placeholder="Truck Invoice Date"
-                          className="w-full" disableFuture
+                          className="w-full"
+                          disableFuture
                           data-validate="required"
                         />
                       </FormField>

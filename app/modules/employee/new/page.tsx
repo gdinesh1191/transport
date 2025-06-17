@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, ChangeEvent, FormEvent, useRef } from "react";
+import { useState, ChangeEvent, FormEvent, useRef, ReactNode, useEffect } from "react";
 import Layout from "../../../components/Layout";
 
-import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
-import useInputValidation from "@/app/utils/inputValidations";
+// Ensure these paths are correct for your project
+// import SearchableSelect from "@/app/utils/searchableSelect"; // If you use it later, include it
+import useInputValidation from "@/app/utils/inputValidations"; // For real-time input formatting
 import DatePicker from "@/app/utils/commonDatepicker";
-import { validateForm, FormErrors } from "@/app/utils/formValidations";
-import { Input, RadioGroup } from "@/app/utils/form-controls";
+import { validateForm, FormErrors } from "@/app/utils/formValidations"; // Assuming validateForm(formElement): FormErrors
+import { Input } from "@/app/utils/form-controls";
+import SearchableSelect from "@/app/utils/searchableSelect";
+import ToastContainer, { showToast } from "@/app/utils/toaster";
 
 interface BankDetails {
   id: number;
@@ -18,35 +21,36 @@ interface BankDetails {
   branchName: string;
 }
 
+// Unified Form Data Interface
+interface FormData {
+  // General Employee Details (add as needed, e.g., fullName, employeeID etc.)
+  phoneNumber: string;
+  whatsappNumber: string;
+  familyName: string;
+  dob: Date | undefined;
+
+  // Tab-specific details
+  bankDetails: Omit<BankDetails, "id">; // For the current bank entry form
+  bankList: BankDetails[]; // For the list of added banks
+  proofDetails: {
+    aadhaarNumber: string;
+    panNumber: string;
+  };
+  driverDetails: {
+    licenseNumber: string;
+    licenseExpiry: Date | undefined; // Store as Date object
+    truckNumber: string;
+    licenseIssuedBy: string;
+  };
+}
+
 interface FormFieldProps {
   label: string;
   required?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
-  error?: string; // Add an error prop to FormField
+  error?: string;
   htmlFor?: string;
-}
-
-interface InputProps {
-  name: string;
-  placeholder?: string;
-  type?: string;
-  className?: string;
-  value?: string;
-  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
-  maxLength?: number;
-  "data-validate"?: string;
-}
-
-interface RadioOption {
-  value: string;
-  label: string;
-}
-
-interface RadioGroupProps {
-  name: string;
-  options: RadioOption[];
-  required?: boolean;
 }
 
 const FormField = ({
@@ -55,20 +59,18 @@ const FormField = ({
   children,
   className = "",
   error,
-  htmlFor, // Destructure htmlFor prop
+  htmlFor,
 }: FormFieldProps) => (
   <div
     className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}
   >
     <label className="form-label w-50" htmlFor={htmlFor}>
-      {" "}
-      {/* Use htmlFor here */}
       {label}
       {required && <span className="form-required text-red-500">*</span>}
     </label>
     <div className="flex flex-col w-3/4">
       {children}
-      {error && ( // Conditionally render error message
+      {error && (
         <p className="error-message text-red-500 text-xs mt-1">{error}</p>
       )}
     </div>
@@ -78,96 +80,97 @@ const FormField = ({
 export default function NewEmployee() {
   const [activeTab, setActiveTab] = useState<string>("Bank_details");
   const [showModal, setShowModal] = useState<boolean>(true);
-  const [employeeType, setEmployeeType] = useState<string>("");
+  const [employeeType, setEmployeeType] = useState<string>(""); // "Staff" or "Driver"
   const [fileName, setFileName] = useState("No file chosen");
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const formRef = useRef<HTMLFormElement>(null);
-  useInputValidation();
+
   const [dob, setDob] = useState<Date | undefined>();
-  const [licenseExpiryDate, handleLicenseExpiryChange] = useState<
-    Date | undefined
-  >();
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [whatsappNumber, setWhatsappNumber] = useState("");
-  const [familyNumber, setFamilyNumber] = useState("");
-
+  useInputValidation(); // For real-time input formatting/masking
   const stateOptions = [
-    { value: "Tamil Nadu", label: "Tamil Nadu" },
-    { value: "Karnataka", label: "Karnataka" },
-    { value: "Kerala", label: "Kerala" },
-    { value: "Andhra Pradesh", label: "Andhra Pradesh" },
-    { value: "Telangana", label: "Telangana" },
-    { value: "Maharashtra", label: "Maharashtra" },
-    { value: "Gujarat", label: "Gujarat" },
-    { value: "Rajasthan", label: "Rajasthan" },
-    { value: "Punjab", label: "Punjab" },
-    { value: "Uttar Pradesh", label: "Uttar Pradesh" },
+
+    { value: "Tamil Nadu", label: "Tamil Nadu" }
+
+   
+
   ];
+  const [formData, setFormData] = useState<FormData>({
+    phoneNumber: "",
+    whatsappNumber: "",
+    familyName: "",
+    dob: undefined,
 
-  const [bankForm, setBankForm] = useState<Omit<BankDetails, "id">>({
-    bankName: "",
-    accountNumber: "",
-    accountName: "",
-    ifscCode: "",
-    branchName: "",
+    bankDetails: {
+      bankName: "",
+      accountNumber: "",
+      accountName: "",
+      ifscCode: "",
+      branchName: "",
+    },
+    bankList: [],
+    proofDetails: {
+      aadhaarNumber: "",
+      panNumber: "",
+    },
+    driverDetails: {
+      licenseNumber: "",
+      licenseExpiry: undefined,
+      truckNumber: "",
+      licenseIssuedBy: "",
+    },
   });
 
-  const [proofDetailsForm, setProofDetailsForm] = useState({
-    aadhaarNumber: "",
-    panNumber: "",
-  });
-
-  const [driverDetailsForm, setDriverDetailsForm] = useState({
-    licenseNumber: "",
-    licenseExpiry: "",
-    truckNumber: "",
-    licenseIssuedBy: "",
-  });
-
-  const handleProofChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setProofDetailsForm({
-      ...proofDetailsForm,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleDriverChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setDriverDetailsForm({
-      ...driverDetailsForm,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleNumberChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    setter: (value: string) => void
-  ) => {
-    let value = e.target.value.replace(/[^\d]/g, "");
-
-    // Ensure first digit is between 6–9 if it's the first digit
-    if (value.length === 1 && !/^[6-9]$/.test(value)) return;
-
-    setter(value);
-  };
-
-  const [bankList, setBankList] = useState<BankDetails[]>([]);
   const [bankIdCounter, setBankIdCounter] = useState<number>(1);
-  const [bankError, setBankError] = useState<string>("");
+  const [bankInputError, setBankInputError] = useState<string>("");
 
   const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (name === "accountNumber") {
-      const numericValue = value.replace(/[^0-9]/g, "");
-      setBankForm({ ...bankForm, [name]: numericValue });
-    } else {
-      setBankForm({ ...bankForm, [name]: value });
+    setFormData((prev) => ({
+      ...prev,
+      bankDetails: {
+        ...prev.bankDetails,
+        [name]: name === "accountNumber" ? value.replace(/[^0-9]/g, "") : value,
+      },
+    }));
+    setBankInputError("");
+  };
+
+  const handleProofChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({
+      ...prev,
+      proofDetails: {
+        ...prev.proofDetails,
+        [e.target.name]: e.target.value,
+      },
+    }));
+  };
+
+  const handleDriverChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({
+      ...prev,
+      driverDetails: {
+        ...prev.driverDetails,
+        [e.target.name]: e.target.value,
+      },
+    }));
+  };
+
+ 
+
+  const handleDateChange = (date: Date | undefined, fieldName: "dob" | "licenseExpiry") => {
+    if (fieldName === "dob") {
+      setFormData((prev) => ({ ...prev, dob: date }));
+    } else if (fieldName === "licenseExpiry") {
+      setFormData((prev) => ({
+        ...prev,
+        driverDetails: { ...prev.driverDetails, licenseExpiry: date },
+      }));
     }
-    setBankError("");
   };
 
   const handleAddBank = () => {
     const { bankName, accountNumber, accountName, ifscCode, branchName } =
-      bankForm;
+      formData.bankDetails;
 
     if (bankName && accountNumber && accountName && ifscCode && branchName) {
       const newBank: BankDetails = {
@@ -179,60 +182,53 @@ export default function NewEmployee() {
         branchName,
       };
 
-      setBankList((prev) => [...prev, newBank]);
+      setFormData((prev) => ({
+        ...prev,
+        bankList: [...prev.bankList, newBank],
+      }));
       setBankIdCounter((prev) => prev + 1);
 
-      // Clear form
-      setBankForm({
-        bankName: "",
-        accountNumber: "",
-        accountName: "",
-        ifscCode: "",
-        branchName: "",
-      });
-
-      setBankError("");
+      setFormData((prev) => ({
+        ...prev,
+        bankDetails: {
+          bankName: "",
+          accountNumber: "",
+          accountName: "",
+          ifscCode: "",
+          branchName: "",
+        },
+      }));
+      setBankInputError("");
     } else {
-      setBankError('Please fill all bank details before clicking "Add Bank".');
+      setBankInputError('Please fill all bank details before clicking "Add Bank".');
     }
   };
 
   const handleEditBank = (id: number) => {
-    const bank = bankList.find((b) => b.id === id);
-    if (bank) {
-      const { id: bankId, ...bankWithoutId } = bank;
-      setBankForm(bankWithoutId);
-      setBankList((prev) => prev.filter((b) => b.id !== id));
-    }
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fileInput = e.target;
-
-    if (fileInput.files && fileInput.files.length > 0) {
-      const file = fileInput.files[0];
-
-      // Example size validation (optional)
-      if (file.size > 2 * 1024 * 1024) {
-        alert("File size should not exceed 2MB.");
-        fileInput.value = ""; // ✅ This is allowed
-        setFileName("No file chosen");
-        return;
-      }
-
-      setFileName(file.name); // ✅ Update UI
-    } else {
-      setFileName("No file chosen");
+    const bankToEdit = formData.bankList.find((b) => b.id === id);
+    if (bankToEdit) {
+      const { id: bankId, ...bankWithoutId } = bankToEdit;
+      setFormData((prev) => ({
+        ...prev,
+        bankDetails: bankWithoutId,
+        bankList: prev.bankList.filter((b) => b.id !== id),
+      }));
     }
   };
 
   const handleDeleteBank = (id: number) => {
-    setBankList((prev) => prev.filter((b) => b.id !== id));
+    setFormData((prev) => ({
+      ...prev,
+      bankList: prev.bankList.filter((b) => b.id !== id),
+    }));
   };
 
   const handleEmployeeTypeChange = (type: string) => {
     setEmployeeType(type);
     setShowModal(false);
+    if (type === "Staff" && activeTab === "Driver_details") {
+      setActiveTab("Proof_details");
+    }
   };
 
   const tabs = [
@@ -243,61 +239,144 @@ export default function NewEmployee() {
       : []),
   ];
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // Submission logic here
 
-    if (formRef.current) {
-      const validationResults = validateForm(formRef.current); // Get all errors
-      setFormErrors(validationResults); // Update error state
+    if (!formRef.current) return;
 
-      const isFormValid = Object.keys(validationResults).length === 0;
+    const currentErrors: FormErrors = {};
 
-      if (isFormValid) {
-        const formData = new FormData(formRef.current);
-        const formValues = Object.fromEntries(formData.entries());
-        console.log("Form submitted successfully", formValues);
+    // --- Manual Validation for bankList (since validateForm can't see arrays) ---
+    if (formData.bankList.length === 0) {
+      currentErrors.bankList = "At least one bank account is required.";
+    }
+
+    // --- Prepare temporary hidden inputs for validation of all fields ---
+    // This is crucial because validateForm only inspects the DOM elements.
+    // We need to ensure all fields are "visible" to it before calling.
+    const tempInputs: HTMLInputElement[] = [];
+
+    // Helper to create and append temporary input
+    const createTempInput = (name: string, value: string, dataValidate?: string) => {
+      const input = document.createElement('input');
+      input.type = 'hidden'; // Use hidden type
+      input.name = name;
+      input.value = value;
+      if (dataValidate) {
+        input.setAttribute('data-validate', dataValidate);
+      }
+      formRef.current?.appendChild(input);
+      tempInputs.push(input);
+    };
+
+    // Proof Details
+    createTempInput('aadhaarNumber', formData.proofDetails.aadhaarNumber, 'required');
+    createTempInput('panNumber', formData.proofDetails.panNumber, 'required');
+
+    // Driver Details (only if employeeType is Driver)
+    if (employeeType === "Driver") {
+      createTempInput('licenseNumber', formData.driverDetails.licenseNumber, 'required');
+      // For date pickers, convert Date object to string format expected by validation
+      createTempInput(
+        'licenseExpiry',
+        formData.driverDetails.licenseExpiry ? formData.driverDetails.licenseExpiry.toISOString().split('T')[0] : '',
+        'required'
+      );
+      createTempInput('licenseIssuedBy', formData.driverDetails.licenseIssuedBy, 'required');
+    }
+
+    // General fields (if they are part of the main form to be validated by the utility)
+    // Assuming phoneNumber, whatsappNumber, familyName, dob might have data-validate attributes
+    createTempInput('phoneNumber', formData.phoneNumber); // Add 'required' if needed
+    createTempInput('whatsappNumber', formData.whatsappNumber);
+    createTempInput('familyName', formData.familyName);
+    createTempInput(
+      'dob',
+      formData.dob ? formData.dob.toISOString().split('T')[0] : ''
+    );
 
 
+    // --- Run the external validation on the form element ---
+    // Make sure your validateForm only takes formRef.current
+    const externalValidationResults = validateForm(formRef.current);
 
+    // Merge external validation results with our custom ones
+    Object.assign(currentErrors, externalValidationResults);
 
-          let firstErrorTabId: string | null = null;
-        for (const tab of tabs) {
-          // Check if any field within this tab has an error
-          const tabContentDiv = formRef.current.querySelector(
-            `#${tab.id}_tab_content`
-          );
-          if (tabContentDiv) {
-            const fieldsInTab =
-              tabContentDiv.querySelectorAll<HTMLElement>("[name]");
-            for (const field of fieldsInTab) {
-              if (
-                field.getAttribute("name") &&
-                validationResults[field.getAttribute("name")!]
-              ) {
-                firstErrorTabId = tab.id;
-                break;
-              }
-            }
+    setFormErrors(currentErrors);
+
+    // --- Clean up temporary inputs ---
+    tempInputs.forEach(input => {
+      formRef.current?.removeChild(input);
+    });
+
+    const isFormValid = Object.keys(currentErrors).length === 0;
+
+    if (isFormValid) {
+      console.log("Form submitted successfully!", formData);
+      // Here you would typically send formData to your API
+
+      // Reset all forms on successful submission
+      setFormData({
+        phoneNumber: "",
+        whatsappNumber: "",
+        familyName: "",
+        dob: undefined,
+        bankDetails: {
+          bankName: "",
+          accountNumber: "",
+          accountName: "",
+          ifscCode: "",
+          branchName: "",
+        },
+        bankList: [],
+        proofDetails: {
+          aadhaarNumber: "",
+          panNumber: "",
+        },
+        driverDetails: {
+          licenseNumber: "",
+          licenseExpiry: undefined,
+          truckNumber: "",
+          licenseIssuedBy: "",
+        },
+      });
+      setBankIdCounter(1);
+      setBankInputError("");
+      setFileName("No file chosen");
+      setActiveTab(tabs[0].id);
+    } else {
+      showToast.error("Please correct the errors in the form.");
+     
+      let firstErrorTabId: string | null = null;
+
+      if (currentErrors.bankList) {
+        firstErrorTabId = "Bank_details";
+      } else if (currentErrors.aadhaarNumber || currentErrors.panNumber) {
+        firstErrorTabId = "Proof_details";
+      } else if (
+        employeeType === "Driver" &&
+        (currentErrors.licenseNumber ||
+          currentErrors.licenseExpiry ||
+          currentErrors.licenseIssuedBy)
+      ) {
+        firstErrorTabId = "Driver_details";
+      }
+      // Add checks for other general fields if they are linked to a specific tab
+      // Example: if phoneNumber, dob etc. are on a "Personal Details" tab
+
+      if (firstErrorTabId && firstErrorTabId !== activeTab) {
+        setActiveTab(firstErrorTabId);
+        setTimeout(() => {
+          const firstErrorFieldElement =
+            formRef.current?.querySelector(`.error-message`);
+          if (firstErrorFieldElement) {
+            firstErrorFieldElement.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
           }
-          if (firstErrorTabId) break;
-        }
-
-        if (firstErrorTabId && firstErrorTabId !== activeTab) {
-          setActiveTab(firstErrorTabId); // Switch to the tab with the first error
-          // Optional: Scroll to the first error field in that tab
-          setTimeout(() => {
-            // Find the *first* error message element within the *entire form* after the tab has switched
-            const firstErrorFieldElement =
-              formRef.current?.querySelector(`.error-message`);
-            if (firstErrorFieldElement) {
-              firstErrorFieldElement.scrollIntoView({
-                behavior: "smooth",
-                block: "center",
-              });
-            }
-          }, 100); // Give React time to render the new tab content
-        }
+        }, 100); // Small delay to allow tab content to render
       }
     }
   };
@@ -306,128 +385,142 @@ export default function NewEmployee() {
     switch (activeTab) {
       case "Bank_details":
         return (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
-            <div className="lg:border-r lg:border-gray-300 lg:pr-4">
-              <div>
-                <FormField label="Account Name" required>
-                  <Input
-                    type="text"
-                    name="accountName"
-                    value={bankForm.accountName}
-                    onChange={handleBankChange}
-                    placeholder="Enter Account Name"
-                    className="alphabet_only capitalize"
-                    maxLength={50}
-                  />
-                </FormField>
+          <div id="Bank_details_tab_content">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
+              <div className="lg:border-r lg:border-gray-300 lg:pr-4">
+                <div>
+                  <FormField label="Account Name" required>
+                    <Input
+                      type="text"
+                      name="accountName"
+                      value={formData.bankDetails.accountName}
+                      onChange={handleBankChange}
+                      placeholder="Enter Account Name"
+                      className="alphabet_only capitalize"
+                      maxLength={50}
+                    />
+                  </FormField>
 
-                <FormField label="Account Number" required>
-                  <Input
-                    name="accountNumber"
-                    type="text"
-                    value={bankForm.accountNumber}
-                    onChange={handleBankChange}
-                    className="only_number"
-                    placeholder="Enter Account Number"
-                    maxLength={18}
-                  />
-                </FormField>
+                  <FormField label="Account Number" required>
+                    <Input
+                      name="accountNumber"
+                      type="text"
+                      value={formData.bankDetails.accountNumber}
+                      onChange={handleBankChange}
+                      className="only_number"
+                      placeholder="Enter Account Number"
+                      maxLength={18}
+                    />
+                  </FormField>
 
-                <FormField label="IFSC Code" required>
-                  <Input
-                    name="ifscCode"
-                    type="text"
-                    value={bankForm.ifscCode}
-                    onChange={handleBankChange}
-                    placeholder="Enter IFSC Code"
-                    className="alphanumeric all_uppercase"
-                    maxLength={11}
-                  />
-                </FormField>
+                  <FormField label="IFSC Code" required>
+                    <Input
+                      name="ifscCode"
+                      type="text"
+                      value={formData.bankDetails.ifscCode}
+                      onChange={handleBankChange}
+                      placeholder="Enter IFSC Code"
+                      className="alphanumeric all_uppercase"
+                      maxLength={11}
+                    />
+                  </FormField>
 
-                <FormField label="Bank Name" required>
-                  <Input
-                    name="bankName"
-                    type="text"
-                    value={bankForm.bankName}
-                    onChange={handleBankChange}
-                    placeholder="Enter Bank Name"
-                    className="alphabet_only capitalize"
-                    maxLength={50}
-                  />
-                </FormField>
+                  <FormField label="Bank Name" required>
+                    <Input
+                      name="bankName"
+                      type="text"
+                      value={formData.bankDetails.bankName}
+                      onChange={handleBankChange}
+                      placeholder="Enter Bank Name"
+                      className="alphabet_only capitalize"
+                      maxLength={50}
+                    />
+                  </FormField>
 
-                <FormField label="Branch Name" required>
-                  <Input
-                    name="branchName"
-                    type="text"
-                    value={bankForm.branchName}
-                    onChange={handleBankChange}
-                    placeholder="Enter Branch Name"
-                    className="alphabet_only capitalize"
-                    maxLength={50}
-                  />
-                </FormField>
+                  <FormField label="Branch Name" required>
+                    <Input
+                      name="branchName"
+                      type="text"
+                      value={formData.bankDetails.branchName}
+                      onChange={handleBankChange}
+                      placeholder="Enter Branch Name"
+                      className="alphabet_only capitalize"
+                      maxLength={50}
+                    />
+                  </FormField>
 
-                {bankError && (
-                  <div className="text-red-500 text-sm mt-2 text-end">
-                    {bankError}
-                  </div>
-                )}
-                <FormField label="">
-                  <button
-                    type="button"
-                    onClick={handleAddBank}
-                    className="btn-sm btn-primary"
-                  >
-                    Add Bank
-                  </button>
-                </FormField>
+                  {bankInputError && (
+                    <div className="text-red-500 text-sm mt-2 text-end">
+                      {bankInputError}
+                    </div>
+                  )}
+                  <FormField label="">
+                    <button
+                      type="button"
+                      onClick={handleAddBank}
+                      className="btn-sm btn-primary"
+                    >
+                      Add Bank
+                    </button>
+                  </FormField>
+                </div>
               </div>
-            </div>
 
-            <div className="overflow-x-auto">
-              <table className="min-w-full table-auto text-sm text-left">
-                <thead className="text-[#475867]">
-                  <tr>
-                    <th className="px-3 py-2">S.No</th>
-                    <th className="px-3 py-2">Account Name</th>
-                    <th className="px-3 py-2">Account Number</th>
-                    <th className="px-3 py-2">IFSC</th>
-                    <th className="px-3 py-2">Bank</th>
-                    <th className="px-3 py-2">Branch</th>
-                    <th className="px-3 py-2 text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="text-[#000000]">
-                  {bankList.map((bank, index) => (
-                    <tr key={bank.id}>
-                      <td className="px-3 py-2">{index + 1}</td>
-                      <td className="px-3 py-2">{bank.accountName}</td>
-                      <td className="px-3 py-2">{bank.accountNumber}</td>
-                      <td className="px-3 py-2">{bank.ifscCode}</td>
-                      <td className="px-3 py-2">{bank.bankName}</td>
-                      <td className="px-3 py-2">{bank.branchName}</td>
-                      <td className="px-3 py-2 text-center">
-                        <button
-                          type="button"
-                          onClick={() => handleEditBank(bank.id)}
-                          className="text-blue-500 hover:text-blue-700"
-                        >
-                          <i className="ri-pencil-line text-lg cursor-pointer"></i>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteBank(bank.id)}
-                          className="text-red-500 hover:text-red-700 ml-2"
-                        >
-                          <i className="ri-delete-bin-line text-lg cursor-pointer"></i>
-                        </button>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="min-w-full table-auto text-sm text-left">
+                  <thead className="text-[#475867]">
+                    <tr>
+                      <th className="px-3 py-2">S.No</th>
+                      <th className="px-3 py-2">Account Name</th>
+                      <th className="px-3 py-2">Account Number</th>
+                      <th className="px-3 py-2">IFSC</th>
+                      <th className="px-3 py-2">Bank</th>
+                      <th className="px-3 py-2">Branch</th>
+                      <th className="px-3 py-2 text-center">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="text-[#000000]">
+                    {formData.bankList.map((bank, index) => (
+                      <tr key={bank.id}>
+                        <td className="px-3 py-2">{index + 1}</td>
+                        <td className="px-3 py-2">{bank.accountName}</td>
+                        <td className="px-3 py-2">{bank.accountNumber}</td>
+                        <td className="px-3 py-2">{bank.ifscCode}</td>
+                        <td className="px-3 py-2">{bank.bankName}</td>
+                        <td className="px-3 py-2">{bank.branchName}</td>
+                        <td className="px-3 py-2 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleEditBank(bank.id)}
+                            className="text-blue-500 hover:text-blue-700"
+                          >
+                            <i className="ri-pencil-line text-lg cursor-pointer"></i>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteBank(bank.id)}
+                            className="text-red-500 hover:text-red-700 ml-2"
+                          >
+                            <i className="ri-delete-bin-line text-lg cursor-pointer"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {formData.bankList.length === 0 && (
+                        <tr>
+                            <td colSpan={7} className="px-3 py-2 text-center text-gray-500">
+                                No bank details added.
+                            </td>
+                        </tr>
+                    )}
+                  </tbody>
+                </table>
+                {formErrors.bankList && (
+                  <p className="error-message text-red-500 text-xs mt-1">
+                    {formErrors.bankList}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         );
@@ -435,59 +528,77 @@ export default function NewEmployee() {
       case "Driver_details":
         if (employeeType !== "Driver") return null;
         return (
-          <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
-            <div>
-              <FormField label="License Number" required
-                              error={formErrors.licenseNumber} 
-                                                            htmlFor="licenseNumber">
-                <Input
-                  name="licenseNumber"
-                  className="form-control alphanumeric all_uppercase"
-                  value={driverDetailsForm.licenseNumber}
-                  onChange={handleDriverChange}
-                  placeholder="Enter License Number"
-                  maxLength={20}
-                  data-validate="required"
-                />
-              </FormField>
-              <FormField label="License Expiry Date" required
-                error={formErrors.licenseExpiry} htmlFor="licenseExpiry">
-                <DatePicker
-                  date={licenseExpiryDate}
-                  disablePast
-                  setDate={handleLicenseExpiryChange}
-                  name="licenseExpiry"
-                  data-validate="required"
-                />
-              </FormField>
+          <div id="Driver_details_tab_content">
+            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
+              <div>
+                <FormField
+                  label="License Number"
+                  required
+                  error={formErrors.licenseNumber}
+                  htmlFor="licenseNumber"
+                >
+                  <Input
+                    name="licenseNumber"
+                    className="form-control alphanumeric all_uppercase"
+                    value={formData.driverDetails.licenseNumber}
+                    onChange={handleDriverChange}
+                    placeholder="Enter License Number"
+                    maxLength={20}
+                    data-validate="required"
+                  />
+                </FormField>
+                <FormField
+                  label="License Expiry Date"
+                  required
+                  error={formErrors.licenseExpiry}
+                  htmlFor="licenseExpiry"
+                >
+                  <DatePicker
+                    date={formData.driverDetails.licenseExpiry}
+                    disablePast
+                    setDate={(date) => handleDateChange(date, "licenseExpiry")}
+                    name="licenseExpiry"
+                    data-validate="required"
+                   
+                  />
+                </FormField>
 
-              <FormField label="License Issued By" required
-                              error={formErrors.licenseIssuedBy} htmlFor="licenseIssuedBy">
-                <Input
-                  name="licenseIssuedBy"
-                  className="form-control alphabet_only capitalize"
-                  value={driverDetailsForm.licenseIssuedBy}
-                  onChange={handleDriverChange}
-                  placeholder="Enter License Issued By"
-                  data-validate="required"
-                  maxLength={50}
-                />
-              </FormField>
+                <FormField
+                  label="License Issued By"
+                  required
+                  error={formErrors.licenseIssuedBy}
+                  htmlFor="licenseIssuedBy"
+                >
+                  <Input
+                    name="licenseIssuedBy"
+                    className="form-control alphabet_only capitalize"
+                    value={formData.driverDetails.licenseIssuedBy}
+                    onChange={handleDriverChange}
+                    placeholder="Enter License Issued By"
+                    data-validate="required"
+                    maxLength={50}
+                  />
+                </FormField>
+              </div>
+              <div></div>
             </div>
-            <div></div>
           </div>
         );
 
       default:
         return (
-          <div>
+          <div id="Proof_details_tab_content">
             <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 px-4 py-6">
               <div className="space-y-4">
-                <FormField label="Aadhaar Number" required
-                                  error={formErrors.aadhaarNumber} htmlFor="aadhaarNumber">
+                <FormField
+                  label="Aadhaar Number"
+                  required
+                  error={formErrors.aadhaarNumber}
+                  htmlFor="aadhaarNumber"
+                >
                   <Input
                     name="aadhaarNumber"
-                    value={proofDetailsForm.aadhaarNumber}
+                    value={formData.proofDetails.aadhaarNumber}
                     onChange={handleProofChange}
                     placeholder="Enter Aadhaar Number"
                     className="only_number"
@@ -495,11 +606,15 @@ export default function NewEmployee() {
                     data-validate="required"
                   />
                 </FormField>
-                <FormField label="PAN Number" required 
-                                                  error={formErrors.panNumber} htmlFor="panNumber">
+                <FormField
+                  label="PAN Number"
+                  required
+                  error={formErrors.panNumber}
+                  htmlFor="panNumber"
+                >
                   <Input
                     name="panNumber"
-                    value={proofDetailsForm.panNumber}
+                    value={formData.proofDetails.panNumber}
                     onChange={handleProofChange}
                     placeholder="Enter PAN Number"
                     className="alphanumeric all_uppercase"
@@ -507,9 +622,10 @@ export default function NewEmployee() {
                     data-validate="required"
                   />
                 </FormField>
+
+            
               </div>
             </div>
-            <div></div>
           </div>
         );
     }
@@ -521,7 +637,7 @@ export default function NewEmployee() {
         <main id="main-content" className="flex-1">
           <div className="flex-1 overflow-y-auto h-[calc(100vh-103px)]">
             <form ref={formRef} onSubmit={handleSubmit} autoComplete="off">
-              <div className="border-b border-gray-300">
+               <div className="border-b border-gray-300">
                 <div className="grid grid-cols-1 lg:grid-cols-2 px-4 py-2">
                   <FormField
                     label="Name"
@@ -550,12 +666,17 @@ export default function NewEmployee() {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-6 px-4 py-6">
                 <div className="space-y-4 lg:border-r lg:border-gray-300 lg:pr-4">
-                  <FormField label="DOB" required>
+                  <FormField
+                    label="DOB"
+                    required
+                    error={formErrors.dob} // Add error prop for DOB
+                    htmlFor="dob" // Add htmlFor for DOB
+                  >
                     <DatePicker
                       date={dob}
                       disableFuture
                       setDate={setDob}
-                      name="dob"
+                      name="dob" // Add name prop for validation
                       className=" w-full"
                       data-validate="required"
                     />
@@ -601,11 +722,8 @@ export default function NewEmployee() {
                       placeholder="Enter Phone Number"
                       className="form-control w-full only_number"
                       data-validate="required"
-                      maxLength={10}
-                      value={phoneNumber}
-                      onChange={(e: any) =>
-                        handleNumberChange(e, setPhoneNumber)
-                      }
+                      maxLength={10} 
+                      
                     />
                   </FormField>
                   <FormField
@@ -620,10 +738,7 @@ export default function NewEmployee() {
                       className="form-control w-full only_number"
                       data-validate="required"
                       maxLength={10}
-                      value={whatsappNumber}
-                      onChange={(e: any) =>
-                        handleNumberChange(e, setWhatsappNumber)
-                      }
+                      
                     />
                   </FormField>
                   <FormField label="Family Number">
@@ -632,10 +747,7 @@ export default function NewEmployee() {
                       placeholder="Enter Phone Number"
                       className="form-control w-full only_number"
                       maxLength={10}
-                      value={familyNumber}
-                      onChange={(e: any) =>
-                        handleNumberChange(e, setFamilyNumber)
-                      }
+                     
                     />
                   </FormField>
                 </div>
@@ -645,18 +757,23 @@ export default function NewEmployee() {
                     <Input
                       name="addressLine1"
                       placeholder="Enter Address Line 1"
-                      className="form-control w-full  capitalize "
+                      className="form-control w-full capitalize "
                     />
                   </FormField>
                   <FormField label="">
                     <Input
                       name="addressLine2"
                       placeholder="Enter Address Line 2"
-                      className="form-control w-full  capitalize"
+                      className="form-control w-full capitalize"
                     />
                   </FormField>
 
-                  <FormField label="Picture Path" required>
+                  <FormField
+                    label="Picture Path"
+                    required
+                    error={formErrors.picturepath}
+                    htmlFor="picturepathInput"
+                  >
                     <div className="w-full flex-grow flex flex-col">
                       <div className="flex items-center justify-start gap-3">
                         <div className="border border-gray-200 rounded-sm px-3 py-1 cursor-pointer">
@@ -675,13 +792,13 @@ export default function NewEmployee() {
                           {fileName}
                         </span>
                       </div>
-                      <Input
+                      <input // Changed to standard input for file type for simplicity
                         type="file"
                         id="picturepathInput"
                         name="picturepath"
                         className="hidden"
-                        onChange={handleFileUpload}
-                        required
+                        
+                        data-validate="required" // Added required validation
                       />
                     </div>
                   </FormField>
@@ -779,27 +896,22 @@ export default function NewEmployee() {
               <div className="flex gap-4 justify-center">
                 <button
                   type="button"
-                  onClick={() => {
-                    setEmployeeType("staff");
-                    setShowModal(false);
-                  }}
+                  onClick={() => handleEmployeeTypeChange("Staff")}
                   className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white text-gray-800 px-4 py-2 rounded-md w-full"
                 >
                   Staff
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setEmployeeType("Driver");
-                    setShowModal(false);
-                  }}
-                  className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white  text-gray-800 px-4 py-2 rounded-md w-full"
+                  onClick={() => handleEmployeeTypeChange("Driver")}
+                  className="employee_type_btn bg-[#f3f4f6] hover:bg-[#009333] hover:text-white text-gray-800 px-4 py-2 rounded-md w-full"
                 >
                   Driver
                 </button>
               </div>
             </div>
           </div>
+            <ToastContainer />
         </div>
       )}
     </Layout>

@@ -84,6 +84,10 @@ export default function NewEmployee() {
   const [fileName, setFileName] = useState("No file chosen");
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const formRef = useRef<HTMLFormElement>(null);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [familyNumber, setFamilyNumber] = useState("");
+
 
   const [dob, setDob] = useState<Date | undefined>();
   useInputValidation(); // For real-time input formatting/masking
@@ -230,6 +234,26 @@ export default function NewEmployee() {
       setActiveTab("Proof_details");
     }
   };
+   const handleNumberChange = (
+
+e: React.ChangeEvent<HTMLInputElement>,
+
+setter: (value: string) => void
+
+ ) => {
+
+let value = e.target.value.replace(/[^\d]/g, "");
+
+
+
+ // Ensure first digit is between 6–9 if it's the first digit
+
+ if (value.length === 1 && !/^[6-9]$/.test(value)) return;
+
+
+
+ setter(value);
+ };
 
   const tabs = [
     { id: "Bank_details", label: "Bank Details" },
@@ -723,7 +747,8 @@ export default function NewEmployee() {
                       className="form-control w-full only_number"
                       data-validate="required"
                       maxLength={10} 
-                      
+                      onChange={(e:any) => handleNumberChange(e, setPhoneNumber)}
+
                     />
                   </FormField>
                   <FormField
@@ -738,7 +763,8 @@ export default function NewEmployee() {
                       className="form-control w-full only_number"
                       data-validate="required"
                       maxLength={10}
-                      
+                      onChange={(e:any) => handleNumberChange(e, setWhatsappNumber)}
+
                     />
                   </FormField>
                   <FormField label="Family Number">
@@ -747,7 +773,7 @@ export default function NewEmployee() {
                       placeholder="Enter Phone Number"
                       className="form-control w-full only_number"
                       maxLength={10}
-                     
+                     onChange={(e:any) => handleNumberChange(e, setFamilyNumber)}
                     />
                   </FormField>
                 </div>

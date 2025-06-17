@@ -1,4 +1,5 @@
- 'use client';
+// searchableSelect.tsx
+'use client';
 
 import { useEffect, useRef, useState } from 'react';
 
@@ -15,15 +16,13 @@ interface Props {
   placeholder?: string;
   className?: string;
   'data-validate'?: string;
-  value?: string; // Controlled component support
-  onChange?: (option: Option | null) => void; // Callback for state management
-  onAddNew?: () => void; // Callback for "Add New" functionality
-  onRefresh?: () => void; // Callback for refresh functionality
+  value?: string | null; // Allow value to be null as well
+  onChange?: (option: Option | null) => void;
+  onAddNew?: () => void;
+  onRefresh?: () => void;
   disabled?: boolean;
-  error?: string; // Error message support
+  error?: string;
   id?: string;
-  
-
 }
 
 const SearchableSelect = ({
@@ -48,45 +47,37 @@ const SearchableSelect = ({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Filter options based on search term
   const filteredOptions = searchable
     ? options.filter((option) =>
         option.label.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : options;
 
-  // Handle option selection
   const handleSelect = (option: Option) => {
     setSelected(option);
     setIsOpen(false);
     setSearchTerm('');
-    
-    // Call onChange callback if provided
     if (onChange) {
       onChange(option);
     }
   };
 
-  // Handle clearing selection
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
     setSelected(null);
     setSearchTerm('');
-    
     if (onChange) {
-      onChange(null);
+      onChange(null); // Explicitly pass null when clearing
     }
   };
 
-  // Handle click outside to close dropdown
   const handleClickOutside = (e: MouseEvent) => {
     if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
       setIsOpen(false);
-      setSearchTerm(''); // Clear search when closing
+      setSearchTerm('');
     }
   };
 
-  // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (disabled) return;
 
@@ -111,24 +102,20 @@ const SearchableSelect = ({
         break;
       case 'ArrowUp':
         e.preventDefault();
-        // Could implement option navigation here
         break;
     }
   };
 
-  // Handle search input changes
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  // Handle toggle dropdown
   const handleToggle = () => {
     if (disabled) return;
-    
+
     const newIsOpen = !isOpen;
     setIsOpen(newIsOpen);
-    
-    // Focus search input when opening
+
     if (newIsOpen && searchable) {
       setTimeout(() => {
         searchInputRef.current?.focus();
@@ -136,30 +123,23 @@ const SearchableSelect = ({
     }
   };
 
-  // Sync with external value prop (controlled component)
+  // Sync with external value prop
   useEffect(() => {
-    if (value !== undefined) {
-      const foundOption = options.find(opt => opt.value === value);
+    if (value === undefined || value === null) {
+      setSelected(null); // Explicitly set to null if value is undefined or null
+    } else {
+      const foundOption = options.find((opt) => opt.value === value);
       setSelected(foundOption || null);
     }
   }, [value, options]);
 
-  // Setup click outside listener
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Get current display value
-  const getDisplayValue = () => {
-    if (selected) return selected.label;
-    if (searchTerm && isOpen) return searchTerm;
-    return '';
-  };
-
   return (
     <div ref={wrapperRef} className={`relative ${className}`}>
-      {/* Hidden input for form submission */}
       <input
         type="hidden"
         name={name}
@@ -167,56 +147,73 @@ const SearchableSelect = ({
         required={required}
         data-validate={dataValidate}
       />
-      
-      {/* Main select button */}
+
       <div
-  id={id}
-  className={`form-control flex items-center justify-between border rounded-md px-3 py-2 cursor-pointer ${
-    disabled
-      ? 'bg-gray-100 cursor-not-allowed opacity-60'
-      : ''
-  } ${
-    isOpen ? 'border-[#009333] ring-0.5 ring-[#009333]' : 'border-gray-300'
-  } ${error ? 'border-red-500' : ''}`}
-  onClick={handleToggle}
-  onKeyDown={handleKeyDown}
-  tabIndex={disabled ? -1 : 0}
-  role="combobox"
-  aria-expanded={isOpen}
-  aria-haspopup="listbox"
-  aria-labelledby={id}
->
-  {/* Selected value or placeholder */}
-  <span
-    className={`flex-1 truncate ${
-      selected ? 'text-black' : 'text-gray-500'
-    }`}
-  >
-    {selected?.label || placeholder}
-  </span>
+        id={id}
+        className={`form-control flex items-center justify-between border rounded-md px-3 py-2 cursor-pointer ${
+          disabled
+            ? 'bg-gray-100 cursor-not-allowed opacity-60'
+            : ''
+        } ${
+          isOpen ? 'border-[#009333] ring-0.5 ring-[#009333]' : 'border-gray-300'
+        } ${error ? 'border-red-500' : ''}`}
+        onClick={handleToggle}
+        onKeyDown={handleKeyDown}
+        tabIndex={disabled ? -1 : 0}
+        role="combobox"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-labelledby={id}
+      >
+        <span
+          className={`flex-1 truncate ${
+            selected ? 'text-black' : 'text-gray-500'
+          }`}
+        >
+          {selected?.label || placeholder}
+        </span>
 
-  {/* Dropdown arrow */}
-  <svg
-    className={`w-4 h-4 text-gray-400 transition-transform ${
-      isOpen ? 'rotate-180' : ''
-    }`}
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-  </svg>
-</div>
+        {selected && !disabled && ( // Add a clear button only when an option is selected and not disabled
+          <button
+            type="button"
+            onClick={handleClear}
+            className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+            aria-label="Clear selection"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        )}
 
-      {/* Error message */}
+        <svg
+          className={`w-4 h-4 text-gray-400 transition-transform ${
+            isOpen ? 'rotate-180' : ''
+          }`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+
       {error && (
         <p className="mt-1 text-sm text-red-600">{error}</p>
       )}
 
-      {/* Dropdown menu */}
       {isOpen && (
         <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
-          {/* Search input */}
           {searchable && (
             <div className="p-2 border-b border-gray-200">
               <input
@@ -231,7 +228,6 @@ const SearchableSelect = ({
             </div>
           )}
 
-          {/* Options list */}
           <div className="max-h-60 overflow-y-auto">
             {filteredOptions.length > 0 ? (
               <ul role="listbox">
@@ -239,8 +235,8 @@ const SearchableSelect = ({
                   <li
                     key={option.value}
                     className={`px-3 py-2 cursor-pointer text-sm hover:bg-blue-50 ${
-                      selected?.value === option.value 
-                        ? 'bg-blue-100 text-blue-900' 
+                      selected?.value === option.value
+                        ? 'bg-blue-100 text-blue-900'
                         : 'text-gray-900'
                     }`}
                     onClick={() => handleSelect(option)}
@@ -258,7 +254,6 @@ const SearchableSelect = ({
             )}
           </div>
 
-          {/* Footer with actions */}
           {(onAddNew || onRefresh) && (
             <div className="flex justify-between items-center p-2 border-t border-gray-200 bg-gray-50">
               {onAddNew && (
@@ -266,7 +261,7 @@ const SearchableSelect = ({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onAddNew();
+                    if (onAddNew) onAddNew();
                     setIsOpen(false);
                   }}
                   className="flex items-center gap-1 text-sm text-green-600 hover:text-green-700 font-medium"
@@ -277,13 +272,13 @@ const SearchableSelect = ({
                   Add New
                 </button>
               )}
-              
+
               {onRefresh && (
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onRefresh();
+                    if (onRefresh) onRefresh();
                   }}
                   className="text-blue-600 hover:text-blue-700 p-1 rounded"
                   aria-label="Refresh options"

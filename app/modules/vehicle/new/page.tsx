@@ -1,7 +1,5 @@
 "use client";
- 
 import { useEffect, useRef, useState } from "react";
- 
 import Layout from "../../../components/Layout";
 import useInputValidation from "@/app/utils/inputValidations";
 import ToastContainer, { showToast } from "@/app/utils/toaster";
@@ -9,12 +7,8 @@ import { Input, RadioGroup } from "@/app/utils/form-controls";
 import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
 import { validateForm, FormErrors } from "@/app/utils/formValidations";
 import DatePicker from "@/app/utils/commonDatepicker";
- 
 import { useSearchParams } from "next/navigation";
- 
-
 import { apiCall } from "@/app/utils/api";
-
 interface FormFieldProps {
   label: string;
   required?: boolean;
@@ -23,7 +17,6 @@ interface FormFieldProps {
   error?: string;  
   htmlFor?: string;  
 }
- 
 const FormField = ({
   label,
   required = false,
@@ -43,13 +36,12 @@ const FormField = ({
     </label>
     <div className="flex flex-col w-3/4">
       {children}
-      {error && ( // Conditionally render error message
+      {error && (  
         <p className="error-message text-red-500 text-xs mt-1">{error}</p>
       )}
     </div>
   </div>
 );
-
 export default function NewVehicle() {
   const insuranceOptions: Option[] = [
     { value: "icici", label: "ICICI Lombard" },
@@ -70,15 +62,11 @@ export default function NewVehicle() {
     { value: "pickup", label: "Pickup" },
     { value: "lorry", label: "Lorry" },
   ];
-
   const [activeTab, setActiveTab] = useState("owner_information");
   const [formErrors, setFormErrors] = useState<FormErrors>({});
-
   useInputValidation();
-
   const handleErrorToast = () =>
     showToast.error("Failed to save vehicle information.");
-
   const tabs = [
     { id: "owner_information", label: "Owner Information" },
     { id: "vehicle_details", label: "Vehicle Details" },
@@ -86,17 +74,11 @@ export default function NewVehicle() {
     { id: "load_availed_details", label: "Loan Availed Details" },
     { id: "vehicle_purchase_details", label: "Vehicle Purchase Details" },
   ];
-  
-
- 
   const [loanProvider, setLoanProvider] = useState<string | undefined>(undefined);
   const [insuranceCompany, setInsuranceCompany] = useState<string | undefined>(undefined);
   const [classOfTruck, setClassOfTruck] = useState<string | undefined>(undefined);
   const [truckType, setTruckType] = useState<string | undefined>(undefined);
-
-
   const [registrationDate, setregistrationDate] = useState<Date | undefined>();
- 
   const [insuranceExpiry, setInsuranceExpiry] = useState<Date | undefined>();
   const [permitExpiryDate, setPermitExpiryDate] = useState<Date | undefined>();
   const [npExpiryDate, setNpExpiryDate] = useState<Date | undefined>();
@@ -106,37 +88,39 @@ export default function NewVehicle() {
   const [truckInvoiceDate, setTruckInvoiceDate] = useState<Date | undefined>();
   const [fcExpiry, setFcexpiryDate] = useState<Date | undefined>();
   const [loanStartDate, setLoanStartDate] = useState<Date | undefined>();
-
   const formRef = useRef<HTMLFormElement>(null);
 
+  function formatDateToDMY(date: Date | undefined) {
+    if (!date) return "";
+    return date.toLocaleDateString("en-GB"); // DD/MM/YYYY
+  }
+
+
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (formRef.current) {
       const validationResults = validateForm(formRef.current); // Get all errors
       setFormErrors(validationResults); // Update error state
-
       const isFormValid = Object.keys(validationResults).length === 0;
-
       if (isFormValid) {
         const formData = new FormData(formRef.current);
         const formValues = Object.fromEntries(formData.entries());
         console.log("Form submitted successfully", formValues);
-
         try {
           const payload = {
             token: "putVehicle",
             data: {
               ...formValues,
-              // Explicitly add date values from state, as FormData doesn't pick them from DatePicker
-              registrationDate: registrationDate?.toISOString(),
-              insuranceExpiry: insuranceExpiry?.toISOString(),
-              permitExpiryDate: permitExpiryDate?.toISOString(),
-              npExpiryDate: npExpiryDate?.toISOString(),
-              quarterlyTaxExpiry: quarterlyTaxExpiry?.toISOString(),
-              truckInvoiceDate: truckInvoiceDate?.toISOString(),
-              fcExpiry: fcExpiry?.toISOString(),
-              loanStartDate: loanStartDate?.toISOString(),
+              // Format dates as DD/MM/YYYY strings for the payload
+              registrationDate: formatDateToDMY(registrationDate),
+              insuranceExpiry: formatDateToDMY(insuranceExpiry),
+              permitExpiryDate: formatDateToDMY(permitExpiryDate),
+              npExpiryDate: formatDateToDMY(npExpiryDate),
+              quarterlyTaxExpiry: formatDateToDMY(quarterlyTaxExpiry),
+              truckInvoiceDate: formatDateToDMY(truckInvoiceDate),
+              fcExpiry: formatDateToDMY(fcExpiry),
+              loanStartDate: formatDateToDMY(loanStartDate),
             },
           };
           const response = await apiCall(payload);
@@ -145,7 +129,6 @@ export default function NewVehicle() {
             showToast.success("Vehicle information saved successfully!");
             setFormErrors({});
             formRef.current.reset(); // Reset the form fields
-
             setregistrationDate(undefined);
             setInsuranceExpiry(undefined);
             setPermitExpiryDate(undefined);
@@ -167,11 +150,8 @@ export default function NewVehicle() {
         }
       } else {
         showToast.error("Please correct the errors in the form.");
-
-        // Find the first tab with an error and switch to it
-        let firstErrorTabId: string | null = null;
+   let firstErrorTabId: string | null = null;
         for (const tab of tabs) {
-          // Check if any field within this tab has an error
           const tabContentDiv = formRef.current.querySelector(
             `#${tab.id}_tab_content`
           );
@@ -190,13 +170,10 @@ export default function NewVehicle() {
           }
           if (firstErrorTabId) break;
         }
-
         if (firstErrorTabId && firstErrorTabId !== activeTab) {
-          setActiveTab(firstErrorTabId); // Switch to the tab with the first error
-          // Optional: Scroll to the first error field in that tab
+          setActiveTab(firstErrorTabId);  
           setTimeout(() => {
-            // Find the *first* error message element within the *entire form* after the tab has switched
-            const firstErrorFieldElement =
+             const firstErrorFieldElement =
               formRef.current?.querySelector(`.error-message`);
             if (firstErrorFieldElement) {
               firstErrorFieldElement.scrollIntoView({
@@ -204,23 +181,20 @@ export default function NewVehicle() {
                 block: "center",
               });
             }
-          }, 100); // Give React time to render the new tab content
+          }, 100);  
         }
       }
     }
   };
- 
   const searchParams = useSearchParams();
-  const edit_id = searchParams.get("id"); // returns string or null
+  const edit_id = searchParams.get("id");  
   useEffect(() => {
     const fetchVehicle = async () => {
       if (!edit_id) return;
-
       const payload = {
         token: "getVehicle",
         data: { id: Number(edit_id) },
       };
-
       try {
         const response = await apiCall(payload);
         if (response.status === 200) {
@@ -234,10 +208,8 @@ export default function NewVehicle() {
         showToast.error("Something went wrong");
       }
     };
-
     fetchVehicle();
   }, [edit_id]);
- 
   return (
     <Layout pageTitle="Vehicle Registration">
       <div className="flex-1">
@@ -256,7 +228,7 @@ export default function NewVehicle() {
                     htmlFor="registrationNumber"
                   >
                     <Input
-                      id="registrationNumber" // Added ID for htmlFor
+                      id="registrationNumber"  
                       name="registrationNumber"
                       placeholder="Enter registration number"
                       className="alphanumeric no_space all_uppercase"
@@ -269,7 +241,6 @@ export default function NewVehicle() {
                     error={formErrors.truckType}
                     htmlFor="truckType"
                   >
- 
                       <SearchableSelect
         id="truckType"
         name="truckType"
@@ -280,7 +251,6 @@ export default function NewVehicle() {
         value={truckType}
         onChange={(opt) => setTruckType(opt?.value)}
       />
- 
                   </FormField>
                   <FormField
                     label="Makers Name"
@@ -289,7 +259,7 @@ export default function NewVehicle() {
                     htmlFor="makerName"
                   >
                     <Input
-                      id="makerName" // Added ID for htmlFor
+                      id="makerName"  
                       name="makerName"
                       placeholder="Enter makers name"
                       className="capitalize alphanumeric"
@@ -347,13 +317,12 @@ export default function NewVehicle() {
                         htmlFor="owner"
                       >
                         <RadioGroup
-                          id="owner" // Added ID for htmlFor, assuming RadioGroup uses a hidden input or accessible element
+                          id="owner"  
                           name="owner"
                           options={[
                             { value: "New", label: "New" },
                             { value: "Existing", label: "Existing" },
                           ]}
-                          // data-validate="required" // Add data-validate if "Owner" is required
                         />
                       </FormField>
                       <FormField
@@ -363,7 +332,7 @@ export default function NewVehicle() {
                         htmlFor="address"
                       >
                         <Input
-                          id="address" // Added ID for htmlFor
+                          id="address" 
                           name="address"
                           placeholder="Enter Address"
                           className="capitalize"
@@ -375,13 +344,10 @@ export default function NewVehicle() {
                         error={formErrors.registrationDate}
                         htmlFor="registrationDate"
                       >
-                        {/* Ensure DatePicker correctly links to a hidden input with this name/ID for validation */}
-                        <DatePicker
- 
+                         <DatePicker
                           id="registrationDate"
                           name="registrationDate" // Prop to pass the name down
                           date={registrationDate}
- 
                           disableFuture
                           setDate={setregistrationDate}
                           placeholder="Select date"
@@ -425,7 +391,6 @@ export default function NewVehicle() {
                     </div>
                   </div>
                 </div>
-
                 <div
                   id="vehicle_details_tab_content"
                   className={`p-2 ${
@@ -440,8 +405,6 @@ export default function NewVehicle() {
                         error={formErrors.vehicleType}
                         htmlFor="vehicleType"
                       >
- 
-                        
       <SearchableSelect
         id="classOfTruck"
         name="classOfTruck"
@@ -452,8 +415,6 @@ export default function NewVehicle() {
         value={classOfTruck}
         onChange={(opt) => setClassOfTruck(opt?.value)}
       />
-
- 
                       </FormField>
                       <FormField
                         label="Model Number"
@@ -476,7 +437,7 @@ export default function NewVehicle() {
                         htmlFor="modelYear"
                       >
                         <select
-                          id="modelYear" // Added ID for htmlFor
+                          id="modelYear" 
                           name="modelYear"
                           className="form-control border border-gray-300 rounded px-3 py-2"
                           data-validate="required"
@@ -499,7 +460,7 @@ export default function NewVehicle() {
                         htmlFor="chasisNumber"
                       >
                         <Input
-                          id="chasisNumber" // Added ID for htmlFor
+                          id="chasisNumber"  
                           name="chasisNumber"
                           className="alphanumeric all_uppercase"
                           placeholder="Enter Chassis Number"
@@ -515,9 +476,7 @@ export default function NewVehicle() {
                         htmlFor="engineNumber"
                       >
                         <Input
- 
                           id="engineNumber"
- 
                           name="engineNumber"
                           className="alphanumeric all_uppercase"
                           placeholder="Enter Engine Number"
@@ -531,9 +490,7 @@ export default function NewVehicle() {
                         htmlFor="vehicleWeight"
                       >
                         <Input
- 
                           id="vehicleWeight"
- 
                           name="vehicleWeight"
                           className="number_with_decimal"
                           type="text"
@@ -559,7 +516,6 @@ export default function NewVehicle() {
                     </div>
                   </div>
                 </div>
-
                 <div
                   id="vehicle_expiry_details_tab_content"
                   className={`p-2 ${
@@ -696,7 +652,6 @@ export default function NewVehicle() {
                     </div>
                   </div>
                 </div>
-
                 <div
                   id="load_availed_details_tab_content"
                   className={`p-2 ${
@@ -794,7 +749,6 @@ export default function NewVehicle() {
                     </div>
                   </div>
                 </div>
-
                 <div
                   id="vehicle_purchase_details_tab_content"
                   className={`p-2 ${

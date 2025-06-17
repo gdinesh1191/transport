@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { LoadingProvider } from "./utils/pageLoader";
 import "./globals.css";
+import { Providers } from "./providers";
 
 export default function RootLayout({
   children,
@@ -57,6 +58,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <Providers>
         <LoadingProvider>
           {/* TopLoader */}
           {loading && (
@@ -68,6 +70,7 @@ export default function RootLayout({
 
           {children}
         </LoadingProvider>
+        </Providers>
       </body>
     </html>
   );

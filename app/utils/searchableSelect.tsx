@@ -33,8 +33,8 @@ const SearchableSelect = ({
   placeholder = 'Select an option',
   className = 'text-[13px]',
   'data-validate': dataValidate,
-  initialValue, // The prop to initially set the component's internal state
-  onChange: externalOnChange, // Renamed to avoid conflict with internal handler
+  initialValue,  
+  onChange: externalOnChange,  
   onAddNew,
   onRefresh,
   disabled = false,

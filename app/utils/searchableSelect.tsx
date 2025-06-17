@@ -1,6 +1,7 @@
- 'use client';
+ // searchableSelect.tsx
+'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 export interface Option {
   value: string;
@@ -15,15 +16,13 @@ interface Props {
   placeholder?: string;
   className?: string;
   'data-validate'?: string;
-  value?: string; // Controlled component support
-  onChange?: (option: Option | null) => void; // Callback for state management
-  onAddNew?: () => void; // Callback for "Add New" functionality
-  onRefresh?: () => void; // Callback for refresh functionality
+  initialValue?: string | null; // Use initialValue for setting the initial state
+  onChange?: (selectedValue: string | null) => void; // Optional callback for parent
+  onAddNew?: () => void;
+  onRefresh?: () => void;
   disabled?: boolean;
-  error?: string; // Error message support
+  error?: string;
   id?: string;
-  
-
 }
 
 const SearchableSelect = ({
@@ -34,8 +33,8 @@ const SearchableSelect = ({
   placeholder = 'Select an option',
   className = 'text-[13px]',
   'data-validate': dataValidate,
-  value,
-  onChange,
+  initialValue, // The prop to initially set the component's internal state
+  onChange: externalOnChange, // Renamed to avoid conflict with internal handler
   onAddNew,
   onRefresh,
   disabled = false,
@@ -44,50 +43,57 @@ const SearchableSelect = ({
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selected, setSelected] = useState<Option | null>(null);
+
+  // 1. Internal state to manage the currently selected option
+  const [currentSelection, setCurrentSelection] = useState<Option | null>(
+    initialValue ? options.find((opt) => opt.value === initialValue) || null : null
+  );
+
+  // 2. useEffect to update internal state if initialValue prop changes
+  // This ensures the component reacts to external changes (like fetching data for editing)
+  useEffect(() => {
+    const newOption = initialValue ? options.find((opt) => opt.value === initialValue) || null : null;
+    // Only update if the new initialValue is different from the current internal selection
+    if (newOption?.value !== currentSelection?.value) {
+      setCurrentSelection(newOption);
+    }
+  }, [initialValue, options]); // Dependencies: initialValue and options
+
   const wrapperRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Filter options based on search term
   const filteredOptions = searchable
     ? options.filter((option) =>
         option.label.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : options;
 
-  // Handle option selection
-  const handleSelect = (option: Option) => {
-    setSelected(option);
+  const handleSelect = useCallback((option: Option) => {
+    setCurrentSelection(option); // Update internal state
     setIsOpen(false);
     setSearchTerm('');
-    
-    // Call onChange callback if provided
-    if (onChange) {
-      onChange(option);
+    if (externalOnChange) {
+      externalOnChange(option.value); // Notify parent if callback is provided
     }
-  };
+  }, [externalOnChange]); // Dependency: externalOnChange
 
-  // Handle clearing selection
-  const handleClear = (e: React.MouseEvent) => {
+  const handleClear = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    setSelected(null);
+    setCurrentSelection(null); // Clear internal state
     setSearchTerm('');
-    
-    if (onChange) {
-      onChange(null);
+    if (externalOnChange) {
+      externalOnChange(null); // Notify parent of cleared selection
     }
-  };
+  }, [externalOnChange]); // Dependency: externalOnChange
 
-  // Handle click outside to close dropdown
-  const handleClickOutside = (e: MouseEvent) => {
+  const handleClickOutside = useCallback((e: MouseEvent) => {
     if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
       setIsOpen(false);
-      setSearchTerm(''); // Clear search when closing
+      setSearchTerm('');
     }
-  };
+  }, []);
 
-  // Handle keyboard navigation
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (disabled) return;
 
     switch (e.key) {
@@ -111,112 +117,109 @@ const SearchableSelect = ({
         break;
       case 'ArrowUp':
         e.preventDefault();
-        // Could implement option navigation here
         break;
     }
-  };
+  }, [disabled, isOpen, filteredOptions, handleSelect]);
 
-  // Handle search input changes
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-  };
+  }, []);
 
-  // Handle toggle dropdown
-  const handleToggle = () => {
+  const handleToggle = useCallback(() => {
     if (disabled) return;
-    
+
     const newIsOpen = !isOpen;
     setIsOpen(newIsOpen);
-    
-    // Focus search input when opening
+
     if (newIsOpen && searchable) {
       setTimeout(() => {
         searchInputRef.current?.focus();
       }, 100);
     }
-  };
+  }, [disabled, isOpen, searchable]);
 
-  // Sync with external value prop (controlled component)
-  useEffect(() => {
-    if (value !== undefined) {
-      const foundOption = options.find(opt => opt.value === value);
-      setSelected(foundOption || null);
-    }
-  }, [value, options]);
-
-  // Setup click outside listener
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Get current display value
-  const getDisplayValue = () => {
-    if (selected) return selected.label;
-    if (searchTerm && isOpen) return searchTerm;
-    return '';
-  };
+  }, [handleClickOutside]);
 
   return (
     <div ref={wrapperRef} className={`relative ${className}`}>
-      {/* Hidden input for form submission */}
+      {/* The hidden input will hold the actual value for form submission */}
       <input
         type="hidden"
         name={name}
-        value={selected?.value || ''}
+        value={currentSelection?.value || ''} // Controlled by internal state
         required={required}
         data-validate={dataValidate}
       />
-      
-      {/* Main select button */}
+
       <div
-  id={id}
-  className={`form-control flex items-center justify-between border rounded-md px-3 py-2 cursor-pointer ${
-    disabled
-      ? 'bg-gray-100 cursor-not-allowed opacity-60'
-      : ''
-  } ${
-    isOpen ? 'border-[#009333] ring-0.5 ring-[#009333]' : 'border-gray-300'
-  } ${error ? 'border-red-500' : ''}`}
-  onClick={handleToggle}
-  onKeyDown={handleKeyDown}
-  tabIndex={disabled ? -1 : 0}
-  role="combobox"
-  aria-expanded={isOpen}
-  aria-haspopup="listbox"
-  aria-labelledby={id}
->
-  {/* Selected value or placeholder */}
-  <span
-    className={`flex-1 truncate ${
-      selected ? 'text-black' : 'text-gray-500'
-    }`}
-  >
-    {selected?.label || placeholder}
-  </span>
+        id={id}
+        className={`form-control flex items-center justify-between border rounded-md px-3 py-2 cursor-pointer ${
+          disabled
+            ? 'bg-gray-100 cursor-not-allowed opacity-60'
+            : ''
+        } ${
+          isOpen ? 'border-[#009333] ring-0.5 ring-[#009333]' : 'border-gray-300'
+        } ${error ? 'border-red-500' : ''}`}
+        onClick={handleToggle}
+        onKeyDown={handleKeyDown}
+        tabIndex={disabled ? -1 : 0}
+        role="combobox"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-labelledby={id}
+      >
+        <span
+          className={`flex-1 truncate ${
+            currentSelection ? 'text-black' : 'text-gray-500'
+          }`}
+        >
+          {currentSelection?.label || placeholder}
+        </span>
 
-  {/* Dropdown arrow */}
-  <svg
-    className={`w-4 h-4 text-gray-400 transition-transform ${
-      isOpen ? 'rotate-180' : ''
-    }`}
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-  </svg>
-</div>
+        {currentSelection && !disabled && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+            aria-label="Clear selection"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        )}
 
-      {/* Error message */}
+        <svg
+          className={`w-4 h-4 text-gray-400 transition-transform ${
+            isOpen ? 'rotate-180' : ''
+          }`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+
       {error && (
         <p className="mt-1 text-sm text-red-600">{error}</p>
       )}
 
-      {/* Dropdown menu */}
       {isOpen && (
         <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
-          {/* Search input */}
           {searchable && (
             <div className="p-2 border-b border-gray-200">
               <input
@@ -231,7 +234,6 @@ const SearchableSelect = ({
             </div>
           )}
 
-          {/* Options list */}
           <div className="max-h-60 overflow-y-auto">
             {filteredOptions.length > 0 ? (
               <ul role="listbox">
@@ -239,13 +241,13 @@ const SearchableSelect = ({
                   <li
                     key={option.value}
                     className={`px-3 py-2 cursor-pointer text-sm hover:bg-blue-50 ${
-                      selected?.value === option.value 
-                        ? 'bg-blue-100 text-blue-900' 
+                      currentSelection?.value === option.value
+                        ? 'bg-blue-100 text-blue-900'
                         : 'text-gray-900'
                     }`}
                     onClick={() => handleSelect(option)}
                     role="option"
-                    aria-selected={selected?.value === option.value}
+                    aria-selected={currentSelection?.value === option.value}
                   >
                     {option.label}
                   </li>
@@ -258,7 +260,6 @@ const SearchableSelect = ({
             )}
           </div>
 
-          {/* Footer with actions */}
           {(onAddNew || onRefresh) && (
             <div className="flex justify-between items-center p-2 border-t border-gray-200 bg-gray-50">
               {onAddNew && (
@@ -266,7 +267,7 @@ const SearchableSelect = ({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onAddNew();
+                    if (onAddNew) onAddNew();
                     setIsOpen(false);
                   }}
                   className="flex items-center gap-1 text-sm text-green-600 hover:text-green-700 font-medium"
@@ -277,13 +278,14 @@ const SearchableSelect = ({
                   Add New
                 </button>
               )}
-              
+
               {onRefresh && (
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onRefresh();
+                    if (onRefresh) onRefresh();
+                    setIsOpen(false);
                   }}
                   className="text-blue-600 hover:text-blue-700 p-1 rounded"
                   aria-label="Refresh options"
@@ -291,6 +293,7 @@ const SearchableSelect = ({
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
+                  Refresh
                 </button>
               )}
             </div>

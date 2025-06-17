@@ -1,7 +1,7 @@
-// searchableSelect.tsx
+ // searchableSelect.tsx
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 export interface Option {
   value: string;
@@ -16,8 +16,8 @@ interface Props {
   placeholder?: string;
   className?: string;
   'data-validate'?: string;
-  value?: string | null; // Allow value to be null as well
-  onChange?: (option: Option | null) => void;
+  value?: string | null; // For controlled component behavior (when editing)
+  defaultValue?: string | null; // For uncontrolled component behavior (initial value for new forms)
   onAddNew?: () => void;
   onRefresh?: () => void;
   disabled?: boolean;
@@ -33,8 +33,8 @@ const SearchableSelect = ({
   placeholder = 'Select an option',
   className = 'text-[13px]',
   'data-validate': dataValidate,
-  value,
-  onChange,
+  value, // Controlled prop
+  defaultValue, // Uncontrolled prop
   onAddNew,
   onRefresh,
   disabled = false,
@@ -43,7 +43,13 @@ const SearchableSelect = ({
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selected, setSelected] = useState<Option | null>(null);
+
+  // Determine the initial selection based on 'value' (controlled) or 'defaultValue' (uncontrolled)
+  const initialSelectionValue = (value !== undefined) ? value : defaultValue;
+  const [currentSelection, setCurrentSelection] = useState<Option | null>(
+    initialSelectionValue ? options.find((opt) => opt.value === initialSelectionValue) || null : null
+  );
+
   const wrapperRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -53,32 +59,26 @@ const SearchableSelect = ({
       )
     : options;
 
-  const handleSelect = (option: Option) => {
-    setSelected(option);
+  const handleSelect = useCallback((option: Option) => {
+    setCurrentSelection(option); // Update internal state
     setIsOpen(false);
     setSearchTerm('');
-    if (onChange) {
-      onChange(option);
-    }
-  };
+  }, []);
 
-  const handleClear = (e: React.MouseEvent) => {
+  const handleClear = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    setSelected(null);
+    setCurrentSelection(null); // Clear internal state
     setSearchTerm('');
-    if (onChange) {
-      onChange(null); // Explicitly pass null when clearing
-    }
-  };
+  }, []);
 
-  const handleClickOutside = (e: MouseEvent) => {
+  const handleClickOutside = useCallback((e: MouseEvent) => {
     if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
       setIsOpen(false);
       setSearchTerm('');
     }
-  };
+  }, []);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (disabled) return;
 
     switch (e.key) {
@@ -104,13 +104,13 @@ const SearchableSelect = ({
         e.preventDefault();
         break;
     }
-  };
+  }, [disabled, isOpen, filteredOptions, handleSelect]);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-  };
+  }, []);
 
-  const handleToggle = () => {
+  const handleToggle = useCallback(() => {
     if (disabled) return;
 
     const newIsOpen = !isOpen;
@@ -121,29 +121,31 @@ const SearchableSelect = ({
         searchInputRef.current?.focus();
       }, 100);
     }
-  };
+  }, [disabled, isOpen, searchable]);
 
-  // Sync with external value prop
+  // EFFECT: Sync currentSelection with the 'value' prop only if 'value' is provided and changes
+  // This makes the component controlled when 'value' is present.
   useEffect(() => {
-    if (value === undefined || value === null) {
-      setSelected(null); // Explicitly set to null if value is undefined or null
-    } else {
-      const foundOption = options.find((opt) => opt.value === value);
-      setSelected(foundOption || null);
+    if (value !== undefined) { // Check if 'value' prop is explicitly provided
+      const newOption = value ? options.find((opt) => opt.value === value) || null : null;
+      if (newOption?.value !== currentSelection?.value) {
+        setCurrentSelection(newOption);
+      }
     }
-  }, [value, options]);
+  }, [value, options, currentSelection]); // Only depends on 'value' and 'options' when 'value' is controlled
 
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [handleClickOutside]);
 
   return (
     <div ref={wrapperRef} className={`relative ${className}`}>
+      {/* The hidden input will hold the actual value for form submission */}
       <input
         type="hidden"
         name={name}
-        value={selected?.value || ''}
+        value={currentSelection?.value || ''} // This is what FormData will pick up
         required={required}
         data-validate={dataValidate}
       />
@@ -167,13 +169,13 @@ const SearchableSelect = ({
       >
         <span
           className={`flex-1 truncate ${
-            selected ? 'text-black' : 'text-gray-500'
+            currentSelection ? 'text-black' : 'text-gray-500'
           }`}
         >
-          {selected?.label || placeholder}
+          {currentSelection?.label || placeholder}
         </span>
 
-        {selected && !disabled && ( // Add a clear button only when an option is selected and not disabled
+        {currentSelection && !disabled && (
           <button
             type="button"
             onClick={handleClear}
@@ -235,13 +237,13 @@ const SearchableSelect = ({
                   <li
                     key={option.value}
                     className={`px-3 py-2 cursor-pointer text-sm hover:bg-blue-50 ${
-                      selected?.value === option.value
+                      currentSelection?.value === option.value
                         ? 'bg-blue-100 text-blue-900'
                         : 'text-gray-900'
                     }`}
                     onClick={() => handleSelect(option)}
                     role="option"
-                    aria-selected={selected?.value === option.value}
+                    aria-selected={currentSelection?.value === option.value}
                   >
                     {option.label}
                   </li>
@@ -279,6 +281,7 @@ const SearchableSelect = ({
                   onClick={(e) => {
                     e.stopPropagation();
                     if (onRefresh) onRefresh();
+                    setIsOpen(false);
                   }}
                   className="text-blue-600 hover:text-blue-700 p-1 rounded"
                   aria-label="Refresh options"

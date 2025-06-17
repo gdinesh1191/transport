@@ -3,29 +3,28 @@
 
 import * as React from "react";
 import { CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils"; // Assuming this is your utility for Tailwind classes
+import { cn } from "@/lib/utils";
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
-} from "@/components/ui/popover"; // Assuming these are from Shadcn UI
-import { Button } from "@/components/ui/button"; // Assuming these are from Shadcn UI
-import { Calendar } from "@/components/ui/calendar"; // Assuming these are from Shadcn UI
-import { Input } from "@/components/ui/input"; // Assuming this is your Input component, likely from Shadcn UI
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
 
 interface DatePickerProps {
-  date: Date | undefined; // Back to Date object
-  setDate: (date: Date | undefined) => void; // Back to Date object
   className?: string;
   placeholder?: string;
-  name?: string;
+  name: string; // Make name required
   required?: boolean;
   "data-validate"?: string;
-  id?: string;
-  minDate?: Date; // 👈 Minimum allowed date
-  maxDate?: Date; // 👈 Maximum allowed date
-  disableFuture?: boolean; // 👈 Optional shortcut
-  disablePast?: boolean; // 👈 Optional shortcut
+  id: string; // Make id required
+  minDate?: Date; // Minimum allowed date
+  maxDate?: Date; // Maximum allowed date
+  disableFuture?: boolean; // Optional shortcut
+  disablePast?: boolean; // Optional shortcut
+  initialDate?: Date; // Prop for setting initial date
 }
 
 // Format date as DD/MM/YYYY
@@ -39,8 +38,6 @@ function isValidDate(date: Date | undefined) {
 }
 
 const DatePicker: React.FC<DatePickerProps> = ({
-  date: propDate, // Renamed to propDate to avoid conflict with local state
-  setDate, // This setDate expects a Date object now
   className,
   placeholder = "Select date",
   name,
@@ -51,6 +48,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
   maxDate,
   disableFuture,
   disablePast,
+  initialDate,
 }) => {
   const today = React.useMemo(() => {
     const d = new Date();
@@ -58,104 +56,108 @@ const DatePicker: React.FC<DatePickerProps> = ({
     return d;
   }, []);
 
-  const [localDate, setLocalDate] = React.useState<Date | undefined>(propDate);
-  const [inputValue, setInputValue] = React.useState(formatDate(propDate));
+  // Use a single state for the selected date
+  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(
+    initialDate
+  );
+  // Derived state for the input field display
+  const [inputValue, setInputValue] = React.useState(formatDate(initialDate));
   const [open, setOpen] = React.useState(false);
-  const [month, setMonth] = React.useState<Date | undefined>(propDate);
+  // Month for the calendar view, defaults to selectedDate or today
+  const [calendarMonth, setCalendarMonth] = React.useState<Date>(
+    initialDate || today
+  );
 
-  // --- Combined Effect for Initialization and Prop Syncing ---
+  // Effect to sync initialDate prop with internal state,
+  // and set default to today if required or if disableFuture/Past is true and no initialDate
   React.useEffect(() => {
-    const shouldSetInitialDefault = propDate === undefined && (required || disableFuture || disablePast);
-
-    if (shouldSetInitialDefault) {
-      const initialDateToSet = new Date();
-      initialDateToSet.setHours(0, 0, 0, 0);
-
-      setLocalDate(initialDateToSet);
-      setInputValue(formatDate(initialDateToSet));
-      setDate(initialDateToSet); // Correct: Pass Date object
-      setMonth(initialDateToSet);
-    } else if (propDate !== undefined) {
-      setLocalDate(propDate);
-      setInputValue(formatDate(propDate));
-      setMonth(propDate);
-    } else {
-      setLocalDate(undefined);
-      setInputValue("");
-      setDate(undefined); // Correct: Pass undefined
-      setMonth(today);
+    if (initialDate !== undefined && !areDatesEqual(initialDate, selectedDate)) {
+      // If initialDate prop changes and it's different from current selectedDate
+      setSelectedDate(initialDate);
+      setInputValue(formatDate(initialDate));
+      setCalendarMonth(initialDate); // Set calendar to the initial date's month
+    } else if (initialDate === undefined && selectedDate === undefined) {
+      // If no initialDate prop, and nothing is selected, check for default behavior
+      if (required || disableFuture || disablePast) {
+        // Set to today if required or constraints apply and no date is set
+        setSelectedDate(today);
+        setInputValue(formatDate(today));
+        setCalendarMonth(today);
+      } else {
+        // Otherwise, ensure no date is selected and input is empty
+        setSelectedDate(undefined);
+        setInputValue("");
+        setCalendarMonth(today); // Calendar still opens to today
+      }
     }
-  }, [propDate, required, setDate, disableFuture, disablePast, today]);
+    // Note: If selectedDate is already set and matches initialDate, do nothing.
+    // This prevents infinite loops or unnecessary updates.
+  }, [initialDate, required, disableFuture, disablePast, today, selectedDate]);
 
+
+  // Helper to compare dates without time for useEffect dependency
+  const areDatesEqual = (date1: Date | undefined, date2: Date | undefined) => {
+    if (!date1 && !date2) return true;
+    if (!date1 || !date2) return false;
+    return date1.getFullYear() === date2.getFullYear() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getDate() === date2.getDate();
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setInputValue(value);
 
-    // Try to parse DD/MM/YYYY
     const parts = value.split("/");
     if (parts.length === 3) {
       const [dayStr, monthStr, yearStr] = parts;
       const day = parseInt(dayStr, 10);
-      const month = parseInt(monthStr, 10); // month-1 for Date constructor
+      const monthNum = parseInt(monthStr, 10); // month-1 for Date constructor
       const year = parseInt(yearStr, 10);
 
-      // Basic validity check for numbers
-      if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
-        const parsedDate = new Date(year, month - 1, day);
-        parsedDate.setHours(0, 0, 0, 0); // Normalize parsed date to start of day
+      if (!isNaN(day) && !isNaN(monthNum) && !isNaN(year)) {
+        const parsedDate = new Date(year, monthNum - 1, day);
+        parsedDate.setHours(0, 0, 0, 0);
 
         if (isValidDate(parsedDate)) {
-          // Check if parsed date is within allowed min/max range
           const isDateAllowed =
             (!minDate || parsedDate >= minDate) &&
             (!maxDate || parsedDate <= maxDate) &&
             (!disableFuture || parsedDate <= today) &&
-            (!disablePast || parsedDate >= today); // Use `today` which is normalized
+            (!disablePast || parsedDate >= today);
 
           if (isDateAllowed) {
-            setLocalDate(parsedDate);
-            setDate(parsedDate); // Correct: Update parent state with Date object
-            setMonth(parsedDate); // Sync month for calendar view
+            setSelectedDate(parsedDate);
+            setCalendarMonth(parsedDate); // Update calendar month on valid manual input
           } else {
-            // If date is invalid or out of range, clear parent state
-            setDate(undefined); // Correct: Clear parent state with undefined
-            setLocalDate(undefined); // Clear local state if invalid
+            setSelectedDate(undefined); // Clear if out of range
           }
         } else {
-          // If date is invalid, clear parent state
-          setDate(undefined); // Correct: Clear parent state with undefined
-          setLocalDate(undefined); // Clear local state if invalid
+          setSelectedDate(undefined); // Clear if invalid date
         }
       } else {
-        // If parts are not numbers, clear parent state
-        setDate(undefined); // Correct: Clear parent state with undefined
-        setLocalDate(undefined); // Clear local state if invalid
+        setSelectedDate(undefined); // Clear if parts are not numbers
       }
+    } else if (value === "") {
+      setSelectedDate(undefined); // Clear if input is empty
     } else {
-      // If input is not a complete DD/MM/YYYY, clear parent state
-      setDate(undefined); // Correct: Clear parent state with undefined
-      setLocalDate(undefined); // Clear local state if invalid
-    }
-    // If the input is empty, clear the date
-    if (value === "") {
-      setLocalDate(undefined);
-      setDate(undefined); // Correct: Clear parent state with undefined
+      setSelectedDate(undefined); // Clear if not a complete DD/MM/YYYY
     }
   };
 
-
-  const handleCalendarSelect = (selectedDate: Date | undefined) => {
-    if (selectedDate) {
-      selectedDate.setHours(0, 0, 0, 0); // Normalize selected date to start of day
+  const handleCalendarSelect = (date: Date | undefined) => {
+    // This is the crucial part: `date` argument is the selected date from the calendar.
+    if (date) {
+      date.setHours(0, 0, 0, 0); // Normalize selected date
     }
-    setLocalDate(selectedDate);
-    setDate(selectedDate); // Correct: Update parent state with Date object
-    setInputValue(formatDate(selectedDate));
-    if (selectedDate) {
-      setMonth(selectedDate); // Set calendar to selected month
+    setSelectedDate(date); // Set the selected date state
+    setInputValue(formatDate(date)); // Update the input field display
+    if (date) {
+      setCalendarMonth(date); // Keep calendar on the selected month
+    } else {
+        setCalendarMonth(today); // If cleared, go back to today's month
     }
-    setOpen(false);
+    setOpen(false); // Close the popover
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -165,28 +167,21 @@ const DatePicker: React.FC<DatePickerProps> = ({
     }
   };
 
-  // The hidden input should reflect the actual date in local state
-  const getHiddenInputValue = () => {
-    return localDate ? localDate.toLocaleDateString("en-GB") : ""; // Consistent with input display
-  };
-
   return (
     <div className={cn("relative", className)}>
       {/* Hidden input for form submission */}
-      {name && ( // Only render if name is provided
-        <input
-          type="hidden"
-          name={name}
-          value={getHiddenInputValue()} // Use localDate for value, which is formatted as DD/MM/YYYY by getHiddenInputValue
-          required={required} // Propagate required to hidden input
-          data-validate={dataValidate} // Propagate data-validate to hidden input
-        />
-      )}
+      <input
+        type="hidden"
+        name={name}
+        value={formatDate(selectedDate)} // Always format for the hidden input
+        required={required}
+        data-validate={dataValidate}
+      />
 
       <div className="relative flex gap-2">
         <Input
-          id={id} // ID for linking with FormField label's htmlFor
-          value={inputValue} // Bind to inputValue for manual input control
+          id={id}
+          value={inputValue}
           placeholder={placeholder}
           className="bg-background pr-10"
           onChange={handleInputChange}
@@ -211,19 +206,28 @@ const DatePicker: React.FC<DatePickerProps> = ({
           >
             <Calendar
               mode="single"
-              selected={localDate} // Use localDate for selected
+              selected={selectedDate} // Bind calendar to selectedDate state
               captionLayout="dropdown"
-              month={month}
-              onMonthChange={setMonth}
-              onSelect={handleCalendarSelect}
-              defaultMonth={localDate || today} // Default calendar to selected date or today
+              month={calendarMonth} // Control calendar's displayed month
+              onMonthChange={setCalendarMonth}
+              onSelect={handleCalendarSelect} // This is where the selected date is handled
+              defaultMonth={calendarMonth} // Default calendar to its controlled month
               disabled={(dateToCheck) => {
-                // Normalize dates to start of day for comparison
-                const normalizedDateToCheck = new Date(dateToCheck.getFullYear(), dateToCheck.getMonth(), dateToCheck.getDate());
-                const normalizedToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                const normalizedDateToCheck = new Date(
+                  dateToCheck.getFullYear(),
+                  dateToCheck.getMonth(),
+                  dateToCheck.getDate()
+                );
+                const normalizedToday = new Date(
+                  today.getFullYear(),
+                  today.getMonth(),
+                  today.getDate()
+                );
 
-                if (disableFuture && normalizedDateToCheck > normalizedToday) return true;
-                if (disablePast && normalizedDateToCheck < normalizedToday) return true;
+                if (disableFuture && normalizedDateToCheck > normalizedToday)
+                  return true;
+                if (disablePast && normalizedDateToCheck < normalizedToday)
+                  return true;
                 if (minDate && normalizedDateToCheck < minDate) return true;
                 if (maxDate && normalizedDateToCheck > maxDate) return true;
                 return false;

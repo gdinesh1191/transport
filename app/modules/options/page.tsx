@@ -2,8 +2,9 @@
 
 import { useRef, useState, useEffect } from "react";
 import Layout from "../../components/Layout";
-import { validateForm } from "@/app/utils/formValidations"; // Import the utility
+import { validateForm, FormErrors } from "@/app/utils/formValidations";
 import SweetAlert, { SweetAlertHandler } from "@/app/utils/sweetAlert";
+import ToastContainer, { showToast } from "@/app/utils/toaster";
 import { apiCall } from "@/app/utils/api";
 import { Input } from "@/app/utils/form-controls";
 
@@ -12,20 +13,30 @@ const FormField = ({
   required = false,
   children,
   className = "",
+   error,
+  htmlFor,
 }: {
   label: string;
   required?: boolean;
   children: React.ReactNode;
   className?: string;
+  error?: string;  
+  htmlFor?: string; 
 }) => (
   <div
     className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}
   >
-    <label className="form-label w-50">
+    <label className="form-label w-50" htmlFor={htmlFor}>
+      {" "}
       {label}
       {required && <span className="form-required text-red-500">*</span>}
     </label>
-    <div className="flex flex-col w-3/4 flex-grow">{children}</div>
+    <div className="flex flex-col w-3/4">
+      {children}
+      {error && (  
+        <p className="error-message text-red-500 text-xs mt-1">{error}</p>
+      )}
+    </div>
   </div>
 );
 
@@ -69,6 +80,7 @@ const Options = () => {
   });
   const [tableData, setTableData] = useState<any[]>([]);
   const [editingId, setEditingId] = useState<number | null>(0);
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const formRef = useRef<HTMLFormElement>(null);
   const titles: { [key: string]: string } = {
     insuranceCompany: "Insurance Company",
@@ -80,7 +92,8 @@ const Options = () => {
   useEffect(() => {
     fetchOptions("insuranceCompany");
   }, []);
-  
+    const handleErrorToast = () =>
+    showToast.error("Failed to save Options information.");
 
   const handleFormTypeClick = (formType: string) => {
     setActiveForm(formType);
@@ -116,57 +129,48 @@ const Options = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // alertRef.current?.showAlert(
-    //   "warning",
-    //   "Are you sure?",
-    //   "This cannot be undone.",
-    //   () => {
-    //     alertRef.current?.showAlert(
-    //       "success",
-    //       "Deleted!",
-    //       "Your file was successfully deleted.",
-    //       () => alertRef.current?.hideAlert() // ← Manually close it
-    //     );
-    //   },
-    //   () => {
-    //     alertRef.current?.showAlert(
-    //       "error",
-    //       "Cancelled!",
-    //       "Your file is safe.",
-    //       () => alertRef.current?.hideAlert() // ← Same here
-    //     );
-    //   }
-    // );
-    if (formRef.current) {
-      if (validateForm(formRef.current)) {
-        const formData = new FormData(formRef.current);
-        const formValues = Object.fromEntries(formData.entries());
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-        try {
-          const payload = {
-            token: "putOption",
-            data: {
-              id: editingId,
-              name: formValues.name,
-              remarks: formValues.remarks,
-              type: activeForm,
-              status: 1,
-            },
-          };
-          const response = await apiCall(payload);
-          if (response.status === 200) {
-            fetchOptions(activeForm);
-            setFormData({ name: "", remarks: "" });
-            setEditingId(null);
-          }
-        } catch (error) {
-          console.error("Error adding option:", error);
+  if (formRef.current) {
+    const errors: FormErrors = validateForm(formRef.current);
+    setFormErrors(errors); // Update the formErrors state
+
+    if (Object.keys(errors).length === 0) {
+      // If no validation errors, proceed with API call
+      const formData = new FormData(formRef.current);
+      const formValues = Object.fromEntries(formData.entries());
+
+      try {
+        const payload = {
+          token: "putOption",
+          data: {
+            id: editingId,
+            name: formValues.name,
+            remarks: formValues.remarks,
+            type: activeForm,
+            status: 1,
+          },
+        };
+        const response = await apiCall(payload);
+        if (response.status === 200) {
+          fetchOptions(activeForm);
+          setFormData({ name: "", remarks: "" });
+          setEditingId(null);
+          showToast.success("Options information saved successfully!");
+        } else {
+          handleErrorToast(); // API call failed toast
         }
+      } catch (error) {
+        console.error("API call error:", error);
+        handleErrorToast(); // API call exception toast
       }
+    } else {
+      // If validation errors exist, show a toaster message
+      showToast.error("Please correct the errors in the form.");
     }
-  };
+  }
+};
 
   const fetchOptions = async (type: string) => {
     try {
@@ -309,23 +313,22 @@ const Options = () => {
 
               {activeForm && (
                 <div className="w-full flex justify-center pt-4">
-                  <form
-                    ref={formRef}
+                 <form ref={formRef} onSubmit={handleSubmit} 
                     className="p-4 w-full max-w-2xl"
                     autoComplete="off"
                   >
-                    <FormField label="Name" required>
-                      <Input
-                        name="name"
-                        placeholder="Enter name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        data-validate="required"
-                        className="capitalize w-full"
-                      />
-                    </FormField>
-
-                    <FormField label="Remarks" required>
+                   <FormField label="Name" required error={formErrors.name} htmlFor="nameInput"> {/* Changed formErrors.Name to formErrors.name and added htmlFor */}
+  <Input
+    name="name"
+    id="nameInput" 
+    placeholder="Enter name"
+    value={formData.name}
+    onChange={handleInputChange}
+    data-validate="required"
+    className="capitalize w-full"
+  />
+</FormField>
+                    <FormField label="Remarks" >
                       <Input
                         name="remarks"
                         placeholder="Enter remarks"
@@ -416,7 +419,9 @@ const Options = () => {
             </div>
           </div>
         </main>
+           <ToastContainer />
       </div>
+    
     </Layout>
   );
 };

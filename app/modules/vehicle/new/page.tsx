@@ -129,7 +129,7 @@ export default function NewVehicle() {
             data: {
               ...formValues,
               // Explicitly add date values from state, as FormData doesn't pick them from DatePicker
-              registerationDate: registerationDate?.toISOString(),
+              registrationDate: registrationDate?.toISOString(),
               insuranceExpiry: insuranceExpiry?.toISOString(),
               permitExpiryDate: permitExpiryDate?.toISOString(),
               npExpiryDate: npExpiryDate?.toISOString(),
@@ -274,7 +274,7 @@ export default function NewVehicle() {
         id="truckType"
         name="truckType"
         placeholder="Select truck type"
-        options={classOfTruckOptions}
+        options={vehicleTypeOptions}
         searchable
         data-validate="required"
         value={truckType}
@@ -372,8 +372,8 @@ export default function NewVehicle() {
                       </FormField>
                       <FormField
                         label="Registration Date"
-                        error={formErrors.registerationDate}
-                        htmlFor="registerationDate"
+                        error={formErrors.registrationDate}
+                        htmlFor="registrationDate"
                       >
                         {/* Ensure DatePicker correctly links to a hidden input with this name/ID for validation */}
                         <DatePicker
@@ -383,7 +383,7 @@ export default function NewVehicle() {
                           date={registrationDate}
  
                           disableFuture
-                          setDate={setregisterationDate}
+                          setDate={setregistrationDate}
                           placeholder="Select date"
                           className="w-full"
                           required={true}

@@ -88,7 +88,7 @@ export default function NewEmployee() {
       setFormData((prev) => ({ ...prev, driverDetails: { ...prev.driverDetails, licenseExpiry: date } }));
     }
   };
-
+ 
   const handleSearchableSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };

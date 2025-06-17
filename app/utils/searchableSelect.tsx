@@ -16,8 +16,8 @@ interface Props {
   placeholder?: string;
   className?: string;
   'data-validate'?: string;
-  value?: string | null; // For controlled component behavior (when editing)
-  defaultValue?: string | null; // For uncontrolled component behavior (initial value for new forms)
+  initialValue?: string | null; // Use initialValue for setting the initial state
+  onChange?: (selectedValue: string | null) => void; // Optional callback for parent
   onAddNew?: () => void;
   onRefresh?: () => void;
   disabled?: boolean;
@@ -33,8 +33,8 @@ const SearchableSelect = ({
   placeholder = 'Select an option',
   className = 'text-[13px]',
   'data-validate': dataValidate,
-  value, // Controlled prop
-  defaultValue, // Uncontrolled prop
+  initialValue, // The prop to initially set the component's internal state
+  onChange: externalOnChange, // Renamed to avoid conflict with internal handler
   onAddNew,
   onRefresh,
   disabled = false,
@@ -44,11 +44,20 @@ const SearchableSelect = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Determine the initial selection based on 'value' (controlled) or 'defaultValue' (uncontrolled)
-  const initialSelectionValue = (value !== undefined) ? value : defaultValue;
+  // 1. Internal state to manage the currently selected option
   const [currentSelection, setCurrentSelection] = useState<Option | null>(
-    initialSelectionValue ? options.find((opt) => opt.value === initialSelectionValue) || null : null
+    initialValue ? options.find((opt) => opt.value === initialValue) || null : null
   );
+
+  // 2. useEffect to update internal state if initialValue prop changes
+  // This ensures the component reacts to external changes (like fetching data for editing)
+  useEffect(() => {
+    const newOption = initialValue ? options.find((opt) => opt.value === initialValue) || null : null;
+    // Only update if the new initialValue is different from the current internal selection
+    if (newOption?.value !== currentSelection?.value) {
+      setCurrentSelection(newOption);
+    }
+  }, [initialValue, options]); // Dependencies: initialValue and options
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -63,13 +72,19 @@ const SearchableSelect = ({
     setCurrentSelection(option); // Update internal state
     setIsOpen(false);
     setSearchTerm('');
-  }, []);
+    if (externalOnChange) {
+      externalOnChange(option.value); // Notify parent if callback is provided
+    }
+  }, [externalOnChange]); // Dependency: externalOnChange
 
   const handleClear = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     setCurrentSelection(null); // Clear internal state
     setSearchTerm('');
-  }, []);
+    if (externalOnChange) {
+      externalOnChange(null); // Notify parent of cleared selection
+    }
+  }, [externalOnChange]); // Dependency: externalOnChange
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
     if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
@@ -123,17 +138,6 @@ const SearchableSelect = ({
     }
   }, [disabled, isOpen, searchable]);
 
-  // EFFECT: Sync currentSelection with the 'value' prop only if 'value' is provided and changes
-  // This makes the component controlled when 'value' is present.
-  useEffect(() => {
-    if (value !== undefined) { // Check if 'value' prop is explicitly provided
-      const newOption = value ? options.find((opt) => opt.value === value) || null : null;
-      if (newOption?.value !== currentSelection?.value) {
-        setCurrentSelection(newOption);
-      }
-    }
-  }, [value, options, currentSelection]); // Only depends on 'value' and 'options' when 'value' is controlled
-
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -145,7 +149,7 @@ const SearchableSelect = ({
       <input
         type="hidden"
         name={name}
-        value={currentSelection?.value || ''} // This is what FormData will pick up
+        value={currentSelection?.value || ''} // Controlled by internal state
         required={required}
         data-validate={dataValidate}
       />
@@ -289,6 +293,7 @@ const SearchableSelect = ({
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
+                  Refresh
                 </button>
               )}
             </div>

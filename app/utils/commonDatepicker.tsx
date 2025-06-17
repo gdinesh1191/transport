@@ -1,4 +1,4 @@
- // app/utils/commonDatepicker.tsx
+// app/utils/commonDatepicker.tsx
 "use client";
 
 import * as React from "react";
@@ -25,6 +25,7 @@ interface DatePickerProps {
   disableFuture?: boolean; // Optional shortcut
   disablePast?: boolean; // Optional shortcut
   initialDate?: Date; // Prop for setting initial date
+  onChange?: (value: string) => void;
 }
 
 // Format date as DD/MM/YYYY
@@ -49,6 +50,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
   disableFuture,
   disablePast,
   initialDate,
+  onChange,
 }) => {
   const today = React.useMemo(() => {
     const d = new Date();
@@ -71,7 +73,10 @@ const DatePicker: React.FC<DatePickerProps> = ({
   // Effect to sync initialDate prop with internal state,
   // and set default to today if required or if disableFuture/Past is true and no initialDate
   React.useEffect(() => {
-    if (initialDate !== undefined && !areDatesEqual(initialDate, selectedDate)) {
+    if (
+      initialDate !== undefined &&
+      !areDatesEqual(initialDate, selectedDate)
+    ) {
       // If initialDate prop changes and it's different from current selectedDate
       setSelectedDate(initialDate);
       setInputValue(formatDate(initialDate));
@@ -94,14 +99,15 @@ const DatePicker: React.FC<DatePickerProps> = ({
     // This prevents infinite loops or unnecessary updates.
   }, [initialDate, required, disableFuture, disablePast, today, selectedDate]);
 
-
   // Helper to compare dates without time for useEffect dependency
   const areDatesEqual = (date1: Date | undefined, date2: Date | undefined) => {
     if (!date1 && !date2) return true;
     if (!date1 || !date2) return false;
-    return date1.getFullYear() === date2.getFullYear() &&
-           date1.getMonth() === date2.getMonth() &&
-           date1.getDate() === date2.getDate();
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    );
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,7 +134,10 @@ const DatePicker: React.FC<DatePickerProps> = ({
 
           if (isDateAllowed) {
             setSelectedDate(parsedDate);
-            setCalendarMonth(parsedDate); // Update calendar month on valid manual input
+            setCalendarMonth(parsedDate);
+            if (onChange) {
+              onChange(formatDate(parsedDate));
+            } // Update calendar month on valid manual input
           } else {
             setSelectedDate(undefined); // Clear if out of range
           }
@@ -155,7 +164,10 @@ const DatePicker: React.FC<DatePickerProps> = ({
     if (date) {
       setCalendarMonth(date); // Keep calendar on the selected month
     } else {
-        setCalendarMonth(today); // If cleared, go back to today's month
+      setCalendarMonth(today); // If cleared, go back to today's month
+    }
+    if (onChange) {
+      onChange(formatDate(date));
     }
     setOpen(false); // Close the popover
   };

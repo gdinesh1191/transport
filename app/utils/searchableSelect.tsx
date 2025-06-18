@@ -1,5 +1,4 @@
- // searchableSelect.tsx
-'use client';
+ 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 
@@ -16,8 +15,8 @@ interface Props {
   placeholder?: string;
   className?: string;
   'data-validate'?: string;
-  initialValue?: string | null; // Use initialValue for setting the initial state
-  onChange?: (selectedValue: string | null) => void; // Optional callback for parent
+  initialValue?: string | null;  
+  onChange?: (selectedValue: string | null) => void;  
   onAddNew?: () => void;
   onRefresh?: () => void;
   disabled?: boolean;
@@ -33,8 +32,8 @@ const SearchableSelect = ({
   placeholder = 'Select an option',
   className = 'text-[13px]',
   'data-validate': dataValidate,
-  initialValue, // The prop to initially set the component's internal state
-  onChange: externalOnChange, // Renamed to avoid conflict with internal handler
+  initialValue,
+  onChange: externalOnChange,
   onAddNew,
   onRefresh,
   disabled = false,
@@ -54,10 +53,11 @@ const SearchableSelect = ({
   useEffect(() => {
     const newOption = initialValue ? options.find((opt) => opt.value === initialValue) || null : null;
     // Only update if the new initialValue is different from the current internal selection
-    if (newOption?.value !== currentSelection?.value) {
+    // or if the initialValue is null/undefined and currentSelection is not.
+    if (newOption?.value !== currentSelection?.value || (newOption === null && currentSelection !== null)) {
       setCurrentSelection(newOption);
     }
-  }, [initialValue, options]); // Dependencies: initialValue and options
+  }, [initialValue, options, currentSelection]);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -75,7 +75,7 @@ const SearchableSelect = ({
     if (externalOnChange) {
       externalOnChange(option.value); // Notify parent if callback is provided
     }
-  }, [externalOnChange]); // Dependency: externalOnChange
+  }, [externalOnChange]);
 
   const handleClear = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -84,7 +84,7 @@ const SearchableSelect = ({
     if (externalOnChange) {
       externalOnChange(null); // Notify parent of cleared selection
     }
-  }, [externalOnChange]); // Dependency: externalOnChange
+  }, [externalOnChange]);
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
     if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {

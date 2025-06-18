@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState, ChangeEvent, FormEvent, useRef, useEffect } from "react";
 import Layout from "../../../components/Layout";
 import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
-import DatePicker from "@/app/utils/commonDatepicker"; // Assuming this is your DatePicker component
+import DatePicker from "@/app/utils/commonDatepicker";
 import { validateForm } from "@/app/utils/formValidations";
 import useInputValidation from "@/app/utils/inputValidations";
+import { Input } from "@/app/utils/form-controls";
 
 // Form field components for reusability
 const FormField = ({
@@ -30,44 +31,27 @@ const FormField = ({
   </div>
 );
 
-const Input = ({
-  name,
-  placeholder,
-  type = "text",
-  className = "",
-  ...props
-}: {
-  name: string;
-  placeholder?: string;
-  type?: string;
-  className?: string;
-  [key: string]: any;
-}) => (
-  <input
-    type={type}
-    name={name}
-    placeholder={placeholder}
-    className={`form-control ${className}`}
-    {...props}
-  />
-);
-
 export default function NewTrip() {
-  const [tripDate, setTripDate] = useState(""); // This state isn't being used for validation, `selectedDate` is.
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [driverName, setDriverName] = useState("");
+  const [AgentBrokerName, setAgentBrokerName] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
-  useInputValidation(); // This hook is for general input validation, not directly controlling the modal button.
+  useInputValidation();
 
   const [showForm, setShowForm] = useState(false);
-  const [itemDetails, setItemDetails] = useState([]); // Not relevant to the current problem
-  const [otherCharges, setOtherCharges] = useState("0"); // Not relevant to the current problem
+  const [itemDetails, setItemDetails] = useState([
+    { id: 1, itemName: "", remarks: "", quantity: "", rent: "", total: "" },
+  ]); // Initialize with one row
+  const [otherCharges, setOtherCharges] = useState("0");
   const initialModalRef = useRef<HTMLDivElement | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined); // Initialize as undefined
-  const [isFormValid, setIsFormValid] = useState(false); // Initialize to false
+
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [isFormValid, setIsFormValid] = useState(true);
+
+  const [subTotal, setSubTotal] = useState("0.00");
+  const [netTotal, setNetTotal] = useState("0.00");
 
   useEffect(() => {
-    // Check if selectedDate is a valid Date object (not null, undefined, or "Invalid Date")
     const isDateValid = selectedDate instanceof Date && !isNaN(selectedDate.getTime());
     const isVehicleValid = vehicleNumber.trim() !== "";
     const isDriverValid = driverName.trim() !== "";
@@ -78,7 +62,20 @@ export default function NewTrip() {
     console.log("Form valid?", isDateValid && isVehicleValid && isDriverValid);
 
     setIsFormValid(isDateValid && isVehicleValid && isDriverValid);
-  }, [selectedDate, vehicleNumber, driverName]); // Depend on these states
+  }, [selectedDate, vehicleNumber, driverName]);
+
+  useEffect(() => {
+    const calculatedSubTotal = itemDetails.reduce((acc, item) => {
+      const total = parseFloat(item.total) || 0;
+      return acc + total;
+    }, 0);
+    setSubTotal(calculatedSubTotal.toFixed(2));
+  }, [itemDetails]);
+
+  useEffect(() => {
+    const calculatedNetTotal = (parseFloat(subTotal) + parseFloat(otherCharges || "0")).toFixed(2);
+    setNetTotal(calculatedNetTotal);
+  }, [subTotal, otherCharges]);
 
   const agentOptions: Option[] = [
     { value: "40", label: "Karthi" },
@@ -95,11 +92,12 @@ export default function NewTrip() {
   ];
 
   const handleCreateTrip = () => {
-    // This check is redundant if the button is already disabled when !isFormValid
-    if (!isFormValid) return;
-
     if (initialModalRef.current) {
       initialModalRef.current.classList.add("hidden");
+    }
+    if (!isFormValid) {
+      console.warn("Attempted to create trip with invalid initial form data.");
+      return;
     }
     setShowForm(true);
   };
@@ -108,11 +106,43 @@ export default function NewTrip() {
     if (initialModalRef.current) {
       initialModalRef.current.classList.add("hidden");
     }
-    // Optionally reset states when cancelling to ensure modal reappears correctly if needed
     setSelectedDate(undefined);
     setVehicleNumber("");
     setDriverName("");
-    setIsFormValid(false); // Reset form validity
+    setIsFormValid(false);
+  };
+
+  // Function to add a new row
+  const addRow = () => {
+    setItemDetails((prevDetails) => [
+      ...prevDetails,
+      {
+        id: prevDetails.length > 0 ? Math.max(...prevDetails.map(item => item.id)) + 1 : 1,
+        itemName: "",
+        remarks: "",
+        quantity: "",
+        rent: "",
+        total: "",
+      },
+    ]);
+  };
+
+  // Function to delete a row
+  const deleteRow = (id: number) => {
+    setItemDetails((prevDetails) => prevDetails.filter((item) => item.id !== id));
+  };
+
+  // Function to update an item's details (quantity, rent, total)
+  const updateItemDetail = (
+    id: number,
+    field: string,
+    value: string | number
+  ) => {
+    setItemDetails((prevDetails) =>
+      prevDetails.map((item) =>
+        item.id === id ? { ...item, [field]: value } : item
+      )
+    );
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -120,12 +150,10 @@ export default function NewTrip() {
     if (formRef.current && validateForm(formRef.current)) {
       const formData = new FormData(formRef.current);
       const formValues = Object.fromEntries(formData.entries());
-      console.log("Form submitted successfully", formValues);
+      console.log("Main form submitted successfully", formValues);
     }
 
-    const vehicleType = (
-      document.querySelector('[name="vehicleType"]') as HTMLSelectElement
-    )?.value;
+    const agentBrokerName = AgentBrokerName; // Use state
     const fromPlace = (
       document.querySelector('[name="fromPlace"]') as HTMLInputElement
     )?.value.trim();
@@ -133,100 +161,126 @@ export default function NewTrip() {
       document.querySelector('[name="toPlace"]') as HTMLInputElement
     )?.value.trim();
 
-    const rows = document.querySelectorAll("#productTableBody tr");
-    const itemDetailsPayload: any[] = [];
-
-    rows.forEach((row) => {
-      const cells = row.querySelectorAll("td");
-      const item = {
-        itemName: cells[1]?.querySelector("input")?.value.trim() || "",
-        remarks: cells[2]?.querySelector("input")?.value.trim() || "",
-        quantity: cells[3]?.querySelector("input")?.value.trim() || "",
-        rent: cells[4]?.querySelector("input")?.value.trim() || "",
-        total: cells[5]?.querySelector("input")?.value.trim() || "",
-      };
-
-      if (
-        item.itemName ||
-        item.remarks ||
-        item.quantity ||
-        item.rent ||
-        item.total
-      ) {
-        itemDetailsPayload.push(item);
-      }
-    });
-
-    const subtotal = "0";
-    const netTotal = (
-      parseFloat(subtotal) + parseFloat(otherCharges || "0")
-    ).toFixed(2);
+    // Use the state for item details directly
+    const itemDetailsPayload = itemDetails.map(item => ({
+      itemName: item.itemName,
+      remarks: item.remarks,
+      quantity: item.quantity,
+      rent: item.rent,
+      total: item.total,
+    })).filter(item => item.itemName || item.remarks || item.quantity || item.rent || item.total); // Filter out empty rows if desired
 
     const payload = {
-      agentBrokerName: vehicleType,
+      agentBrokerName: agentBrokerName,
       fromPlace,
       toPlace,
-      tripDate: selectedDate?.toISOString().split('T')[0], // Use selectedDate for tripDate
+      tripDate: selectedDate ? selectedDate.toLocaleDateString("en-GB") : "",
       vehicleNumber,
       driverName,
       itemDetails: itemDetailsPayload,
-      subTotal: subtotal,
+      subTotal: subTotal, // Use the state value
       otherCharges,
-      netTotal,
+      netTotal, // Use the state value
     };
 
-    console.log("Form is valid. Submitting...", payload);
+    console.log("Final submission payload:", payload);
   };
 
-  const TableRow = ({ index }: { index: number }) => (
-    <tr>
-      <td className="p-2 text-center w-[3%]">{index}</td>
-      <td className="p-2 w-[30%]">
-        <input
-          type="text"
-          className="w-full form-control"
-          placeholder="Enter Item Name"
-        />
-      </td>
-      <td className="p-2 w-[15%]">
-        <input
-          type="text"
-          className="w-full form-control"
-          placeholder="Enter Remarks"
-        />
-      </td>
-      <td className="p-2 w-[15%]">
-        <input
-          type="text"
-          className="w-full form-control"
-          placeholder="Enter Quantity"
-        />
-      </td>
-      <td className="p-2 w-[15%]">
-        <input
-          type="text"
-          className="w-full form-control"
-          placeholder="Enter Rent"
-        />
-      </td>
-      <td className="p-2 w-[15%]">
-        <input
-          type="text"
-          className="w-full text-right form-control total"
-          placeholder="Auto-calculated Total"
-          readOnly
-        />
-      </td>
-      <td className="p-2 text-center w-[7%]">
-        <button className="text-blue-600 edit-row mx-1 cursor-pointer">
-          <i className="ri-edit-line text-[16px]"></i>
-        </button>
-        <button className="text-red-600 delete-row mx-1 cursor-pointer">
-          <i className="ri-delete-bin-line text-[16px]"></i>
-        </button>
-      </td>
-    </tr>
-  );
+  const TableRow = ({ index, item, updateItemDetail, deleteRow }: {
+    index: number;
+    item: { id: number; itemName: string; remarks: string; quantity: string; rent: string; total: string };
+    updateItemDetail: (id: number, field: string, value: string | number) => void;
+    deleteRow: (id: number) => void;
+  }) => {
+    const handleQuantityChange = (e: ChangeEvent<HTMLInputElement>) => {
+      const newQuantity = e.target.value;
+      updateItemDetail(item.id, "quantity", newQuantity);
+      calculateTotal(newQuantity, item.rent);
+    };
+
+    const handleRentChange = (e: ChangeEvent<HTMLInputElement>) => {
+      const newRent = e.target.value;
+      updateItemDetail(item.id, "rent", newRent);
+      calculateTotal(item.quantity, newRent);
+    };
+
+    const calculateTotal = (quantity: string, rent: string) => {
+      const qty = parseFloat(quantity) || 0;
+      const rnt = parseFloat(rent) || 0;
+      const newTotal = (qty * rnt).toFixed(2);
+      updateItemDetail(item.id, "total", newTotal);
+    };
+
+    useEffect(() => {
+        // Recalculate total if quantity or rent changes from parent (e.g., initial load)
+        calculateTotal(item.quantity, item.rent);
+    }, [item.quantity, item.rent]);
+
+    return (
+      <tr>
+        <td className="p-2 text-center w-[3%]">{index}</td>
+        <td className="p-2 w-[30%]">
+          <Input
+            type="text"
+            name={`itemName-${item.id}`} // Unique name for each input
+            className="w-full alphanumeric"
+            placeholder="Enter Item Name"
+            value={item.itemName}
+            onChange={(e:any) => updateItemDetail(item.id, "itemName", e.target.value)}
+          />
+        </td>
+        <td className="p-2 w-[15%]">
+          <Input
+            type="text"
+            name={`remarks-${item.id}`} // Unique name
+            className="w-full alphanumeric"
+            placeholder="Enter Remarks"
+            value={item.remarks}
+            onChange={(e:any) => updateItemDetail(item.id, "remarks", e.target.value)}
+          />
+        </td>
+        <td className="p-2 w-[15%]">
+          <Input
+            type="text"
+            name={`quantity-${item.id}`} // Unique name
+            className="w-full number_with_decimal"
+            placeholder="Enter Quantity"
+            value={item.quantity}
+            onChange={handleQuantityChange}
+          />
+        </td>
+        <td className="p-2 w-[15%]">
+          <Input
+            type="text"
+            name={`rent-${item.id}`} // Unique name
+            className="w-full number_with_decimal"
+            placeholder="Enter Rent"
+            value={item.rent}
+            onChange={handleRentChange}
+          />
+        </td>
+        <td className="p-2 w-[15%]">
+          <Input
+            type="text"
+            name={`total-${item.id}`} // Unique name
+            className="w-full text-right total"
+            placeholder="Auto-calculated Total"
+            value={item.total}
+            readOnly
+          />
+        </td>
+        <td className="p-2 text-center w-[7%]">
+          <button
+            type="button"
+            className="text-red-600 delete-row mx-1 cursor-pointer"
+            onClick={() => deleteRow(item.id)}
+          >
+            <i className="ri-delete-bin-line text-[16px]"></i>
+          </button>
+        </td>
+      </tr>
+    );
+  };
 
   return (
     <Layout pageTitle="NewTrip">
@@ -244,6 +298,8 @@ export default function NewTrip() {
                         options={agentOptions}
                         searchable
                         data-validate="required"
+                        onChange={(selectedValue: string | null) => setAgentBrokerName(selectedValue || "")} // Corrected
+                        initialValue={AgentBrokerName} // Ensure this prop is passed to maintain selection
                       />
                     </FormField>
                     <FormField label="Place From" required>
@@ -275,13 +331,20 @@ export default function NewTrip() {
                       <td className="p-2 w-[15%]">Remarks</td>
                       <td className="p-2 w-[15%]">Quantity</td>
                       <td className="p-2 w-[15%]">Rent</td>
-                      <td className="p-2 w-[15%] text-right">Total Amount</td>
+                      <td className="p-2 w-[15%]">Total Amount</td>
                       <td className="p-2 w-[7%] text-center">Action</td>
                     </tr>
+
                   </thead>
                   <tbody id="productTableBody">
-                    {[1, 2, 3, 4, 5].map((index) => (
-                      <TableRow key={index} index={index} />
+                    {itemDetails.map((item, index) => (
+                      <TableRow
+                        key={item.id}
+                        index={index + 1}
+                        item={item}
+                        updateItemDetail={updateItemDetail}
+                        deleteRow={deleteRow}
+                      />
                     ))}
                   </tbody>
                 </table>
@@ -290,10 +353,10 @@ export default function NewTrip() {
                   <div className="ml-5">
                     <button
                       type="button"
-                      className="bg-[#f1f1fa] text-[14px] text-[#212529] py-[0.375rem] px-[0.75rem] rounded-[0.375rem] cursor-pointer flex items-center gap-1"
+                      onClick={addRow}
+                      className="btn-sm btn-outline-primary"
                     >
-                      <i className="ri-add-circle-fill text-[15px] text-[#009333]"></i>
-                      Add New Item
+                      <i className="ri-add-line mr-1"></i>Add New Row
                     </button>
                   </div>
 
@@ -301,11 +364,12 @@ export default function NewTrip() {
                     <div className="flex items-center justify-between gap-2">
                       <span>Sub Total</span>
                       <div className="flex items-center gap-2">
-                        <input
+                        <Input
                           type="text"
+                          name="subtotal"
                           placeholder="Auto-calculated subtotal"
-                          className="w-full text-right form-control subtotal"
-                          value={"0.00"}
+                          className="w-full text-right subtotal"
+                          value={subTotal}
                           readOnly
                         />
                       </div>
@@ -313,17 +377,22 @@ export default function NewTrip() {
                     <div className="flex items-center justify-between gap-2">
                       <span>Other Charges</span>
                       <div className="flex items-center gap-2">
-                        <input
+                        <Input
                           type="text"
+                          name="otherCharges"
                           placeholder="Enter Other Charges"
-                          className="w-full text-right form-control other charges"
+                          className="w-full text-right other charges"
+                          value={otherCharges}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => setOtherCharges(e.target.value)}
                         />
                       </div>
                     </div>
                     <hr className="my-2 border-t border-gray-200" />
                     <div className="flex justify-between items-center font-semibold text-base">
                       <span className="pl-2">Net Total</span>
-                      <span className="pr-2 text-[#009333]">0.00</span>
+                      <span className="pr-2 text-[#009333]">
+                        {netTotal}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -350,42 +419,36 @@ export default function NewTrip() {
               <div>
                 <label className="block w-full form-label">Trip Date</label>
                 <DatePicker
-                  id="tripdate"
-                  
-                  name="tripdate"
-                  required={true}
-                  placeholder="Select date"
+                  id="tripDate"
+                  name="tripDate" disablePast
+                  selected={selectedDate}
+                  onChange={(date: Date | undefined) => setSelectedDate(date)}
+                  placeholder="Select Date"
                   className="w-full"
-                  data-validate="required"
-                
                 />
               </div>
               <div>
-                <label className="block w-full form-label">
-                  Vehicle Number
-                </label>
+                <label className="block w-full form-label">Vehicle Number</label>
                 <SearchableSelect
                   name="vehicleNumber"
-                  placeholder="Select vehicleNumber"
+                  placeholder="Select Vehicle Number"
                   options={vehicleOptions}
                   searchable
                   data-validate="required"
-                  onChange={(selected: any) =>
-                    setVehicleNumber(selected?.value || "")
-                  }
+                  onChange={(selectedValue: string | null) => setVehicleNumber(selectedValue || "")} // Corrected
+                  initialValue={vehicleNumber} // Ensure this prop is passed to maintain selection
                 />
               </div>
               <div>
                 <label className="block w-full form-label">Driver Name</label>
                 <SearchableSelect
                   name="driverName"
-                  placeholder="Select driverName"
+                  placeholder="Select Driver Name"
                   options={driverOptions}
                   searchable
                   data-validate="required"
-                  onChange={(selected: any) =>
-                    setDriverName(selected?.value || "")
-                  }
+                  onChange={(selectedValue: string | null) => setDriverName(selectedValue || "")} // Corrected
+                  initialValue={driverName} // Ensure this prop is passed to maintain selection
                 />
               </div>
             </form>
@@ -396,9 +459,7 @@ export default function NewTrip() {
               <button
                 id="createTrip"
                 onClick={handleCreateTrip}
-                className={`btn-sm btn-primary ${
-                  !isFormValid ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`btn-sm btn-primary ${!isFormValid ? "opacity-50 cursor-not-allowed" : ""}`}
                 disabled={!isFormValid}
               >
                 Create Trip

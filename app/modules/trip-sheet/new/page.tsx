@@ -148,12 +148,31 @@ export default function NewTrip() {
     });
   }, []);
 
+  // Validation functions for numeric inputs
+  const validateNumericInput = (value: string): string => {
+    // Allow empty string, numbers, and decimal points
+    const numericValue = value.replace(/[^0-9.]/g, '');
+    // Prevent multiple decimal points
+    const parts = numericValue.split('.');
+    if (parts.length > 2) {
+      return parts[0] + '.' + parts.slice(1).join('');
+    }
+    return numericValue;
+  };
 
   const handleItemChange = useCallback((id: number, field: keyof ItemDetail, value: string) => {
     setItemDetails(prevDetails =>
       prevDetails.map(item => {
         if (item.id === id) {
-          const newItem = { ...item, [field]: value };
+          let processedValue = value;
+          
+          // Apply validation for numeric fields
+          if (field === "quantity" || field === "rent") {
+            processedValue = validateNumericInput(value);
+          }
+          
+          const newItem = { ...item, [field]: processedValue };
+          
           // Calculate total if quantity or rent changes
           if (field === "quantity" || field === "rent") {
             const quantity = parseFloat(newItem.quantity) || 0;
@@ -206,47 +225,51 @@ export default function NewTrip() {
       <td className="p-2 w-[30%]">
         <Input
           type="text"
-          name={`itemName-${item.id}`} // Unique name for each input
-          className="w-full alphanumeric"
+          name={`itemName-${item.id}`}
+          className="w-full" // Removed alphanumeric class that might restrict input
           placeholder="Enter Item Name"
           value={item.itemName}
           onChange={(e: ChangeEvent<HTMLInputElement>) => handleItemChange(item.id, "itemName", e.target.value)}
+          maxLength={100} // Add reasonable max length instead of character restriction
         />
       </td>
       <td className="p-2 w-[15%]">
         <Input
           type="text"
-          name={`remarks-${item.id}`} // Unique name
-          className="w-full alphanumeric"
+          name={`remarks-${item.id}`}
+          className="w-full" // Removed alphanumeric class
           placeholder="Enter Remarks"
           value={item.remarks}
           onChange={(e: ChangeEvent<HTMLInputElement>) => handleItemChange(item.id, "remarks", e.target.value)}
+          maxLength={200} // Add reasonable max length
         />
       </td>
       <td className="p-2 w-[15%]">
         <Input
           type="text"
-          name={`quantity-${item.id}`} // Unique name
-          className="w-full number_with_decimal"
+          name={`quantity-${item.id}`}
+          className="w-full" // Removed number_with_decimal class, handling validation in code
           placeholder="Enter Quantity"
           value={item.quantity}
           onChange={(e: ChangeEvent<HTMLInputElement>) => handleItemChange(item.id, "quantity", e.target.value)}
+          inputMode="decimal" // Better mobile keyboard
         />
       </td>
       <td className="p-2 w-[15%]">
         <Input
           type="text"
-          name={`rent-${item.id}`} // Unique name
-          className="w-full number_with_decimal"
+          name={`rent-${item.id}`}
+          className="w-full" // Removed number_with_decimal class, handling validation in code
           placeholder="Enter Rent"
           value={item.rent}
           onChange={(e: ChangeEvent<HTMLInputElement>) => handleItemChange(item.id, "rent", e.target.value)}
+          inputMode="decimal" // Better mobile keyboard
         />
       </td>
       <td className="p-2 w-[15%]">
         <Input
           type="text"
-          name={`total-${item.id}`} // Unique name
+          name={`total-${item.id}`}
           className="w-full text-right total"
           placeholder="Auto-calculated Total"
           value={item.total}
@@ -300,8 +323,6 @@ export default function NewTrip() {
                   </div>
                 </div>
 
-             
-
                 <h2 className="text-lg text-[#009333] mb-4">Item Details</h2>
 
                 <table className="w-full text-sm">
@@ -325,14 +346,7 @@ export default function NewTrip() {
 
                 <div className="mt-4 flex flex-col md:flex-row md:justify-between md:items-start gap-4">
                   <div className="ml-5">
-                    <button
-                      type="button"
-                      onClick={handleAddItem} // Manual add button still exists
-                      className="bg-[#f1f1fa] text-[14px] text-[#212529] py-[0.375rem] px-[0.75rem] rounded-[0.375rem] cursor-pointer flex items-center gap-1"
-                    >
-                      <i className="ri-add-circle-fill text-[15px] text-[#009333]"></i>
-                      Add New Item
-                    </button>
+                  
                   </div>
 
                   <div className="bg-[#f9f9fb] p-4 rounded-xl w-full md:max-w-md space-y-4 text-sm text-[#212529] md:mr-[6.5%]">
@@ -356,9 +370,13 @@ export default function NewTrip() {
                           type="text"
                           name="otherCharges"
                           placeholder="Enter Other Charges"
-                          className="w-full text-right other charges"
+                          className="w-full text-right"
                           value={otherCharges}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) => setOtherCharges(e.target.value)}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                            const value = validateNumericInput(e.target.value);
+                            setOtherCharges(value);
+                          }}
+                          inputMode="decimal"
                         />
                       </div>
                     </div>

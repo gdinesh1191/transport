@@ -1,5 +1,4 @@
- // searchableSelect.tsx
-'use client';
+ 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 
@@ -33,8 +32,8 @@ const SearchableSelect = ({
   placeholder = 'Select an option',
   className = 'text-[13px]',
   'data-validate': dataValidate,
-  initialValue,  
-  onChange: externalOnChange,  
+  initialValue,
+  onChange: externalOnChange,
   onAddNew,
   onRefresh,
   disabled = false,
@@ -57,7 +56,7 @@ const SearchableSelect = ({
     if (newOption?.value !== currentSelection?.value) {
       setCurrentSelection(newOption);
     }
-  }, [initialValue, options]); // Dependencies: initialValue and options
+  }, [initialValue, options, currentSelection]); // Added currentSelection to dependencies for strictness, though unlikely to cause issues here without it.
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -75,7 +74,7 @@ const SearchableSelect = ({
     if (externalOnChange) {
       externalOnChange(option.value); // Notify parent if callback is provided
     }
-  }, [externalOnChange]); // Dependency: externalOnChange
+  }, [externalOnChange]);
 
   const handleClear = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -84,7 +83,7 @@ const SearchableSelect = ({
     if (externalOnChange) {
       externalOnChange(null); // Notify parent of cleared selection
     }
-  }, [externalOnChange]); // Dependency: externalOnChange
+  }, [externalOnChange]);
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
     if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {

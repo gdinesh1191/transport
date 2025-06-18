@@ -1,12 +1,22 @@
 "use client";
 
-import { useState, ChangeEvent, FormEvent, useRef, useEffect } from "react";
+import { useState, ChangeEvent, FormEvent, useRef, useEffect, useCallback } from "react";
 import Layout from "../../../components/Layout";
 import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
 import DatePicker from "@/app/utils/commonDatepicker";
 import { validateForm } from "@/app/utils/formValidations";
 import useInputValidation from "@/app/utils/inputValidations";
 import { Input } from "@/app/utils/form-controls";
+
+// Interface for item details
+interface ItemDetail {
+  id: number; // Unique ID for each item for easy management
+  itemName: string;
+  remarks: string;
+  quantity: string;
+  rent: string;
+  total: string;
+}
 
 // Form field components for reusability
 const FormField = ({
@@ -39,43 +49,45 @@ export default function NewTrip() {
   useInputValidation();
 
   const [showForm, setShowForm] = useState(false);
-  const [itemDetails, setItemDetails] = useState([
-    { id: 1, itemName: "", remarks: "", quantity: "", rent: "", total: "" },
-  ]); // Initialize with one row
+  const [itemDetails, setItemDetails] = useState<ItemDetail[]>([
+    { id: Date.now(), itemName: "", remarks: "", quantity: "", rent: "", total: "" }
+  ]);
   const [otherCharges, setOtherCharges] = useState("0");
   const initialModalRef = useRef<HTMLDivElement | null>(null);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isFormValid, setIsFormValid] = useState(true);
 
-  const [subTotal, setSubTotal] = useState("0.00");
-  const [netTotal, setNetTotal] = useState("0.00");
+  // Calculate subtotal
+  const subtotal = itemDetails.reduce((sum, item) => {
+    return sum + parseFloat(item.total || "0");
+  }, 0).toFixed(2);
+
+  // Calculate net total
+  const netTotal = (
+    parseFloat(subtotal) + parseFloat(otherCharges || "0")
+  ).toFixed(2);
 
   useEffect(() => {
     const isDateValid = selectedDate instanceof Date && !isNaN(selectedDate.getTime());
     const isVehicleValid = vehicleNumber.trim() !== "";
     const isDriverValid = driverName.trim() !== "";
 
-    console.log("selectedDate:", selectedDate);
-    console.log("vehicleNumber:", vehicleNumber);
-    console.log("driverName:", driverName);
-    console.log("Form valid?", isDateValid && isVehicleValid && isDriverValid);
-
     setIsFormValid(isDateValid && isVehicleValid && isDriverValid);
   }, [selectedDate, vehicleNumber, driverName]);
 
+  // Effect to automatically add a new row
   useEffect(() => {
-    const calculatedSubTotal = itemDetails.reduce((acc, item) => {
-      const total = parseFloat(item.total) || 0;
-      return acc + total;
-    }, 0);
-    setSubTotal(calculatedSubTotal.toFixed(2));
-  }, [itemDetails]);
-
-  useEffect(() => {
-    const calculatedNetTotal = (parseFloat(subTotal) + parseFloat(otherCharges || "0")).toFixed(2);
-    setNetTotal(calculatedNetTotal);
-  }, [subTotal, otherCharges]);
+    const lastItem = itemDetails[itemDetails.length - 1];
+    if (lastItem && parseFloat(lastItem.total) > 0) {
+      // Check if the last item's total is greater than 0
+      // And also ensure it's not just an empty row with quantity/rent
+      // to prevent adding new rows without meaningful input
+      if (lastItem.quantity.trim() !== "" && lastItem.rent.trim() !== "") {
+          handleAddItem();
+      }
+    }
+  }, [itemDetails]); // Triggered when itemDetails changes
 
   const agentOptions: Option[] = [
     { value: "40", label: "Karthi" },
@@ -109,41 +121,51 @@ export default function NewTrip() {
     setSelectedDate(undefined);
     setVehicleNumber("");
     setDriverName("");
+    setItemDetails([{ id: Date.now(), itemName: "", remarks: "", quantity: "", rent: "", total: "" }]); // Reset item details
+    setOtherCharges("0"); // Reset other charges
     setIsFormValid(false);
   };
 
-  // Function to add a new row
-  const addRow = () => {
-    setItemDetails((prevDetails) => [
-      ...prevDetails,
-      {
-        id: prevDetails.length > 0 ? Math.max(...prevDetails.map(item => item.id)) + 1 : 1,
-        itemName: "",
-        remarks: "",
-        quantity: "",
-        rent: "",
-        total: "",
-      },
-    ]);
-  };
+  const handleAddItem = useCallback(() => {
+    // Only add a new row if the last row is not completely empty
+    const lastItem = itemDetails[itemDetails.length - 1];
+    if (lastItem && (lastItem.itemName || lastItem.remarks || lastItem.quantity || lastItem.rent || parseFloat(lastItem.total) > 0)) {
+        setItemDetails(prevDetails => [
+            ...prevDetails,
+            { id: Date.now(), itemName: "", remarks: "", quantity: "", rent: "", total: "" }
+        ]);
+    }
+  }, [itemDetails]); // Dependency on itemDetails to get the latest lastItem
 
-  // Function to delete a row
-  const deleteRow = (id: number) => {
-    setItemDetails((prevDetails) => prevDetails.filter((item) => item.id !== id));
-  };
+  const handleDeleteItem = useCallback((id: number) => {
+    setItemDetails(prevDetails => {
+        const updatedItems = prevDetails.filter(item => item.id !== id);
+        // If all rows are deleted, add one empty row back
+        if (updatedItems.length === 0) {
+            return [{ id: Date.now(), itemName: "", remarks: "", quantity: "", rent: "", total: "" }];
+        }
+        return updatedItems;
+    });
+  }, []);
 
-  // Function to update an item's details (quantity, rent, total)
-  const updateItemDetail = (
-    id: number,
-    field: string,
-    value: string | number
-  ) => {
-    setItemDetails((prevDetails) =>
-      prevDetails.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item
-      )
+
+  const handleItemChange = useCallback((id: number, field: keyof ItemDetail, value: string) => {
+    setItemDetails(prevDetails =>
+      prevDetails.map(item => {
+        if (item.id === id) {
+          const newItem = { ...item, [field]: value };
+          // Calculate total if quantity or rent changes
+          if (field === "quantity" || field === "rent") {
+            const quantity = parseFloat(newItem.quantity) || 0;
+            const rent = parseFloat(newItem.rent) || 0;
+            newItem.total = (quantity * rent).toFixed(2);
+          }
+          return newItem;
+        }
+        return item;
+      })
     );
-  };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,134 +175,91 @@ export default function NewTrip() {
       console.log("Main form submitted successfully", formValues);
     }
 
-    const agentBrokerName = AgentBrokerName; // Use state
-    const fromPlace = (
-      document.querySelector('[name="fromPlace"]') as HTMLInputElement
-    )?.value.trim();
-    const toPlace = (
-      document.querySelector('[name="toPlace"]') as HTMLInputElement
-    )?.value.trim();
-
-    // Use the state for item details directly
-    const itemDetailsPayload = itemDetails.map(item => ({
-      itemName: item.itemName,
-      remarks: item.remarks,
-      quantity: item.quantity,
-      rent: item.rent,
-      total: item.total,
-    })).filter(item => item.itemName || item.remarks || item.quantity || item.rent || item.total); // Filter out empty rows if desired
-
     const payload = {
-      agentBrokerName: agentBrokerName,
-      fromPlace,
-      toPlace,
+      agentBrokerName: AgentBrokerName,
+      fromPlace: (document.querySelector('[name="fromPlace"]') as HTMLInputElement)?.value.trim(),
+      toPlace: (document.querySelector('[name="toPlace"]') as HTMLInputElement)?.value.trim(),
       tripDate: selectedDate ? selectedDate.toLocaleDateString("en-GB") : "",
       vehicleNumber,
       driverName,
-      itemDetails: itemDetailsPayload,
-      subTotal: subTotal, // Use the state value
+      // Filter out completely empty rows before submission
+      itemDetails: itemDetails.filter(item =>
+        item.itemName.trim() !== "" ||
+        item.remarks.trim() !== "" ||
+        parseFloat(item.quantity) > 0 ||
+        parseFloat(item.rent) > 0 ||
+        parseFloat(item.total) > 0
+      ),
+      subTotal: subtotal,
       otherCharges,
-      netTotal, // Use the state value
+      netTotal,
     };
 
     console.log("Final submission payload:", payload);
+    // You would typically send this payload to your backend
+    alert("Form submitted! Check console for payload.");
   };
 
-  const TableRow = ({ index, item, updateItemDetail, deleteRow }: {
-    index: number;
-    item: { id: number; itemName: string; remarks: string; quantity: string; rent: string; total: string };
-    updateItemDetail: (id: number, field: string, value: string | number) => void;
-    deleteRow: (id: number) => void;
-  }) => {
-    const handleQuantityChange = (e: ChangeEvent<HTMLInputElement>) => {
-      const newQuantity = e.target.value;
-      updateItemDetail(item.id, "quantity", newQuantity);
-      calculateTotal(newQuantity, item.rent);
-    };
-
-    const handleRentChange = (e: ChangeEvent<HTMLInputElement>) => {
-      const newRent = e.target.value;
-      updateItemDetail(item.id, "rent", newRent);
-      calculateTotal(item.quantity, newRent);
-    };
-
-    const calculateTotal = (quantity: string, rent: string) => {
-      const qty = parseFloat(quantity) || 0;
-      const rnt = parseFloat(rent) || 0;
-      const newTotal = (qty * rnt).toFixed(2);
-      updateItemDetail(item.id, "total", newTotal);
-    };
-
-    useEffect(() => {
-        // Recalculate total if quantity or rent changes from parent (e.g., initial load)
-        calculateTotal(item.quantity, item.rent);
-    }, [item.quantity, item.rent]);
-
-    return (
-      <tr>
-        <td className="p-2 text-center w-[3%]">{index}</td>
-        <td className="p-2 w-[30%]">
-          <Input
-            type="text"
-            name={`itemName-${item.id}`} // Unique name for each input
-            className="w-full alphanumeric"
-            placeholder="Enter Item Name"
-            value={item.itemName}
-            onChange={(e:any) => updateItemDetail(item.id, "itemName", e.target.value)}
-          />
-        </td>
-        <td className="p-2 w-[15%]">
-          <Input
-            type="text"
-            name={`remarks-${item.id}`} // Unique name
-            className="w-full alphanumeric"
-            placeholder="Enter Remarks"
-            value={item.remarks}
-            onChange={(e:any) => updateItemDetail(item.id, "remarks", e.target.value)}
-          />
-        </td>
-        <td className="p-2 w-[15%]">
-          <Input
-            type="text"
-            name={`quantity-${item.id}`} // Unique name
-            className="w-full number_with_decimal"
-            placeholder="Enter Quantity"
-            value={item.quantity}
-            onChange={handleQuantityChange}
-          />
-        </td>
-        <td className="p-2 w-[15%]">
-          <Input
-            type="text"
-            name={`rent-${item.id}`} // Unique name
-            className="w-full number_with_decimal"
-            placeholder="Enter Rent"
-            value={item.rent}
-            onChange={handleRentChange}
-          />
-        </td>
-        <td className="p-2 w-[15%]">
-          <Input
-            type="text"
-            name={`total-${item.id}`} // Unique name
-            className="w-full text-right total"
-            placeholder="Auto-calculated Total"
-            value={item.total}
-            readOnly
-          />
-        </td>
-        <td className="p-2 text-center w-[7%]">
-          <button
-            type="button"
-            className="text-red-600 delete-row mx-1 cursor-pointer"
-            onClick={() => deleteRow(item.id)}
-          >
-            <i className="ri-delete-bin-line text-[16px]"></i>
-          </button>
-        </td>
-      </tr>
-    );
-  };
+  const TableRow = ({ item, index }: { item: ItemDetail; index: number }) => (
+    <tr>
+      <td className="p-2 text-center w-[3%]">{index + 1}</td>
+      <td className="p-2 w-[30%]">
+        <Input
+          type="text"
+          name={`itemName-${item.id}`} // Unique name for each input
+          className="w-full alphanumeric"
+          placeholder="Enter Item Name"
+          value={item.itemName}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => handleItemChange(item.id, "itemName", e.target.value)}
+        />
+      </td>
+      <td className="p-2 w-[15%]">
+        <Input
+          type="text"
+          name={`remarks-${item.id}`} // Unique name
+          className="w-full alphanumeric"
+          placeholder="Enter Remarks"
+          value={item.remarks}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => handleItemChange(item.id, "remarks", e.target.value)}
+        />
+      </td>
+      <td className="p-2 w-[15%]">
+        <Input
+          type="text"
+          name={`quantity-${item.id}`} // Unique name
+          className="w-full number_with_decimal"
+          placeholder="Enter Quantity"
+          value={item.quantity}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => handleItemChange(item.id, "quantity", e.target.value)}
+        />
+      </td>
+      <td className="p-2 w-[15%]">
+        <Input
+          type="text"
+          name={`rent-${item.id}`} // Unique name
+          className="w-full number_with_decimal"
+          placeholder="Enter Rent"
+          value={item.rent}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => handleItemChange(item.id, "rent", e.target.value)}
+        />
+      </td>
+      <td className="p-2 w-[15%]">
+        <Input
+          type="text"
+          name={`total-${item.id}`} // Unique name
+          className="w-full text-right total"
+          placeholder="Auto-calculated Total"
+          value={item.total}
+          readOnly
+        />
+      </td>
+      <td className="p-2 text-center w-[7%]">
+        <button type="button" className="text-red-600 delete-row mx-1 cursor-pointer" onClick={() => handleDeleteItem(item.id)}>
+          <i className="ri-delete-bin-line text-[16px]"></i>
+        </button>
+      </td>
+    </tr>
+  );
 
   return (
     <Layout pageTitle="NewTrip">
@@ -298,8 +277,8 @@ export default function NewTrip() {
                         options={agentOptions}
                         searchable
                         data-validate="required"
-                        onChange={(selectedValue: string | null) => setAgentBrokerName(selectedValue || "")} // Corrected
-                        initialValue={AgentBrokerName} // Ensure this prop is passed to maintain selection
+                        onChange={(selectedValue: string | null) => setAgentBrokerName(selectedValue || "")}
+                        initialValue={AgentBrokerName}
                       />
                     </FormField>
                     <FormField label="Place From" required>
@@ -321,6 +300,8 @@ export default function NewTrip() {
                   </div>
                 </div>
 
+              
+
                 <h2 className="text-lg text-[#009333] mb-4">Item Details</h2>
 
                 <table className="w-full text-sm">
@@ -334,30 +315,17 @@ export default function NewTrip() {
                       <td className="p-2 w-[15%]">Total Amount</td>
                       <td className="p-2 w-[7%] text-center">Action</td>
                     </tr>
-
                   </thead>
                   <tbody id="productTableBody">
                     {itemDetails.map((item, index) => (
-                      <TableRow
-                        key={item.id}
-                        index={index + 1}
-                        item={item}
-                        updateItemDetail={updateItemDetail}
-                        deleteRow={deleteRow}
-                      />
+                      <TableRow key={item.id} item={item} index={index} />
                     ))}
                   </tbody>
                 </table>
 
                 <div className="mt-4 flex flex-col md:flex-row md:justify-between md:items-start gap-4">
                   <div className="ml-5">
-                    <button
-                      type="button"
-                      onClick={addRow}
-                      className="btn-sm btn-outline-primary"
-                    >
-                      <i className="ri-add-line mr-1"></i>Add New Row
-                    </button>
+                  
                   </div>
 
                   <div className="bg-[#f9f9fb] p-4 rounded-xl w-full md:max-w-md space-y-4 text-sm text-[#212529] md:mr-[6.5%]">
@@ -369,7 +337,7 @@ export default function NewTrip() {
                           name="subtotal"
                           placeholder="Auto-calculated subtotal"
                           className="w-full text-right subtotal"
-                          value={subTotal}
+                          value={subtotal}
                           readOnly
                         />
                       </div>
@@ -435,8 +403,8 @@ export default function NewTrip() {
                   options={vehicleOptions}
                   searchable
                   data-validate="required"
-                  onChange={(selectedValue: string | null) => setVehicleNumber(selectedValue || "")} // Corrected
-                  initialValue={vehicleNumber} // Ensure this prop is passed to maintain selection
+                  onChange={(selectedValue: string | null) => setVehicleNumber(selectedValue || "")}
+                  initialValue={vehicleNumber}
                 />
               </div>
               <div>
@@ -447,8 +415,8 @@ export default function NewTrip() {
                   options={driverOptions}
                   searchable
                   data-validate="required"
-                  onChange={(selectedValue: string | null) => setDriverName(selectedValue || "")} // Corrected
-                  initialValue={driverName} // Ensure this prop is passed to maintain selection
+                  onChange={(selectedValue: string | null) => setDriverName(selectedValue || "")}
+                  initialValue={driverName}
                 />
               </div>
             </form>

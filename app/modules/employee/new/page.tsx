@@ -39,9 +39,26 @@ export default function NewEmployee() {
   const [fileName, setFileName] = useState("No file chosen");
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const formRef = useRef<HTMLFormElement>(null);
+<<<<<<< HEAD
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [familyNumber, setFamilyNumber] = useState("");
+
+
+  const [dob, setDob] = useState<Date | undefined>();
+  useInputValidation(); // For real-time input formatting/masking
+  const stateOptions = [
+
+    { value: "Tamil Nadu", label: "Tamil Nadu" }
+
+   
+
+  ];
+=======
   useInputValidation(); 
   const stateOptions = [{ value: "Tamil Nadu", label: "Tamil Nadu" }];
   
+>>>>>>> 5918a04772cf11794335f23e04513e857b765067
   const [formData, setFormData] = useState<FormData>({
     salutation: "Mr.", employeeName: "", phoneNumber: "", whatsappNumber: "", familyName: "", dob: undefined, gender: "", bloodGroup: "", addressLine1: "", addressLine2: "", picturepath: null, remarks: "", state: "", pincode: "",
     bankDetails: { bankName: "", accountNumber: "", accountName: "", ifscCode: "", branchName: "" },
@@ -133,6 +150,26 @@ export default function NewEmployee() {
     // Set initial tab based on employee type selection
     setActiveTab(type === "Staff" ? "Proof_details" : "Bank_details");
   };
+   const handleNumberChange = (
+
+e: React.ChangeEvent<HTMLInputElement>,
+
+setter: (value: string) => void
+
+ ) => {
+
+let value = e.target.value.replace(/[^\d]/g, "");
+
+
+
+ // Ensure first digit is between 6–9 if it's the first digit
+
+ if (value.length === 1 && !/^[6-9]$/.test(value)) return;
+
+
+
+ setter(value);
+ };
 
   const tabs = [
     { id: "Bank_details", label: "Bank Details" },
@@ -405,6 +442,48 @@ export default function NewEmployee() {
                   <FormField label="Blood Group" required error={formErrors.bloodGroup} htmlFor="bloodGroup">
                     <Input name="bloodGroup" placeholder="Enter Blood Group" className="form-control w-full all_uppercase" data-validate="required" value={formData.bloodGroup} onChange={handleChange} maxLength={3} />
                   </FormField>
+<<<<<<< HEAD
+                  <FormField
+                    label="Phone Number"
+                    required
+                    error={formErrors.phoneNumber}
+                    htmlFor="phoneNumber"
+                  >
+                    <Input
+                      name="phoneNumber"
+                      placeholder="Enter Phone Number"
+                      className="form-control w-full only_number"
+                      data-validate="required"
+                      maxLength={10} 
+                      onChange={(e:any) => handleNumberChange(e, setPhoneNumber)}
+
+                    />
+                  </FormField>
+                  <FormField
+                    label="Whatsapp Number"
+                    required
+                    error={formErrors.whatsappNumber}
+                    htmlFor="whatsappNumber"
+                  >
+                    <Input
+                      name="whatsappNumber"
+                      placeholder="Enter Phone Number"
+                      className="form-control w-full only_number"
+                      data-validate="required"
+                      maxLength={10}
+                      onChange={(e:any) => handleNumberChange(e, setWhatsappNumber)}
+
+                    />
+                  </FormField>
+                  <FormField label="Family Number">
+                    <Input
+                      name="familyNumber"
+                      placeholder="Enter Phone Number"
+                      className="form-control w-full only_number"
+                      maxLength={10}
+                     onChange={(e:any) => handleNumberChange(e, setFamilyNumber)}
+                    />
+=======
                   <FormField label="Phone Number" required error={formErrors.phoneNumber} htmlFor="phoneNumber">
                     <Input name="phoneNumber" placeholder="Enter Phone Number" className="form-control w-full only_number" data-validate="required" maxLength={10} value={formData.phoneNumber} onChange={handleChange} />
                   </FormField>
@@ -413,6 +492,7 @@ export default function NewEmployee() {
                   </FormField>
                   <FormField label="Family Number">
                     <Input name="familyName" placeholder="Enter Family Phone Number" className="form-control w-full only_number" maxLength={10} value={formData.familyName} onChange={handleChange} />
+>>>>>>> 5918a04772cf11794335f23e04513e857b765067
                   </FormField>
                 </div>
 

@@ -8,7 +8,7 @@ import { validateForm } from "@/app/utils/formValidations";
 import useInputValidation from "@/app/utils/inputValidations";
 import { Input } from "@/app/utils/form-controls";
 
-// Form field components for reusability
+ 
 const FormField = ({
   label,
   required = false,
@@ -304,7 +304,7 @@ export default function NewTrip() {
                           placeholder="Enter Other Charges"
                           className="w-full text-right other charges"
                           value={otherCharges}
-                          onChange={(e) => setOtherCharges(e.target.value)}
+                          
                         />
                       </div>
                     </div>

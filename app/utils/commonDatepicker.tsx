@@ -19,9 +19,9 @@ interface DatePickerProps {
   name: string; // Make name required
   required?: boolean;
   "data-validate"?: string;
-  id: string; // Make id required
-  minDate?: Date; // Minimum allowed date
-  maxDate?: Date; // Maximum allowed date
+  id: string;  
+  minDate?: Date;  
+  maxDate?: Date;  
   disableFuture?: boolean; // Optional shortcut
   disablePast?: boolean; // Optional shortcut
   initialDate?: Date; // Prop for setting initial date

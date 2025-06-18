@@ -22,7 +22,8 @@ import {
 import { AppDispatch, RootState } from "@/store/store";
 import SearchableSelect from "@/app/utils/searchableSelect";
 import { RadioGroup } from "@/app/utils/form-controls";
-import DatePicker from "@/app/utils/commonDatepicker";
+import DatePicker , {formatDate}from "@/app/utils/commonDatepicker";
+
 
 type TabKey = "all" | "Pending" | "Completed";
 const tabs: TabKey[] = ["all", "Pending", "Completed"];
@@ -369,6 +370,18 @@ const ExpenseList = () => {
     return Object.values(filters).some((value) => value);
   };
 
+  function parseDMYtoJSDate(dateString: string | undefined): Date | undefined {
+    if (!dateString) return undefined;
+    const parts = dateString.split("/");
+    if (parts.length === 3) {
+      const [day, month, year] = parts.map(Number);
+      console.log(new Date(year, month - 1, day));
+      
+      return new Date(year, month - 1, day);
+    }
+    return undefined;
+  }
+
   return (
     <Layout pageTitle="Expense List">
       <main className="flex-1">
@@ -550,13 +563,11 @@ const ExpenseList = () => {
               <label className="block mb-1 font-medium">
                 Date
               </label>
-              <DatePicker required={true} id="insuranceExpiry" name="insuranceExpiry"  disablePast placeholder="Insurance Expiry Date" className="w-full" data-validate="required" onChange={(e) =>
-                  dispatch(
-                    setFilters({
-                      ...filters,
-                      expenseDate: e,
-                    })
-                  )
+              <DatePicker id="expenseDate" name="expenseDate"  disablePast placeholder="Expense Date" className="w-full" data-validate="required" selected={parseDMYtoJSDate(filters.expenseDate)} onChange={(e) =>
+                  dispatch(setFilters({
+                    ...filters,
+                    expenseDate: e ? formatDate(e) : "",
+                  }))
                 } />
               {/* <input
                 type="date"

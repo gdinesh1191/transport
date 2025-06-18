@@ -7,6 +7,12 @@ const useInputValidation = () => {
   useEffect(() => {
     const handleInput = (e: Event) => {
       const target = e.target as HTMLInputElement;
+
+      // --- ADD THIS CHECK ---
+      if (target.type === 'file') {
+        return; // Do not process file inputs for value manipulation
+      }
+      // --- END ADDITION ---
       
       let value = target.value;
 
@@ -19,7 +25,7 @@ const useInputValidation = () => {
       }
 
       if (target.classList.contains('number_with_decimal')) {
-         value = value.replace(/[^0-9.]/g, '');
+        value = value.replace(/[^0-9.]/g, '');
         const match = value.match(/^(\d+(\.\d{0,2})?)?/);
         value = match ? match[0] : '';
       }
@@ -41,11 +47,10 @@ const useInputValidation = () => {
       }
 
       if (target.classList.contains('whole_number')) {
-        
         value = value.replace(/[^\d]/g, '');
       }
-
       
+      // This line will now only execute for non-file inputs
       target.value = value;
     };
 

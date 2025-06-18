@@ -1,12 +1,22 @@
- "use client";
+"use client";
 
-import { useState, ChangeEvent, FormEvent, useRef, useEffect } from "react";
+import { useState, ChangeEvent, FormEvent, useRef, useEffect, useCallback } from "react";
 import Layout from "../../../components/Layout";
 import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
 import DatePicker from "@/app/utils/commonDatepicker";
 import { validateForm } from "@/app/utils/formValidations";
 import useInputValidation from "@/app/utils/inputValidations";
 import { Input } from "@/app/utils/form-controls";
+
+// Interface for item details
+interface ItemDetail {
+  id: number; // Unique ID for each item for easy management
+  itemName: string;
+  remarks: string;
+  quantity: string;
+  rent: string;
+  total: string;
+}
 
 // Form field components for reusability
 const FormField = ({
@@ -34,30 +44,50 @@ const FormField = ({
 export default function NewTrip() {
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [driverName, setDriverName] = useState("");
-
+  const [AgentBrokerName, setAgentBrokerName] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   useInputValidation();
 
   const [showForm, setShowForm] = useState(false);
-  const [itemDetails, setItemDetails] = useState([]);
+  const [itemDetails, setItemDetails] = useState<ItemDetail[]>([
+    { id: Date.now(), itemName: "", remarks: "", quantity: "", rent: "", total: "" }
+  ]);
   const [otherCharges, setOtherCharges] = useState("0");
   const initialModalRef = useRef<HTMLDivElement | null>(null);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isFormValid, setIsFormValid] = useState(true);
 
+  // Calculate subtotal
+  const subtotal = itemDetails.reduce((sum, item) => {
+    return sum + parseFloat(item.total || "0");
+  }, 0).toFixed(2);
+
+  // Calculate net total
+  const netTotal = (
+    parseFloat(subtotal) + parseFloat(otherCharges || "0")
+  ).toFixed(2);
+
   useEffect(() => {
     const isDateValid = selectedDate instanceof Date && !isNaN(selectedDate.getTime());
     const isVehicleValid = vehicleNumber.trim() !== "";
     const isDriverValid = driverName.trim() !== "";
 
-    console.log("selectedDate:", selectedDate);
-    console.log("vehicleNumber:", vehicleNumber);
-    console.log("driverName:", driverName);
-    console.log("Form valid?", isDateValid && isVehicleValid && isDriverValid);
-
     setIsFormValid(isDateValid && isVehicleValid && isDriverValid);
   }, [selectedDate, vehicleNumber, driverName]);
+
+  // Effect to automatically add a new row
+  useEffect(() => {
+    const lastItem = itemDetails[itemDetails.length - 1];
+    if (lastItem && parseFloat(lastItem.total) > 0) {
+      // Check if the last item's total is greater than 0
+      // And also ensure it's not just an empty row with quantity/rent
+      // to prevent adding new rows without meaningful input
+      if (lastItem.quantity.trim() !== "" && lastItem.rent.trim() !== "") {
+          handleAddItem();
+      }
+    }
+  }, [itemDetails]); // Triggered when itemDetails changes
 
   const agentOptions: Option[] = [
     { value: "40", label: "Karthi" },
@@ -91,8 +121,51 @@ export default function NewTrip() {
     setSelectedDate(undefined);
     setVehicleNumber("");
     setDriverName("");
+    setItemDetails([{ id: Date.now(), itemName: "", remarks: "", quantity: "", rent: "", total: "" }]); // Reset item details
+    setOtherCharges("0"); // Reset other charges
     setIsFormValid(false);
   };
+
+  const handleAddItem = useCallback(() => {
+    // Only add a new row if the last row is not completely empty
+    const lastItem = itemDetails[itemDetails.length - 1];
+    if (lastItem && (lastItem.itemName || lastItem.remarks || lastItem.quantity || lastItem.rent || parseFloat(lastItem.total) > 0)) {
+        setItemDetails(prevDetails => [
+            ...prevDetails,
+            { id: Date.now(), itemName: "", remarks: "", quantity: "", rent: "", total: "" }
+        ]);
+    }
+  }, [itemDetails]); // Dependency on itemDetails to get the latest lastItem
+
+  const handleDeleteItem = useCallback((id: number) => {
+    setItemDetails(prevDetails => {
+        const updatedItems = prevDetails.filter(item => item.id !== id);
+        // If all rows are deleted, add one empty row back
+        if (updatedItems.length === 0) {
+            return [{ id: Date.now(), itemName: "", remarks: "", quantity: "", rent: "", total: "" }];
+        }
+        return updatedItems;
+    });
+  }, []);
+
+
+  const handleItemChange = useCallback((id: number, field: keyof ItemDetail, value: string) => {
+    setItemDetails(prevDetails =>
+      prevDetails.map(item => {
+        if (item.id === id) {
+          const newItem = { ...item, [field]: value };
+          // Calculate total if quantity or rent changes
+          if (field === "quantity" || field === "rent") {
+            const quantity = parseFloat(newItem.quantity) || 0;
+            const rent = parseFloat(newItem.rent) || 0;
+            newItem.total = (quantity * rent).toFixed(2);
+          }
+          return newItem;
+        }
+        return item;
+      })
+    );
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,110 +175,86 @@ export default function NewTrip() {
       console.log("Main form submitted successfully", formValues);
     }
 
-    const agentBrokerName = (
-      document.querySelector('[name="agent/brokerName"]') as HTMLSelectElement
-    )?.value;
-    const fromPlace = (
-      document.querySelector('[name="fromPlace"]') as HTMLInputElement
-    )?.value.trim();
-    const toPlace = (
-      document.querySelector('[name="toPlace"]') as HTMLInputElement
-    )?.value.trim();
-
-    const rows = document.querySelectorAll("#productTableBody tr");
-    const itemDetailsPayload: any[] = [];
-
-    rows.forEach((row) => {
-      const cells = row.querySelectorAll("td");
-      const item = {
-        itemName: cells[1]?.querySelector("input")?.value.trim() || "",
-        remarks: cells[2]?.querySelector("input")?.value.trim() || "",
-        quantity: cells[3]?.querySelector("input")?.value.trim() || "",
-        rent: cells[4]?.querySelector("input")?.value.trim() || "",
-        total: cells[5]?.querySelector("input")?.value.trim() || "",
-      };
-
-      if (
-        item.itemName ||
-        item.remarks ||
-        item.quantity ||
-        item.rent ||
-        item.total
-      ) {
-        itemDetailsPayload.push(item);
-      }
-    });
-
-    const subtotal = "0";
-    const netTotal = (
-      parseFloat(subtotal) + parseFloat(otherCharges || "0")
-    ).toFixed(2);
-
     const payload = {
-      agentBrokerName: agentBrokerName,
-      fromPlace,
-      toPlace,
+      agentBrokerName: AgentBrokerName,
+      fromPlace: (document.querySelector('[name="fromPlace"]') as HTMLInputElement)?.value.trim(),
+      toPlace: (document.querySelector('[name="toPlace"]') as HTMLInputElement)?.value.trim(),
       tripDate: selectedDate ? selectedDate.toLocaleDateString("en-GB") : "",
       vehicleNumber,
       driverName,
-      itemDetails: itemDetailsPayload,
+      // Filter out completely empty rows before submission
+      itemDetails: itemDetails.filter(item =>
+        item.itemName.trim() !== "" ||
+        item.remarks.trim() !== "" ||
+        parseFloat(item.quantity) > 0 ||
+        parseFloat(item.rent) > 0 ||
+        parseFloat(item.total) > 0
+      ),
       subTotal: subtotal,
       otherCharges,
       netTotal,
     };
 
     console.log("Final submission payload:", payload);
+    // You would typically send this payload to your backend
+    alert("Form submitted! Check console for payload.");
   };
 
-  const TableRow = ({ index }: { index: number }) => (
+  const TableRow = ({ item, index }: { item: ItemDetail; index: number }) => (
     <tr>
-      <td className="p-2 text-center w-[3%]">{index}</td>
+      <td className="p-2 text-center w-[3%]">{index + 1}</td>
       <td className="p-2 w-[30%]">
         <Input
           type="text"
-          name="itemName"
-          className="w-full"
+          name={`itemName-${item.id}`} // Unique name for each input
+          className="w-full alphanumeric"
           placeholder="Enter Item Name"
+          value={item.itemName}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => handleItemChange(item.id, "itemName", e.target.value)}
         />
       </td>
       <td className="p-2 w-[15%]">
         <Input
           type="text"
-          name="remarks"
-          className="w-full"
+          name={`remarks-${item.id}`} // Unique name
+          className="w-full alphanumeric"
           placeholder="Enter Remarks"
+          value={item.remarks}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => handleItemChange(item.id, "remarks", e.target.value)}
         />
       </td>
       <td className="p-2 w-[15%]">
         <Input
           type="text"
-          name="quantity"
-          className="w-full"
+          name={`quantity-${item.id}`} // Unique name
+          className="w-full number_with_decimal"
           placeholder="Enter Quantity"
+          value={item.quantity}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => handleItemChange(item.id, "quantity", e.target.value)}
         />
       </td>
       <td className="p-2 w-[15%]">
         <Input
           type="text"
-          name="rent"
-          className="w-full"
+          name={`rent-${item.id}`} // Unique name
+          className="w-full number_with_decimal"
           placeholder="Enter Rent"
+          value={item.rent}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => handleItemChange(item.id, "rent", e.target.value)}
         />
       </td>
       <td className="p-2 w-[15%]">
         <Input
           type="text"
-          name="total"
+          name={`total-${item.id}`} // Unique name
           className="w-full text-right total"
           placeholder="Auto-calculated Total"
+          value={item.total}
           readOnly
         />
       </td>
       <td className="p-2 text-center w-[7%]">
-        <button type="button" className="text-blue-600 edit-row mx-1 cursor-pointer">
-          <i className="ri-edit-line text-[16px]"></i>
-        </button>
-        <button type="button" className="text-red-600 delete-row mx-1 cursor-pointer">
+        <button type="button" className="text-red-600 delete-row mx-1 cursor-pointer" onClick={() => handleDeleteItem(item.id)}>
           <i className="ri-delete-bin-line text-[16px]"></i>
         </button>
       </td>
@@ -228,6 +277,8 @@ export default function NewTrip() {
                         options={agentOptions}
                         searchable
                         data-validate="required"
+                        onChange={(selectedValue: string | null) => setAgentBrokerName(selectedValue || "")}
+                        initialValue={AgentBrokerName}
                       />
                     </FormField>
                     <FormField label="Place From" required>
@@ -249,6 +300,8 @@ export default function NewTrip() {
                   </div>
                 </div>
 
+             
+
                 <h2 className="text-lg text-[#009333] mb-4">Item Details</h2>
 
                 <table className="w-full text-sm">
@@ -259,13 +312,13 @@ export default function NewTrip() {
                       <td className="p-2 w-[15%]">Remarks</td>
                       <td className="p-2 w-[15%]">Quantity</td>
                       <td className="p-2 w-[15%]">Rent</td>
-                      <td className="p-2 w-[15%] text-right">Total Amount</td>
+                      <td className="p-2 w-[15%]">Total Amount</td>
                       <td className="p-2 w-[7%] text-center">Action</td>
                     </tr>
                   </thead>
                   <tbody id="productTableBody">
-                    {[1, 2, 3, 4, 5].map((index) => (
-                      <TableRow key={index} index={index} />
+                    {itemDetails.map((item, index) => (
+                      <TableRow key={item.id} item={item} index={index} />
                     ))}
                   </tbody>
                 </table>
@@ -274,6 +327,7 @@ export default function NewTrip() {
                   <div className="ml-5">
                     <button
                       type="button"
+                      onClick={handleAddItem} // Manual add button still exists
                       className="bg-[#f1f1fa] text-[14px] text-[#212529] py-[0.375rem] px-[0.75rem] rounded-[0.375rem] cursor-pointer flex items-center gap-1"
                     >
                       <i className="ri-add-circle-fill text-[15px] text-[#009333]"></i>
@@ -290,7 +344,7 @@ export default function NewTrip() {
                           name="subtotal"
                           placeholder="Auto-calculated subtotal"
                           className="w-full text-right subtotal"
-                          value={"0.00"}
+                          value={subtotal}
                           readOnly
                         />
                       </div>
@@ -304,7 +358,7 @@ export default function NewTrip() {
                           placeholder="Enter Other Charges"
                           className="w-full text-right other charges"
                           value={otherCharges}
-                          onChange={(e) => setOtherCharges(e.target.value)}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => setOtherCharges(e.target.value)}
                         />
                       </div>
                     </div>
@@ -312,7 +366,7 @@ export default function NewTrip() {
                     <div className="flex justify-between items-center font-semibold text-base">
                       <span className="pl-2">Net Total</span>
                       <span className="pr-2 text-[#009333]">
-                        {(parseFloat(otherCharges || "0")).toFixed(2)}
+                        {netTotal}
                       </span>
                     </div>
                   </div>
@@ -341,10 +395,10 @@ export default function NewTrip() {
                 <label className="block w-full form-label">Trip Date</label>
                 <DatePicker
                   id="tripDate"
-                  name="tripDate"
+                  name="tripDate" disablePast
                   selected={selectedDate}
                   onChange={(date: Date | undefined) => setSelectedDate(date)}
-                  placeholder="Select date"
+                  placeholder="Select Date"
                   className="w-full"
                 />
               </div>
@@ -352,24 +406,24 @@ export default function NewTrip() {
                 <label className="block w-full form-label">Vehicle Number</label>
                 <SearchableSelect
                   name="vehicleNumber"
-                  placeholder="Select vehicleNumber"
+                  placeholder="Select Vehicle Number"
                   options={vehicleOptions}
                   searchable
                   data-validate="required"
-                  onChange={(selectedValue: string | null) => setVehicleNumber(selectedValue || "")} // Corrected
-                  initialValue={vehicleNumber} // Ensure this prop is passed to maintain selection
+                  onChange={(selectedValue: string | null) => setVehicleNumber(selectedValue || "")}
+                  initialValue={vehicleNumber}
                 />
               </div>
               <div>
                 <label className="block w-full form-label">Driver Name</label>
                 <SearchableSelect
                   name="driverName"
-                  placeholder="Select driverName"
+                  placeholder="Select Driver Name"
                   options={driverOptions}
                   searchable
                   data-validate="required"
-                  onChange={(selectedValue: string | null) => setDriverName(selectedValue || "")} // Corrected
-                  initialValue={driverName} // Ensure this prop is passed to maintain selection
+                  onChange={(selectedValue: string | null) => setDriverName(selectedValue || "")}
+                  initialValue={driverName}
                 />
               </div>
             </form>

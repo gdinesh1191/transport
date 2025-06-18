@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, ChangeEvent, FormEvent, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Layout from "../../../components/Layout";
 import SearchableSelect, { Option } from "@/app/utils/searchableSelect";
-import DatePicker from "@/app/utils/commonDatepicker";
+import DatePicker from "@/app/utils/commonDatepicker"; // Assuming this is your DatePicker component
 import { validateForm } from "@/app/utils/formValidations";
-import useInputValidation from "@/app/utils/inputValidations"; 
-import { Input } from "@/app/utils/form-controls";
- 
+import useInputValidation from "@/app/utils/inputValidations";
+
 // Form field components for reusability
 const FormField = ({
   label,
@@ -31,40 +30,55 @@ const FormField = ({
   </div>
 );
 
- 
+const Input = ({
+  name,
+  placeholder,
+  type = "text",
+  className = "",
+  ...props
+}: {
+  name: string;
+  placeholder?: string;
+  type?: string;
+  className?: string;
+  [key: string]: any;
+}) => (
+  <input
+    type={type}
+    name={name}
+    placeholder={placeholder}
+    className={`form-control ${className}`}
+    {...props}
+  />
+);
 
 export default function NewTrip() {
-  const [tripDate, setTripDate] = useState("");
+  const [tripDate, setTripDate] = useState(""); // This state isn't being used for validation, `selectedDate` is.
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [driverName, setDriverName] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
-  useInputValidation();
- 
+  useInputValidation(); // This hook is for general input validation, not directly controlling the modal button.
+
   const [showForm, setShowForm] = useState(false);
-  const [itemDetails, setItemDetails] = useState([]);
-  const [otherCharges, setOtherCharges] = useState("0");
+  const [itemDetails, setItemDetails] = useState([]); // Not relevant to the current problem
+  const [otherCharges, setOtherCharges] = useState("0"); // Not relevant to the current problem
   const initialModalRef = useRef<HTMLDivElement | null>(null);
- const [selectedDate, setSelectedDate] = useState<Date | undefined>();
- const [isFormValid, setIsFormValid] = useState(true);
-  
- useEffect(() => {
-  const isDateValid =
-    selectedDate instanceof Date && !isNaN(selectedDate.getTime());
-  const isVehicleValid = vehicleNumber.trim() !== "";
-  const isDriverValid = driverName.trim() !== "";
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined); // Initialize as undefined
+  const [isFormValid, setIsFormValid] = useState(false); // Initialize to false
 
-  console.log("selectedDate:", selectedDate);       
-  console.log("vehicleNumber:", vehicleNumber);     
-  console.log("driverName:", driverName);           
-  console.log("Form valid?", isDateValid && isVehicleValid && isDriverValid);
+  useEffect(() => {
+    // Check if selectedDate is a valid Date object (not null, undefined, or "Invalid Date")
+    const isDateValid = selectedDate instanceof Date && !isNaN(selectedDate.getTime());
+    const isVehicleValid = vehicleNumber.trim() !== "";
+    const isDriverValid = driverName.trim() !== "";
 
-  if (isDateValid && isVehicleValid && isDriverValid) {
-    setIsFormValid(true);
-  } else {
-    setIsFormValid(false);
-  }
-}, [selectedDate, vehicleNumber, driverName]);
+    console.log("selectedDate:", selectedDate);
+    console.log("vehicleNumber:", vehicleNumber);
+    console.log("driverName:", driverName);
+    console.log("Form valid?", isDateValid && isVehicleValid && isDriverValid);
 
+    setIsFormValid(isDateValid && isVehicleValid && isDriverValid);
+  }, [selectedDate, vehicleNumber, driverName]); // Depend on these states
 
   const agentOptions: Option[] = [
     { value: "40", label: "Karthi" },
@@ -80,28 +94,34 @@ export default function NewTrip() {
     { value: "Michael", label: "Michael" },
   ];
 
-const handleCreateTrip = () => {
-   if (initialModalRef.current)
-      initialModalRef.current.classList.add("hidden");
-  if (!isFormValid) return;
-  setShowForm(true);
-  // Optionally close modal if using a modal ref
-  // initialModalRef.current?.close(); or setModalVisible(false);
-};
+  const handleCreateTrip = () => {
+    // This check is redundant if the button is already disabled when !isFormValid
+    if (!isFormValid) return;
 
+    if (initialModalRef.current) {
+      initialModalRef.current.classList.add("hidden");
+    }
+    setShowForm(true);
+  };
 
   const handleCancelTrip = () => {
-    if (initialModalRef.current)
+    if (initialModalRef.current) {
       initialModalRef.current.classList.add("hidden");
+    }
+    // Optionally reset states when cancelling to ensure modal reappears correctly if needed
+    setSelectedDate(undefined);
+    setVehicleNumber("");
+    setDriverName("");
+    setIsFormValid(false); // Reset form validity
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-       if (formRef.current && validateForm(formRef.current)) {
-         const formData = new FormData(formRef.current);
-         const formValues = Object.fromEntries(formData.entries());
-         console.log("Form submitted successfully", formValues);
-       };
+    if (formRef.current && validateForm(formRef.current)) {
+      const formData = new FormData(formRef.current);
+      const formValues = Object.fromEntries(formData.entries());
+      console.log("Form submitted successfully", formValues);
+    }
 
     const vehicleType = (
       document.querySelector('[name="vehicleType"]') as HTMLSelectElement
@@ -146,7 +166,7 @@ const handleCreateTrip = () => {
       agentBrokerName: vehicleType,
       fromPlace,
       toPlace,
-      tripDate,
+      tripDate: selectedDate?.toISOString().split('T')[0], // Use selectedDate for tripDate
       vehicleNumber,
       driverName,
       itemDetails: itemDetailsPayload,
@@ -162,37 +182,37 @@ const handleCreateTrip = () => {
     <tr>
       <td className="p-2 text-center w-[3%]">{index}</td>
       <td className="p-2 w-[30%]">
-        <Input
-          type="text" name="itemName"
-          className="w-full  "
+        <input
+          type="text"
+          className="w-full form-control"
           placeholder="Enter Item Name"
         />
       </td>
       <td className="p-2 w-[15%]">
-        <Input
-          type="text" name="remarks"
-          className="w-full  "
+        <input
+          type="text"
+          className="w-full form-control"
           placeholder="Enter Remarks"
         />
       </td>
       <td className="p-2 w-[15%]">
-        <Input
-          type="text" name="quantity"
-          className="w-full  "
+        <input
+          type="text"
+          className="w-full form-control"
           placeholder="Enter Quantity"
         />
       </td>
       <td className="p-2 w-[15%]">
-        <Input
-          type="text" name="rent"
-          className="w-full  "
+        <input
+          type="text"
+          className="w-full form-control"
           placeholder="Enter Rent"
         />
       </td>
       <td className="p-2 w-[15%]">
-        <Input
-          type="text" name="total"
-          className="w-full text-right   total"
+        <input
+          type="text"
+          className="w-full text-right form-control total"
           placeholder="Auto-calculated Total"
           readOnly
         />
@@ -214,7 +234,7 @@ const handleCreateTrip = () => {
         {showForm && (
           <main id="main-content" className="flex-1 overflow-y-auto">
             <div className="px-4 py-6 h-[calc(100vh-103px)] overflow-y-auto">
-             <form ref={formRef} onSubmit={handleSubmit} autoComplete="off">
+              <form ref={formRef} onSubmit={handleSubmit} autoComplete="off">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
                   <div className="space-y-4">
                     <FormField label="Agent / Broker Name" required>
@@ -281,10 +301,10 @@ const handleCreateTrip = () => {
                     <div className="flex items-center justify-between gap-2">
                       <span>Sub Total</span>
                       <div className="flex items-center gap-2">
-                        <Input
-                          type="text" name="subtotal"
+                        <input
+                          type="text"
                           placeholder="Auto-calculated subtotal"
-                          className="w-full text-right subtotal"
+                          className="w-full text-right form-control subtotal"
                           value={"0.00"}
                           readOnly
                         />
@@ -293,10 +313,10 @@ const handleCreateTrip = () => {
                     <div className="flex items-center justify-between gap-2">
                       <span>Other Charges</span>
                       <div className="flex items-center gap-2">
-                        <Input
-                          type="text" name="otherCharges"
+                        <input
+                          type="text"
                           placeholder="Enter Other Charges"
-                          className="w-full text-right other charges"
+                          className="w-full text-right form-control other charges"
                         />
                       </div>
                     </div>
@@ -312,72 +332,80 @@ const handleCreateTrip = () => {
           </main>
         )}
 
-         <div
-      id="initial-modal"
-      ref={initialModalRef}
-      className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center z-50"
-    >
-      <div className="bg-white rounded-[0.5rem] shadow-lg w-[480px] p-[2rem]">
-        <h2 className="text-xl text-[#000000] flex items-center justify-center gap-2">
-          <i className="ri-bus-2-line text-[#009333] text-2xl"></i>
-          Create a New Trip
-        </h2>
-        <p className="text-[#374151] mt-[16px] text-center">
-          To create a new trip, please fill in the details below to help us
-          process your request smoothly.
-        </p>
-        <form className="space-y-4 mt-[16px]">
-          <div>
-            <label className="block w-full form-label">Trip Date</label>
-<DatePicker
-              id="tripDate" 
-              name="tripDate"
-              placeholder="Select date"
-              className="w-full"
-            />
-
-
+        <div
+          id="initial-modal"
+          ref={initialModalRef}
+          className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center z-50"
+        >
+          <div className="bg-white rounded-[0.5rem] shadow-lg w-[480px] p-[2rem]">
+            <h2 className="text-xl text-[#000000] flex items-center justify-center gap-2">
+              <i className="ri-bus-2-line text-[#009333] text-2xl"></i>
+              Create a New Trip
+            </h2>
+            <p className="text-[#374151] mt-[16px] text-center">
+              To create a new trip, please fill in the details below to help us
+              process your request smoothly.
+            </p>
+            <form className="space-y-4 mt-[16px]">
+              <div>
+                <label className="block w-full form-label">Trip Date</label>
+                <DatePicker
+                  id="tripdate"
+                  
+                  name="tripdate"
+                  required={true}
+                  placeholder="Select date"
+                  className="w-full"
+                  data-validate="required"
+                
+                />
+              </div>
+              <div>
+                <label className="block w-full form-label">
+                  Vehicle Number
+                </label>
+                <SearchableSelect
+                  name="vehicleNumber"
+                  placeholder="Select vehicleNumber"
+                  options={vehicleOptions}
+                  searchable
+                  data-validate="required"
+                  onChange={(selected: any) =>
+                    setVehicleNumber(selected?.value || "")
+                  }
+                />
+              </div>
+              <div>
+                <label className="block w-full form-label">Driver Name</label>
+                <SearchableSelect
+                  name="driverName"
+                  placeholder="Select driverName"
+                  options={driverOptions}
+                  searchable
+                  data-validate="required"
+                  onChange={(selected: any) =>
+                    setDriverName(selected?.value || "")
+                  }
+                />
+              </div>
+            </form>
+            <div className="mt-8 flex justify-end space-x-3">
+              <button onClick={handleCancelTrip} className="btn-sm btn-light">
+                Cancel
+              </button>
+              <button
+                id="createTrip"
+                onClick={handleCreateTrip}
+                className={`btn-sm btn-primary ${
+                  !isFormValid ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                disabled={!isFormValid}
+              >
+                Create Trip
+              </button>
+            </div>
           </div>
-          <div>
-            <label className="block w-full form-label">Vehicle Number</label>
-            <SearchableSelect
-              name="vehicleNumber"
-              placeholder="Select vehicleNumber"
-              options={vehicleOptions}
-              searchable
-              data-validate="required"
-              onChange={(selected: any) => setVehicleNumber(selected?.value || "")}
-
-            />
-          </div>
-          <div>
-            <label className="block w-full form-label">Driver Name</label>
-            <SearchableSelect
-              name="driverName"
-              placeholder="Select driverName"
-              options={driverOptions}
-              searchable
-              data-validate="required"
-             onChange={(selected: any) => setDriverName(selected?.value || "")}
-
-            />
-          </div>
-        </form>
-        <div className="mt-8 flex justify-end space-x-3">
-          <button onClick={handleCancelTrip} className="btn-sm btn-light">
-            Cancel
-          </button>
-          <button
-            id="createTrip"
-            onClick={handleCreateTrip}
-            className={`btn-sm btn-primary ${!isFormValid ? "opacity-50 cursor-not-allowed" : ""}`}
-            disabled={!isFormValid}
-          >
-            Create Trip
-          </button>
         </div>
-      </div>
-    </div>
 
         {showForm && (
           <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">

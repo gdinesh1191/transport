@@ -25,6 +25,7 @@ interface DatePickerProps {
   disableFuture?: boolean; // Optional shortcut
   disablePast?: boolean; // Optional shortcut
   initialDate?: Date; // Prop for setting initial date
+  
 }
 
 // Format date as DD/MM/YYYY

@@ -358,7 +358,7 @@ useEffect(() => {
   return (
     <Layout pageTitle="Vehicle List">
       <main className="flex-1">
-        <div className="overflow-y-hidden h-[calc(100vh-83px)]">
+        <div className="overflow-y-hidden h-[calc(100vh-90px)]">
           {/* Error State */}
           {error && !loading && (
             <div className="flex items-center justify-center h-64 flex-col ">
@@ -592,7 +592,7 @@ useEffect(() => {
               </div>
             )}
 
-            <div className="mx-2 h-[calc(100vh-167px)] overflow-hidden rounded-lg bg-white">
+            <div className="mx-2 h-[calc(100vh-174px)] overflow-hidden rounded-lg bg-white">
               <div ref={listRef} className="h-full overflow-y-auto">
                 <table className="w-full">
                   <thead className="sticky-table-header">
@@ -752,7 +752,7 @@ useEffect(() => {
           </div>
         </div>
       </main>
-      <footer className="bg-[#ebeff3] py-3 h-[36.9px] px-4 flex items-center justify-start">
+      <footer className="bg-[#ebeff3] py-3 h-[46.9px] px-4 flex items-center justify-start">
         <span className="text-sm">
           Showing{" "}
           <span className="text-red-600">{filteredVehicles.length}</span> of{" "}

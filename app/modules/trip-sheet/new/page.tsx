@@ -304,7 +304,7 @@ export default function NewTrip() {
                           placeholder="Enter Other Charges"
                           className="w-full text-right other charges"
                           value={otherCharges}
-                          onChange={(e) => setOtherCharges(e.target.value)}
+                          
                         />
                       </div>
                     </div>

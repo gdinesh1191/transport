@@ -8,6 +8,7 @@ import { validateForm } from "@/app/utils/formValidations";
 import useInputValidation from "@/app/utils/inputValidations";
 import { Input } from "@/app/utils/form-controls";
 
+<<<<<<< HEAD
 // Interface for item details
 interface ItemDetail {
   id: number; // Unique ID for each item for easy management
@@ -19,6 +20,9 @@ interface ItemDetail {
 }
 
 // Form field components for reusability
+=======
+ 
+>>>>>>> 82faedb2dbd0535fdd7a041d45729413aab44567
 const FormField = ({
   label,
   required = false,
@@ -358,7 +362,11 @@ export default function NewTrip() {
                           placeholder="Enter Other Charges"
                           className="w-full text-right other charges"
                           value={otherCharges}
+<<<<<<< HEAD
                           onChange={(e: ChangeEvent<HTMLInputElement>) => setOtherCharges(e.target.value)}
+=======
+                          
+>>>>>>> 82faedb2dbd0535fdd7a041d45729413aab44567
                         />
                       </div>
                     </div>

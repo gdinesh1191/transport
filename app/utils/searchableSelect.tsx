@@ -15,8 +15,8 @@ interface Props {
   placeholder?: string;
   className?: string;
   'data-validate'?: string;
-  initialValue?: string | null; // Use initialValue for setting the initial state
-  onChange?: (selectedValue: string | null) => void; // Optional callback for parent
+  initialValue?: string | null;  
+  onChange?: (selectedValue: string | null) => void;  
   onAddNew?: () => void;
   onRefresh?: () => void;
   disabled?: boolean;
@@ -53,10 +53,11 @@ const SearchableSelect = ({
   useEffect(() => {
     const newOption = initialValue ? options.find((opt) => opt.value === initialValue) || null : null;
     // Only update if the new initialValue is different from the current internal selection
-    if (newOption?.value !== currentSelection?.value) {
+    // or if the initialValue is null/undefined and currentSelection is not.
+    if (newOption?.value !== currentSelection?.value || (newOption === null && currentSelection !== null)) {
       setCurrentSelection(newOption);
     }
-  }, [initialValue, options, currentSelection]); // Added currentSelection to dependencies for strictness, though unlikely to cause issues here without it.
+  }, [initialValue, options, currentSelection]);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);

@@ -53,7 +53,7 @@ export default function NewTrip() {
   const [driverName, setDriverName] = useState("");
   const [AgentBrokerName, setAgentBrokerName] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
- useInputValidation();
+  useInputValidation();
 
   const [showForm, setShowForm] = useState(false);
   const [itemDetails, setItemDetails] = useState<ItemDetail[]>([
@@ -66,27 +66,28 @@ export default function NewTrip() {
       total: "",
     },
   ]);
- 
+
   const initialModalRef = useRef<HTMLDivElement | null>(null);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isFormValid, setIsFormValid] = useState(true);
- const [otherCharges, setOtherCharges] = useState("0");
- const [netTotal, setNetTotal] = useState("0.00");
- // 🧮 Dynamic subtotal calculation
-const subtotal = itemDetails
-  .reduce((sum, item) => sum + parseFloat(item.total || "0"), 0)
-  .toFixed(2);
+  const [otherCharges, setOtherCharges] = useState("0");
+  const [netTotal, setNetTotal] = useState("0.00");
 
-// 🧮 Dynamic netTotal calculation on subtotal + charges
-useEffect(() => {
-  const subtotalValue = parseFloat(subtotal);
-  const charges = parseFloat(otherCharges);
-  const net = (isNaN(subtotalValue) ? 0 : subtotalValue) + (isNaN(charges) ? 0 : charges);
-  setNetTotal(net.toFixed(2));
-}, [subtotal, otherCharges]);
+  // 🧮 Dynamic subtotal calculation
+  const subtotal = itemDetails
+    .reduce((sum, item) => sum + parseFloat(item.total || "0"), 0)
+    .toFixed(2);
 
-
+  // 🧮 Dynamic netTotal calculation on subtotal + charges
+  useEffect(() => {
+    const subtotalValue = parseFloat(subtotal);
+    const charges = parseFloat(otherCharges);
+    const net =
+      (isNaN(subtotalValue) ? 0 : subtotalValue) +
+      (isNaN(charges) ? 0 : charges);
+    setNetTotal(net.toFixed(2));
+  }, [subtotal, otherCharges]);
 
   useEffect(() => {
     const isDateValid =
@@ -153,30 +154,32 @@ useEffect(() => {
         total: "",
       },
     ]); // Reset item details
-    setOtherCharges("0"); // Reset other charges
+    setOtherCharges("0"); // <--- ADDED: Reset other charges here
     setIsFormValid(false);
     setShowForm(false); // Ensure the main form is hidden again
   };
 
   const handleDeleteItem = useCallback((id: number) => {
     setItemDetails((prevDetails) => {
-      const updatedItems = prevDetails.filter((item) => item.id !== id);
-      // If all rows are deleted, add one empty row back
-      if (updatedItems.length === 0) {
-        return [
-          {
-            id: Date.now(),
-            itemName: "",
-            remarks: "",
-            quantity: "",
-            rent: "",
-            total: "",
-          },
-        ];
-      }
-      return updatedItems;
+        const updatedItems = prevDetails.filter((item) => item.id !== id);
+        if (updatedItems.length === 0) {
+            // --- THIS RESETS otherCharges when all items are gone ---
+            setOtherCharges("0");
+            // --- subtotal will also become "0.00" because itemDetails is effectively cleared ---
+            return [
+                {
+                    id: Date.now(),
+                    itemName: "",
+                    remarks: "",
+                    quantity: "",
+                    rent: "",
+                    total: "",
+                },
+            ];
+        }
+        return updatedItems;
     });
-  }, []);
+}, []);
 
   const handleItemUpdate = useCallback(
     (id: number, updatedFields: Partial<ItemDetail>) => {
@@ -247,17 +250,15 @@ useEffect(() => {
     const [rowItem, setRowItem] = useState<ItemDetail>(item);
     const prevTotalRef = useRef(item.total); // To track previous total for new row logic
 
-  
-
     // Effect to trigger new row addition when total changes to a non-zero value
- useEffect(() => {
+    useEffect(() => {
       const newTotal = parseFloat(rowItem.total);
       const prevTotal = parseFloat(prevTotalRef.current);
 
       if (
         isLastRow &&
         !isNaN(newTotal) && // New total must be a valid number
-        newTotal > 0 &&     // New total must be greater than zero
+        newTotal > 0 && // New total must be greater than zero
         (isNaN(prevTotal) || prevTotal === 0) // Previous total was not a number or was zero
       ) {
         const timer = setTimeout(() => {
@@ -268,37 +269,41 @@ useEffect(() => {
       }
       prevTotalRef.current = rowItem.total; // Update ref for next render
     }, [rowItem.total, isLastRow, onAddItem]);
+
     const calculateTotal = (qty: string, rentVal: string) => {
       const quantity = parseFloat(qty) || 0;
       const rent = parseFloat(rentVal) || 0;
       return (quantity * rent).toFixed(2);
     };
-  
 
+    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target;
+      let newRowItem: ItemDetail = { ...rowItem, [name]: value };
 
-   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-   const { name, value } = e.target;
-   let newRowItem: ItemDetail = { ...rowItem, [name]: value };
+      if (name === "quantity" || name === "rent") {
+        // Allow empty string for quantity/rent to clear the field
+        if (value !== "" && !/^\d*\.?\d*$/.test(value)) {
+          return; // Prevent invalid input (non-numeric, non-decimal)
+        }
 
-    if (name === "quantity" || name === "rent") {
-    if (value !== "" && !/^\d*\.?\d*$/.test(value)) {
-      return; 
-    }
+        const newQuantity = name === "quantity" ? value : rowItem.quantity;
+        const newRent = name === "rent" ? value : rowItem.rent;
+        newRowItem.total = calculateTotal(newQuantity, newRent);
+      }
 
-    const newQuantity = name === "quantity" ? value : rowItem.quantity;
-    const newRent = name === "rent" ? value : rowItem.rent;
-    newRowItem.total = calculateTotal(newQuantity, newRent);
-  }
-
-      setRowItem(newRowItem); 
-        
+      setRowItem(newRowItem);
     };
-
 
     const handleBlur = (e: ChangeEvent<HTMLInputElement>) => {
-      const { name, value } = e.target;
+      // Ensure that when input fields are blurred, the state of the parent (itemDetails) is updated
       onItemUpdate(rowItem.id, rowItem);
     };
+
+    // Keep an effect to sync rowItem with the item prop if it changes from parent (e.g., initial load or full reset)
+    useEffect(() => {
+        setRowItem(item);
+    }, [item]);
+
 
     return (
       <tr>
@@ -306,7 +311,7 @@ useEffect(() => {
         <td className="p-2 w-[30%]">
           <Input
             type="text"
-            name="itemName" 
+            name="itemName"
             className="w-full alphanumeric"
             placeholder="Enter Item Name"
             value={rowItem.itemName}
@@ -467,9 +472,15 @@ useEffect(() => {
                           placeholder="Enter Other Charges"
                           className="w-full text-right other charges"
                           value={otherCharges}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setOtherCharges(e.target.value)
-                          }
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                            // Only allow numeric input for other charges
+                            if (
+                              e.target.value === "" ||
+                              /^\d*\.?\d*$/.test(e.target.value)
+                            ) {
+                              setOtherCharges(e.target.value);
+                            }
+                          }}
                         />
                       </div>
                     </div>

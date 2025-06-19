@@ -53,9 +53,7 @@ export default function NewTrip() {
   const [driverName, setDriverName] = useState("");
   const [AgentBrokerName, setAgentBrokerName] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
-  // It's possible useInputValidation() is causing the single-character issue.
-  // For debugging, consider commenting it out temporarily to see if the input behavior changes.
-  useInputValidation();
+ useInputValidation();
 
   const [showForm, setShowForm] = useState(false);
   const [itemDetails, setItemDetails] = useState<ItemDetail[]>([
@@ -68,23 +66,27 @@ export default function NewTrip() {
       total: "",
     },
   ]);
-  const [otherCharges, setOtherCharges] = useState("0");
+ 
   const initialModalRef = useRef<HTMLDivElement | null>(null);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isFormValid, setIsFormValid] = useState(true);
+ const [otherCharges, setOtherCharges] = useState("0");
+ const [netTotal, setNetTotal] = useState("0.00");
+ // 🧮 Dynamic subtotal calculation
+const subtotal = itemDetails
+  .reduce((sum, item) => sum + parseFloat(item.total || "0"), 0)
+  .toFixed(2);
 
-  // Calculate subtotal
-  const subtotal = itemDetails
-    .reduce((sum, item) => {
-      return sum + parseFloat(item.total || "0");
-    }, 0)
-    .toFixed(2);
+// 🧮 Dynamic netTotal calculation on subtotal + charges
+useEffect(() => {
+  const subtotalValue = parseFloat(subtotal);
+  const charges = parseFloat(otherCharges);
+  const net = (isNaN(subtotalValue) ? 0 : subtotalValue) + (isNaN(charges) ? 0 : charges);
+  setNetTotal(net.toFixed(2));
+}, [subtotal, otherCharges]);
 
-  // Calculate net total
-  const netTotal = (
-    parseFloat(subtotal) + parseFloat(otherCharges || "0")
-  ).toFixed(2);
+
 
   useEffect(() => {
     const isDateValid =
@@ -245,10 +247,7 @@ export default function NewTrip() {
     const [rowItem, setRowItem] = useState<ItemDetail>(item);
     const prevTotalRef = useRef(item.total); // To track previous total for new row logic
 
-    // Effect to update local state if parent item prop changes (e.g., when a new row is added and item prop is initialized)
-    useEffect(() => {
-      setRowItem(item);
-    }, [item]);
+  
 
     // Effect to trigger new row addition when total changes to a non-zero value
  useEffect(() => {
@@ -274,37 +273,30 @@ export default function NewTrip() {
       const rent = parseFloat(rentVal) || 0;
       return (quantity * rent).toFixed(2);
     };
+  
 
-    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-      const { name, value } = e.target;
-      let newRowItem: ItemDetail = { ...rowItem, [name]: value };
 
-      if (name === "quantity" || name === "rent") {
-        // Only allow numbers and decimals for quantity and rent
-        if (value === "" || /^\d*\.?\d*$/.test(value)) {
-          const newQuantity = name === "quantity" ? value : rowItem.quantity;
-          const newRent = name === "rent" ? value : rowItem.rent;
-          newRowItem.total = calculateTotal(newQuantity, newRent);
-        } else {
-          // If invalid input, don't update the state but let the user continue typing
-          return;
-        }
-      }
+   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+   const { name, value } = e.target;
+   let newRowItem: ItemDetail = { ...rowItem, [name]: value };
 
-      setRowItem(newRowItem); // Update local state immediately for smooth typing
+    if (name === "quantity" || name === "rent") {
+    if (value !== "" && !/^\d*\.?\d*$/.test(value)) {
+      return; 
+    }
 
-      // Debounce the update to the parent state
-      // This helps prevent excessive re-renders of the entire table on every keystroke
-      const timer = setTimeout(() => {
-        onItemUpdate(rowItem.id, newRowItem);
-      }, 300); // Adjust debounce time as needed (e.g., 300ms)
+    const newQuantity = name === "quantity" ? value : rowItem.quantity;
+    const newRent = name === "rent" ? value : rowItem.rent;
+    newRowItem.total = calculateTotal(newQuantity, newRent);
+  }
 
-      return () => clearTimeout(timer); // Cleanup previous timer on re-render
+      setRowItem(newRowItem); 
+        
     };
+
 
     const handleBlur = (e: ChangeEvent<HTMLInputElement>) => {
       const { name, value } = e.target;
-      // Ensure the latest `rowItem` state is propagated to the parent on blur
       onItemUpdate(rowItem.id, rowItem);
     };
 
@@ -314,7 +306,7 @@ export default function NewTrip() {
         <td className="p-2 w-[30%]">
           <Input
             type="text"
-            name="itemName" // Changed name to match key in ItemDetail
+            name="itemName" 
             className="w-full alphanumeric"
             placeholder="Enter Item Name"
             value={rowItem.itemName}

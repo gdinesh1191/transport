@@ -51,7 +51,18 @@ const useInputValidation = () => {
       }
       
       // This line will now only execute for non-file inputs
-      target.value = value;
+     if (value !== target.value) {
+  const selectionStart = target.selectionStart;
+  const selectionEnd = target.selectionEnd;
+
+  target.value = value;
+
+  // Preserve cursor position
+  if (selectionStart !== null && selectionEnd !== null) {
+    target.setSelectionRange(selectionStart, selectionEnd);
+  }
+}
+
     };
 
     document.addEventListener('input', handleInput);

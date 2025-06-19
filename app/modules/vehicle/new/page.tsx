@@ -1,5 +1,5 @@
  "use client";
-import { useEffect, useRef, useState, Dispatch, SetStateAction } from "react";
+import { useEffect, useRef, useState } from "react";
 import Layout from "../../../components/Layout";
 import useInputValidation from "@/app/utils/inputValidations";
 import ToastContainer, { showToast } from "@/app/utils/toaster";
@@ -32,8 +32,7 @@ const FormField = ({ label, required = false, children, className = "", error, h
     </div>
   </div>
 );
-
-// Define an interface for your form values
+ 
 interface VehicleRegistrationFormValues {
   registrationNumber?: string;
   truckType?: string;
@@ -43,7 +42,7 @@ interface VehicleRegistrationFormValues {
   address?: string;
   registrationDate?: Date;
   ownerName?: string;
-  ownershipType?: "Owned" | "Leased";
+  ownerShipType?: "Owned" | "Leased";
   classOfTruck?: string;
   modelNumber?: string;
   modelYear?: number;
@@ -94,11 +93,34 @@ export default function NewVehicle() {
   const [selectedClassOfTruck, setSelectedClassOfTruck] = useState<string | undefined>(undefined);
   const [selectedInsuranceCompany, setSelectedInsuranceCompany] = useState<string | undefined>(undefined);
   const [selectedLoanProvider, setSelectedLoanProvider] = useState<string | undefined>(undefined);
+  const [dynamicBankOptions, setDynamicBankOptions] = useState<Option[]>([]);
+ const fetchOptions = async (type: string) => {
+    try {
+      const payload = {
+       
+           token : "getOption",
+           data : {
+            "type": "insuranceCompany"
+          
+        }
+      };
+      const response = await apiCall(payload);
+      if (response.status === 200 && response.data) {
+        // Transform the response data to Option[] format
+        return response.data.map((item: any) => ({
+          value: item.id.toString(), // Assuming 'id' is suitable for value
+          label: item.name,
+        }));
+      }
+      return [];
+    } catch (error) {
+      console.error(`Failed to fetch options for ${type}:`, error);
+      showToast.error(`Failed to load ${type} options.`);
+      return [];
+    }
+  };
 
-  const insuranceOptions: Option[] = [
-    { value: "icici", label: "ICICI Lombard" },
-    { value: "hdfc", label: "HDFC Ergo" },
-  ];
+  
   const vehicleOptions: Option[] = [
     { value: "Light", label: "Light" },
     { value: "Medium", label: "Medium" },
@@ -223,6 +245,16 @@ export default function NewVehicle() {
 
   const searchParams = useSearchParams();
   const edit_id = searchParams.get("id");
+  useEffect(() => {
+    // Fetch bank options when the component mounts
+    const loadBankOptions = async () => {
+      const options = await fetchOptions("bank"); // Assuming 'bank' is the type for bank options
+      setDynamicBankOptions(options);
+    };
+
+    loadBankOptions(); // Call the function to load bank options
+    // ... (existing fetchVehicle logic)
+  }, [edit_id]); // Dependency on edit_id
 
   function parseDMYtoJSDate(dateString: string | undefined): Date | undefined {
     if (!dateString) return undefined;
@@ -368,8 +400,8 @@ export default function NewVehicle() {
                       <FormField label="Owners Name" required error={formErrors.ownerName} htmlFor="ownerName">
                         <Input id="ownerName" name="ownerName" placeholder="Enter Owners Name" className="alphabet_only capitalize" data-validate="required" defaultValue={initialFormValues.ownerName} />
                       </FormField>
-                      <FormField label="Ownership Type" required error={formErrors.ownershipType} htmlFor="ownershipType">
-                        <RadioGroup id="ownershipType" name="ownershipType" options={[{ value: "Owned", label: "Owned" }, { value: "Leased", label: "Leased" }]} data-validate="required" defaultValue={initialFormValues.ownershipType} />
+                      <FormField label="Ownership Type" required error={formErrors.ownerShipType} htmlFor="ownerShipType">
+                        <RadioGroup id="ownerShipType" name="ownerShipType" options={[{ value: "Owned", label: "Owned" }, { value: "Leased", label: "Leased" }]} data-validate="required" defaultValue={initialFormValues.ownerShipType} />
                       </FormField>
                     </div>
                   </div>
@@ -433,7 +465,7 @@ export default function NewVehicle() {
                           id="insuranceCompany"
                           name="insuranceCompany"
                           placeholder="Select Insurance Company"
-                          options={insuranceOptions}
+                          options={dynamicBankOptions}
                           searchable
                           data-validate="required"
                           initialValue={selectedInsuranceCompany}
@@ -536,8 +568,7 @@ export default function NewVehicle() {
                 formRef.current?.reset();
                 setInitialFormValues({});
                 setFormKey((prevKey) => prevKey + 1);
-                // Reset date states on Cancel for new forms
-                setRegistrationDate(undefined);
+                 setRegistrationDate(undefined);
                 setFcExpiry(undefined);
                 setInsuranceExpiry(undefined);
                 setPermitExpiryDate(undefined);
@@ -558,7 +589,7 @@ export default function NewVehicle() {
             Cancel
           </button>
         </footer>
-        {/* <ToastContainer /> */}
+          <ToastContainer /> 
       </div>
     </Layout>
   );

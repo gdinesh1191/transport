@@ -22,18 +22,17 @@ interface DatePickerProps {
   id: string;  
   minDate?: Date;  
   maxDate?: Date;  
-  disableFuture?: boolean; // Optional shortcut
-  disablePast?: boolean; // Optional shortcut
-  initialDate?: Date; // Prop for setting initial date
-  // ADD THESE TWO PROPS:
-  selected: Date | undefined; // Prop to receive the selected date from parent
-  onChange: (date: Date | undefined) => void; // Prop to send date changes to parent
+  disableFuture?: boolean;  
+  disablePast?: boolean;  
+  initialDate?: Date;  
+ 
+  selected: Date | undefined;  
+  onChange: (date: Date | undefined) => void;  
 }
-
-// Format date as DD/MM/YYYY
-function formatDate(date: Date | undefined) {
+ 
+export function formatDate(date: Date | undefined) {
   if (!date) return "";
-  return date.toLocaleDateString("en-GB"); // DD/MM/YYYY
+  return date.toLocaleDateString("en-GB"); 
 }
 
 function isValidDate(date: Date | undefined) {

@@ -71,7 +71,7 @@ export default function NewTrip() {
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isFormValid, setIsFormValid] = useState(true);
-  const [otherCharges, setOtherCharges] = useState("0");
+  const [otherCharges, setOtherCharges] = useState("");
   const [netTotal, setNetTotal] = useState("0.00");
 
   // 🧮 Dynamic subtotal calculation
@@ -154,32 +154,30 @@ export default function NewTrip() {
         total: "",
       },
     ]); // Reset item details
-    setOtherCharges("0"); // <--- ADDED: Reset other charges here
+    setOtherCharges("0"); // Reset other charges when cancelling trip
     setIsFormValid(false);
     setShowForm(false); // Ensure the main form is hidden again
   };
 
   const handleDeleteItem = useCallback((id: number) => {
     setItemDetails((prevDetails) => {
-        const updatedItems = prevDetails.filter((item) => item.id !== id);
-        if (updatedItems.length === 0) {
-            // --- THIS RESETS otherCharges when all items are gone ---
-            setOtherCharges("0");
-            // --- subtotal will also become "0.00" because itemDetails is effectively cleared ---
-            return [
-                {
-                    id: Date.now(),
-                    itemName: "",
-                    remarks: "",
-                    quantity: "",
-                    rent: "",
-                    total: "",
-                },
-            ];
-        }
-        return updatedItems;
+      const updatedItems = prevDetails.filter((item) => item.id !== id);
+      if (updatedItems.length === 0) {
+        setOtherCharges("0"); // Reset other charges when all items are deleted
+        return [
+          {
+            id: Date.now(),
+            itemName: "",
+            remarks: "",
+            quantity: "",
+            rent: "",
+            total: "",
+          },
+        ];
+      }
+      return updatedItems;
     });
-}, []);
+  }, []);
 
   const handleItemUpdate = useCallback(
     (id: number, updatedFields: Partial<ItemDetail>) => {
@@ -248,27 +246,26 @@ export default function NewTrip() {
   }) => {
     // Local state for all input fields within this row
     const [rowItem, setRowItem] = useState<ItemDetail>(item);
-    const prevTotalRef = useRef(item.total); // To track previous total for new row logic
+    // Removed prevTotalRef as we are now checking multiple fields
 
-    // Effect to trigger new row addition when total changes to a non-zero value
+    // Effect to trigger new row addition when itemName, quantity, and rent are filled
     useEffect(() => {
-      const newTotal = parseFloat(rowItem.total);
-      const prevTotal = parseFloat(prevTotalRef.current);
+      if (isLastRow) {
+        const isItemNameFilled = rowItem.itemName.trim() !== "";
+        const isQuantityFilled = parseFloat(rowItem.quantity) > 0;
+        const isRentFilled = parseFloat(rowItem.rent) > 0;
 
-      if (
-        isLastRow &&
-        !isNaN(newTotal) && // New total must be a valid number
-        newTotal > 0 && // New total must be greater than zero
-        (isNaN(prevTotal) || prevTotal === 0) // Previous total was not a number or was zero
-      ) {
-        const timer = setTimeout(() => {
-          onAddItem();
-        }, 100); // Small delay
+        // Add a new row only if all three fields are filled with valid data
+        if (isItemNameFilled && isQuantityFilled && isRentFilled) {
+          const timer = setTimeout(() => {
+            onAddItem();
+          }, 100); // Small delay
 
-        return () => clearTimeout(timer);
+          return () => clearTimeout(timer);
+        }
       }
-      prevTotalRef.current = rowItem.total; // Update ref for next render
-    }, [rowItem.total, isLastRow, onAddItem]);
+    }, [rowItem.itemName, rowItem.quantity, rowItem.rent, isLastRow, onAddItem]);
+
 
     const calculateTotal = (qty: string, rentVal: string) => {
       const quantity = parseFloat(qty) || 0;

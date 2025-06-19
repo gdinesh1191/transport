@@ -15,9 +15,8 @@ import { validateForm } from "@/app/utils/formValidations";
 import useInputValidation from "@/app/utils/inputValidations";
 import { Input } from "@/app/utils/form-controls";
 
-// Interface for item details
 interface ItemDetail {
-  id: number; // Unique ID for each item for easy management
+  id: number;
   itemName: string;
   remarks: string;
   quantity: string;
@@ -25,7 +24,6 @@ interface ItemDetail {
   total: string;
 }
 
-// Form field components for reusability
 const FormField = ({
   label,
   required = false,
@@ -37,9 +35,7 @@ const FormField = ({
   children: React.ReactNode;
   className?: string;
 }) => (
-  <div
-    className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}
-  >
+  <div className={`mb-[10px] flex flex-col md:flex-row md:items-center gap-2 md:gap-4 ${className}`}>
     <label className="form-label w-50">
       {label}
       {required && <span className="form-required text-red-500">*</span>}
@@ -74,12 +70,10 @@ export default function NewTrip() {
   const [otherCharges, setOtherCharges] = useState("");
   const [netTotal, setNetTotal] = useState("0.00");
 
-  // 🧮 Dynamic subtotal calculation
   const subtotal = itemDetails
     .reduce((sum, item) => sum + parseFloat(item.total || "0"), 0)
     .toFixed(2);
 
-  // 🧮 Dynamic netTotal calculation on subtotal + charges
   useEffect(() => {
     const subtotalValue = parseFloat(subtotal);
     const charges = parseFloat(otherCharges);
@@ -153,45 +147,40 @@ export default function NewTrip() {
         rent: "",
         total: "",
       },
-    ]); // Reset item details
-    setOtherCharges("0"); // Reset other charges when cancelling trip
+    ]);
+    setOtherCharges("0");
     setIsFormValid(false);
-    setShowForm(false); // Ensure the main form is hidden again
+    setShowForm(false);
   };
 
- const handleDeleteItem = useCallback((id: number) => {
-  setItemDetails((prevDetails: ItemDetail[]) => {
-    // Remove the item with the matching id
-    const updatedItems = prevDetails.filter((item) => item.id !== id);
+  const handleDeleteItem = useCallback((id: number) => {
+    setItemDetails((prevDetails: ItemDetail[]) => {
+      const updatedItems = prevDetails.filter((item) => item.id !== id);
 
-    // If, after deletion, there are no items left,
-    // reset other charges and return a single empty row.
-    if (updatedItems.length === 0) {
-      
-      return [
-        {
-          id: Date.now(), // Unique ID for the new row
-          itemName: "",
-          remarks: "",
-          quantity: "",
-          rent: "",
-          total: "",
-        },
-      ];
+      if (updatedItems.length === 0) {
+        return [
+          {
+            id: Date.now(),
+            itemName: "",
+            remarks: "",
+            quantity: "",
+            rent: "",
+            total: "",
+          },
+        ];
+      }
+
+      return updatedItems;
+    });
+  }, []);
+
+  useEffect(() => {
+    const subtotalValue = parseFloat(subtotal);
+
+    if (subtotalValue === 0 && parseFloat(otherCharges) !== 0) {
+      setOtherCharges("");
     }
-
-    // Return the updated list of items
-    return updatedItems;
-  });
-}, []);
-
-useEffect(() => {
-  const subtotalValue = parseFloat(subtotal);
-  // If subtotal is 0 and otherCharges is not already 0, reset otherCharges
-  if (subtotalValue === 0 && parseFloat(otherCharges) !== 0) {
-    setOtherCharges("");
-  }
-}, [subtotal, otherCharges]);
+  }, [subtotal, otherCharges]);
 
   const handleItemUpdate = useCallback(
     (id: number, updatedFields: Partial<ItemDetail>) => {
@@ -223,7 +212,7 @@ useEffect(() => {
       tripDate: selectedDate ? selectedDate.toLocaleDateString("en-GB") : "",
       vehicleNumber,
       driverName,
-      // Filter out completely empty rows before submission
+
       itemDetails: itemDetails.filter(
         (item) =>
           item.itemName.trim() !== "" ||
@@ -238,11 +227,10 @@ useEffect(() => {
     };
 
     console.log("Final submission payload:", payload);
-    // You would typically send this payload to your backend
+
     alert("Form submitted! Check console for payload.");
   };
 
-  // --- START: Refactored TableRow Component ---
   const TableRow = ({
     item,
     index,
@@ -258,22 +246,18 @@ useEffect(() => {
     onAddItem: () => void;
     isLastRow: boolean;
   }) => {
-    // Local state for all input fields within this row
     const [rowItem, setRowItem] = useState<ItemDetail>(item);
-    // Removed prevTotalRef as we are now checking multiple fields
 
-    // Effect to trigger new row addition when itemName, quantity, and rent are filled
     useEffect(() => {
       if (isLastRow) {
         const isItemNameFilled = rowItem.itemName.trim() !== "";
         const isQuantityFilled = parseFloat(rowItem.quantity) > 0;
         const isRentFilled = parseFloat(rowItem.rent) > 0;
 
-        // Add a new row only if all three fields are filled with valid data
         if (isItemNameFilled && isQuantityFilled && isRentFilled) {
           const timer = setTimeout(() => {
             onAddItem();
-          }, 100); // Small delay
+          }, 100);
 
           return () => clearTimeout(timer);
         }
@@ -297,9 +281,8 @@ useEffect(() => {
       let newRowItem: ItemDetail = { ...rowItem, [name]: value };
 
       if (name === "quantity" || name === "rent") {
-        // Allow empty string for quantity/rent to clear the field
         if (value !== "" && !/^\d*\.?\d*$/.test(value)) {
-          return; // Prevent invalid input (non-numeric, non-decimal)
+          return;
         }
 
         const newQuantity = name === "quantity" ? value : rowItem.quantity;
@@ -311,82 +294,35 @@ useEffect(() => {
     };
 
     const handleBlur = (e: ChangeEvent<HTMLInputElement>) => {
-      // Ensure that when input fields are blurred, the state of the parent (itemDetails) is updated
       onItemUpdate(rowItem.id, rowItem);
     };
-
-  
 
     return (
       <tr>
         <td className="p-2 text-center w-[3%]">{index + 1}</td>
         <td className="p-2 w-[30%]">
-          <Input
-            type="text"
-            name="itemName"
-            className="w-full alphanumeric"
-            placeholder="Enter Item Name"
-            value={rowItem.itemName}
-            onChange={handleChange}
-            onBlur={handleBlur}
-          />
+          <Input type="text" name="itemName" className="w-full alphanumeric" placeholder="Enter Item Name" value={rowItem.itemName} onChange={handleChange} onBlur={handleBlur} />
         </td>
         <td className="p-2 w-[15%]">
-          <Input
-            type="text"
-            name="remarks" // Changed name to match key in ItemDetail
-            className="w-full alphanumeric"
-            placeholder="Enter Remarks"
-            value={rowItem.remarks}
-            onChange={handleChange}
-            onBlur={handleBlur}
-          />
+          <Input type="text" name="remarks" className="w-full alphanumeric" placeholder="Enter Remarks" value={rowItem.remarks} onChange={handleChange} onBlur={handleBlur} />
         </td>
         <td className="p-2 w-[15%]">
-          <Input
-            type="text"
-            name="quantity" // Changed name to match key in ItemDetail
-            className="w-full number_with_decimal"
-            placeholder="Enter Quantity"
-            value={rowItem.quantity}
-            onChange={handleChange}
-            onBlur={handleBlur}
-          />
+          <Input type="text" name="quantity" className="w-full number_with_decimal" placeholder="Enter Quantity" value={rowItem.quantity} onChange={handleChange} onBlur={handleBlur} />
         </td>
         <td className="p-2 w-[15%]">
-          <Input
-            type="text"
-            name="rent" // Changed name to match key in ItemDetail
-            className="w-full number_with_decimal"
-            placeholder="Enter Rent"
-            value={rowItem.rent}
-            onChange={handleChange}
-            onBlur={handleBlur}
-          />
+          <Input type="text" name="rent" className="w-full number_with_decimal" placeholder="Enter Rent" value={rowItem.rent} onChange={handleChange} onBlur={handleBlur} />
         </td>
         <td className="p-2 w-[15%]">
-          <Input
-            type="text"
-            name="total" // Changed name to match key in ItemDetail
-            className="w-full text-right total"
-            placeholder="Auto-calculated Total"
-            value={rowItem.total}
-            readOnly
-          />
+          <Input type="text" name="total" className="w-full text-right total" placeholder="Auto-calculated Total" value={rowItem.total} readOnly />
         </td>
         <td className="p-2 text-center w-[7%]">
-          <button
-            type="button"
-            className="text-red-600 delete-row mx-1 cursor-pointer"
-            onClick={() => onDelete(item.id)}
-          >
+          <button type="button" className="text-red-600 delete-row mx-1 cursor-pointer" onClick={() => onDelete(item.id)}>
             <i className="ri-delete-bin-line text-[16px]"></i>
           </button>
         </td>
       </tr>
     );
   };
-  // --- END: Refactored TableRow Component ---
 
   return (
     <Layout pageTitle="NewTrip">
@@ -398,33 +334,13 @@ useEffect(() => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-5">
                   <div className="space-y-4">
                     <FormField label="Agent / Broker Name" required>
-                      <SearchableSelect
-                        name="agent/brokerName"
-                        placeholder="Select Agent / Broker Name"
-                        options={agentOptions}
-                        searchable
-                        data-validate="required"
-                        onChange={(selectedValue: string | null) =>
-                          setAgentBrokerName(selectedValue || "")
-                        }
-                        initialValue={AgentBrokerName}
-                      />
+                      <SearchableSelect name="agent/brokerName" placeholder="Select Agent / Broker Name" options={agentOptions} searchable data-validate="required" onChange={(selectedValue: string | null) => setAgentBrokerName(selectedValue || "")} initialValue={AgentBrokerName} />
                     </FormField>
                     <FormField label="Place From" required>
-                      <Input
-                        name="fromPlace"
-                        placeholder="Enter place from"
-                        className="form-control alphabet_only"
-                        data-validate="required"
-                      />
+                      <Input name="fromPlace" placeholder="Enter place from" className="form-control alphabet_only" data-validate="required" />
                     </FormField>
                     <FormField label="Place To" required>
-                      <Input
-                        name="toPlace"
-                        placeholder="Enter Place to"
-                        className="form-control alphabet_only"
-                        data-validate="required"
-                      />
+                      <Input name="toPlace" placeholder="Enter Place to" className="form-control alphabet_only" data-validate="required" />
                     </FormField>
                   </div>
                 </div>
@@ -445,15 +361,7 @@ useEffect(() => {
                   </thead>
                   <tbody id="productTableBody">
                     {itemDetails.map((item, index) => (
-                      <TableRow
-                        key={item.id}
-                        item={item}
-                        index={index}
-                        onItemUpdate={handleItemUpdate}
-                        onDelete={handleDeleteItem}
-                        onAddItem={handleAddItem}
-                        isLastRow={index === itemDetails.length - 1} // Pass this prop
-                      />
+                      <TableRow key={item.id} item={item} index={index} onItemUpdate={handleItemUpdate} onDelete={handleDeleteItem} onAddItem={handleAddItem} isLastRow={index === itemDetails.length - 1} />
                     ))}
                   </tbody>
                 </table>
@@ -465,37 +373,13 @@ useEffect(() => {
                     <div className="flex items-center justify-between gap-2">
                       <span>Sub Total</span>
                       <div className="flex items-center gap-2">
-                        <Input
-                          type="text"
-                          name="subtotal"
-                          placeholder="Auto-calculated subtotal"
-                          className="w-full text-right subtotal"
-                          value={subtotal}
-                          readOnly
-                        />
+                        <Input type="text" name="subtotal" placeholder="Auto-calculated subtotal" className="w-full text-right subtotal" value={subtotal} readOnly />
                       </div>
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <span>Other Charges</span>
                       <div className="flex items-center gap-2">
-                        <Input
-                          type="text"
-                          name="otherCharges"
-                          placeholder="Enter Other Charges"
-                          className="w-full text-right other charges"
-                          value={otherCharges}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                            // Only allow numeric input for other charges
-                            if (
-                              e.target.value === "" ||
-                              /^\d*\.?\d*$/.test(e.target.value)
-                            ) {
-                              setOtherCharges(e.target.value);
-                            }
-                          }}
-                          // Add the disabled attribute based on subtotal
-                          disabled={parseFloat(subtotal) === 0}
-                        />
+                        <Input type="text" name="otherCharges" placeholder="Enter Other Charges" className="w-full text-right other charges" value={otherCharges} onChange={(e: ChangeEvent<HTMLInputElement>) => { if (e.target.value === "" || /^\d*\.?\d*$/.test(e.target.value)) { setOtherCharges(e.target.value); } }} disabled={parseFloat(subtotal) === 0} />
                       </div>
                     </div>
                     <hr className="my-2 border-t border-gray-200" />
@@ -510,11 +394,7 @@ useEffect(() => {
           </main>
         )}
 
-        <div
-          id="initial-modal"
-          ref={initialModalRef}
-          className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center z-50"
-        >
+        <div id="initial-modal" ref={initialModalRef} className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center z-50">
           <div className="bg-white rounded-[0.5rem] shadow-lg w-[480px] p-[2rem]">
             <h2 className="text-xl text-[#000000] flex items-center justify-center gap-2">
               <i className="ri-bus-2-line text-[#009333] text-2xl"></i>
@@ -527,59 +407,24 @@ useEffect(() => {
             <form className="space-y-4 mt-[16px]">
               <div>
                 <label className="block w-full form-label">Trip Date</label>
-                <DatePicker
-                  id="tripDate"
-                  name="tripDate"
-                  disablePast
-                  selected={selectedDate}
-                  onChange={(date: Date | undefined) => setSelectedDate(date)}
-                  placeholder="Select Date"
-                  className="w-full"
-                />
+                <DatePicker id="tripDate" name="tripDate" disablePast selected={selectedDate} onChange={(date: Date | undefined) => setSelectedDate(date)} placeholder="Select Date" className="w-full" />
               </div>
               <div>
                 <label className="block w-full form-label">
                   Vehicle Number
                 </label>
-                <SearchableSelect
-                  name="vehicleNumber"
-                  placeholder="Select Vehicle Number"
-                  options={vehicleOptions}
-                  searchable
-                  data-validate="required"
-                  onChange={(selectedValue: string | null) =>
-                    setVehicleNumber(selectedValue || "")
-                  }
-                  initialValue={vehicleNumber}
-                />
+                <SearchableSelect name="vehicleNumber" placeholder="Select Vehicle Number" options={vehicleOptions} searchable data-validate="required" onChange={(selectedValue: string | null) => setVehicleNumber(selectedValue || "")} initialValue={vehicleNumber} />
               </div>
               <div>
                 <label className="block w-full form-label">Driver Name</label>
-                <SearchableSelect
-                  name="driverName"
-                  placeholder="Select Driver Name"
-                  options={driverOptions}
-                  searchable
-                  data-validate="required"
-                  onChange={(selectedValue: string | null) =>
-                    setDriverName(selectedValue || "")
-                  }
-                  initialValue={driverName}
-                />
+                <SearchableSelect name="driverName" placeholder="Select Driver Name" options={driverOptions} searchable data-validate="required" onChange={(selectedValue: string | null) => setDriverName(selectedValue || "")} initialValue={driverName} />
               </div>
             </form>
             <div className="mt-8 flex justify-end space-x-3">
               <button onClick={handleCancelTrip} className="btn-sm btn-light">
                 Cancel
               </button>
-              <button
-                id="createTrip"
-                onClick={handleCreateTrip}
-                className={`btn-sm btn-primary ${
-                  !isFormValid ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-                disabled={!isFormValid}
-              >
+              <button id="createTrip" onClick={handleCreateTrip} className={`btn-sm btn-primary ${!isFormValid ? "opacity-50 cursor-not-allowed" : ""}`} disabled={!isFormValid}>
                 Create Trip
               </button>
             </div>
@@ -588,11 +433,7 @@ useEffect(() => {
 
         {showForm && (
           <footer className="bg-[#ebeff3] py-3 h-[56.9px] px-4 flex justify-start gap-2">
-            <button
-              type="submit"
-              onClick={handleSubmit}
-              className="btn-sm btn-primary"
-            >
+            <button type="submit" onClick={handleSubmit} className="btn-sm btn-primary">
               Save
             </button>
             <button type="button" className="btn-sm btn-secondary">

@@ -159,25 +159,39 @@ export default function NewTrip() {
     setShowForm(false); // Ensure the main form is hidden again
   };
 
-  const handleDeleteItem = useCallback((id: number) => {
-    setItemDetails((prevDetails) => {
-      const updatedItems = prevDetails.filter((item) => item.id !== id);
-      if (updatedItems.length === 0) {
-        setOtherCharges("0"); // Reset other charges when all items are deleted
-        return [
-          {
-            id: Date.now(),
-            itemName: "",
-            remarks: "",
-            quantity: "",
-            rent: "",
-            total: "",
-          },
-        ];
-      }
-      return updatedItems;
-    });
-  }, []);
+ const handleDeleteItem = useCallback((id: number) => {
+  setItemDetails((prevDetails: ItemDetail[]) => {
+    // Remove the item with the matching id
+    const updatedItems = prevDetails.filter((item) => item.id !== id);
+
+    // If, after deletion, there are no items left,
+    // reset other charges and return a single empty row.
+    if (updatedItems.length === 0) {
+      
+      return [
+        {
+          id: Date.now(), // Unique ID for the new row
+          itemName: "",
+          remarks: "",
+          quantity: "",
+          rent: "",
+          total: "",
+        },
+      ];
+    }
+
+    // Return the updated list of items
+    return updatedItems;
+  });
+}, []);
+
+useEffect(() => {
+  const subtotalValue = parseFloat(subtotal);
+  // If subtotal is 0 and otherCharges is not already 0, reset otherCharges
+  if (subtotalValue === 0 && parseFloat(otherCharges) !== 0) {
+    setOtherCharges("");
+  }
+}, [subtotal, otherCharges]);
 
   const handleItemUpdate = useCallback(
     (id: number, updatedFields: Partial<ItemDetail>) => {
@@ -264,8 +278,13 @@ export default function NewTrip() {
           return () => clearTimeout(timer);
         }
       }
-    }, [rowItem.itemName, rowItem.quantity, rowItem.rent, isLastRow, onAddItem]);
-
+    }, [
+      rowItem.itemName,
+      rowItem.quantity,
+      rowItem.rent,
+      isLastRow,
+      onAddItem,
+    ]);
 
     const calculateTotal = (qty: string, rentVal: string) => {
       const quantity = parseFloat(qty) || 0;
@@ -296,11 +315,7 @@ export default function NewTrip() {
       onItemUpdate(rowItem.id, rowItem);
     };
 
-    // Keep an effect to sync rowItem with the item prop if it changes from parent (e.g., initial load or full reset)
-    useEffect(() => {
-        setRowItem(item);
-    }, [item]);
-
+  
 
     return (
       <tr>
@@ -478,6 +493,8 @@ export default function NewTrip() {
                               setOtherCharges(e.target.value);
                             }
                           }}
+                          // Add the disabled attribute based on subtotal
+                          disabled={parseFloat(subtotal) === 0}
                         />
                       </div>
                     </div>
